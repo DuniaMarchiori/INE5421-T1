@@ -1,5 +1,5 @@
-from Expressao import Expressao
-from Gramatica import Gramatica
+from model.Expressao import Expressao
+from model.Gramatica import Gramatica
 
 class Model:
     atributo1 = None

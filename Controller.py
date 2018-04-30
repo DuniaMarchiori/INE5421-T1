@@ -1,4 +1,4 @@
-from Model import Model
+from model.Model import Model
 
 class Controller:
     model = Model()
