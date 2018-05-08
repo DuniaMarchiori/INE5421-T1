@@ -5,7 +5,7 @@ from model.Arvore.Nodos.NodoConcat import NodoConcat
 from model.Arvore.Nodos.NodoFecho import NodoFecho
 from model.Arvore.Nodos.NodoOpcional import NodoOpcional
 from enum import Enum
-import string
+
 
 class Expressao:
 
@@ -30,8 +30,7 @@ class Expressao:
     def gerarArvore(self, expressao):
         self.arvore = Arvore()
         if self.verificaValidade(expressao):
-            #expressao.replace(" ", "") # Remove espaços da expressao inteira
-            expressao = "".join(expressao.split()) # Remove espaços da expressao inteira
+            expressao = self.limparExpressao(expressao)
             self.arvore.setNodoRaiz(self.gerarNodo(expressao))
 
     def verificaValidade(self, expressao):
@@ -43,12 +42,40 @@ class Expressao:
             # raise ("Caracter desconhecido X na posição Y")
             #pass
 
+    def limparExpressao(self, expressao):
+        # Remove espaços em branco
+        expressao = "".join(expressao.split())
+
+        # Remove nulos como ()
+        diferente = True
+        while (diferente):
+            expressaoSemNulo = expressao.replace("()", "")
+            diferente = expressaoSemNulo != expressao
+            expressao = expressaoSemNulo
+
+        # Adiciona concatenações impricitas
+        expressao = self.__exporConcatenacoesImplicitas(expressao)
+
+        return expressao
+
+    def __exporConcatenacoesImplicitas(self, expressao):
+        novaExpressao = expressao
+        charAnterior = ""
+        concatsAdicionadas = 0
+        for i in range(0, len(expressao)):
+            char = expressao[i]
+            if (charAnterior.isalnum() or charAnterior == (")" or "*" or "?")) and (char.isalnum() or char == ("(" or "*" or "?")):
+                novaExpressao = novaExpressao[:i+concatsAdicionadas] + '.' + novaExpressao[i+concatsAdicionadas:]
+                concatsAdicionadas += 1
+            charAnterior = char
+
+        return novaExpressao
+
     def gerarNodo(self, expressao):
         subexpressao = self.__removerParentesesExternos(expressao)
-        subexpressao = self.__exporConcatenacoesOcultas(subexpressao)
 
         if len(subexpressao) == 1:
-            # TODO verificar se expressão é realmente um caracter terminal
+            # TODO verificar se expressão é realmente um caracter terminal, mas antes tem que ver se tem como chegar aqui sem ser um caracter terminal
             return Nodo(subexpressao)
         else:
             operadorDiv = None
@@ -94,7 +121,7 @@ class Expressao:
 
             elif operadorDiv == Operacao.FECHO:
                 nodo = NodoFecho()
-                nodo.setFilhoEsquerdo(self.gerarNodo(subexpressao))
+                nodo.setFilhoEsquerdo(self.gerarNodo(subexpressao[0:posicaoDiv]))
 
             else: # operadorDiv == Operacao.OPCIONAL:
                 nodo = NodoOpcional()
@@ -104,29 +131,12 @@ class Expressao:
 
     def __removerParentesesExternos(self, expressao):
         temParenteses = True
-        while (temParenteses):
+        while (temParenteses and expressao != None):
             if expressao[0] == "(" and expressao[-1] == ")":
                 expressao = expressao[1:-1]
             else:
                 temParenteses = False
         return expressao
-
-    def __exporConcatenacoesOcultas(self, expressao):
-        novaExpressao = expressao
-        charAnterior = ""
-        concatsAdicionadas = 0
-        for i in range(0, len(expressao)):
-            char = expressao[i]
-            if self.__charPertenceAConcatenacao(charAnterior) and self.__charPertenceAConcatenacao(char):
-                novaExpressao = novaExpressao[:i+concatsAdicionadas] + '.' + novaExpressao[i+concatsAdicionadas:]
-                concatsAdicionadas += 1
-            charAnterior = char
-
-        return novaExpressao
-
-    def __charPertenceAConcatenacao(self, char):
-        return char == ("(" or ")" or "*" or "?") or char.isalnum()
-
 
 class Operacao(Enum):
     UNIAO = "|"  # 2
