@@ -17,3 +17,6 @@ class Controller:
 
     def transformar_GR_em_AF(self, gramatica):
         return self.__model.transformar_GR_em_AF(gramatica)
+
+    def transformar_AF_em_GR(self, af):
+        return self.__model.transformar_AF_em_GR(af)

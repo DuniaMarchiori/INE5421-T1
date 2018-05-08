@@ -13,5 +13,5 @@ class Expressao:
         file = open(nome_arquivo, "r")
         texto = file.read()
         file.close()
-        print(texto)
+        #print(texto)
         return texto
