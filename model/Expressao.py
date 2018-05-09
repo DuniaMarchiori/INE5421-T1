@@ -4,7 +4,7 @@ from model.Arvore.Nodos.NodoUniao import NodoUniao
 from model.Arvore.Nodos.NodoConcat import NodoConcat
 from model.Arvore.Nodos.NodoFecho import NodoFecho
 from model.Arvore.Nodos.NodoOpcional import NodoOpcional
-from enum import Enum
+from model.Constants import Operacao, Prioridade
 
 
 class Expressao:
@@ -85,20 +85,20 @@ class Expressao:
                 elif parentesesAbertos == 0:
                     if char == "|" and prioridadeDiv < 2:
                         operadorDiv = Operacao.UNIAO
-                        prioridadeDiv = 2
+                        prioridadeDiv = Prioridade(operadorDiv)
                         posicaoDiv = i
                         #break TODO ja encontrei o primeiro "|" mais pra esquerda, nem preciso ver o resto, talvez dê pra dar break
                     if char == "." and prioridadeDiv < 1:
                         operadorDiv = Operacao.CONCAT
-                        prioridadeDiv = 1
+                        prioridadeDiv = Prioridade(operadorDiv)
                         posicaoDiv = i
                     if char == "*" and prioridadeDiv < 0:
                         operadorDiv = Operacao.FECHO
-                        prioridadeDiv = 0
+                        prioridadeDiv = Prioridade(operadorDiv)
                         posicaoDiv = i
                     if char == "?" and prioridadeDiv < 0:
                         operadorDiv = Operacao.OPCIONAL
-                        prioridadeDiv = 0
+                        prioridadeDiv = Prioridade(operadorDiv)
                         posicaoDiv = i
 
             nodo = None
@@ -146,9 +146,3 @@ class Expressao:
     def toString(self):
         # TODO Adicionar parenteses se o operador filho for de menor prioridade
         return self.arvore.getEmOrdem()
-
-class Operacao(Enum):
-    UNIAO = "|"  # 2
-    CONCAT = "."  # 1
-    FECHO = "*"  # 0
-    OPCIONAL = "?"  # 0

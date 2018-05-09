@@ -1,9 +1,10 @@
 from model.Arvore.Nodo import Nodo
+from model.Constants import *
 
 class NodoOpcional(Nodo):
 
     def __init__(self):
-        super(NodoOpcional, self).__init__("?", prioridade=0)
+        super(NodoOpcional, self).__init__(Operacao.OPCIONAL.value, prioridade=Prioridade(Operacao.OPCIONAL))
 
     def descer(self):
         self.getFilhoEsquerdo().descer()

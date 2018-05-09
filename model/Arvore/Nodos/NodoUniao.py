@@ -1,9 +1,10 @@
 from model.Arvore.Nodo import Nodo
+from model.Constants import *
 
 class NodoUniao(Nodo):
 
     def __init__(self):
-        super(NodoUniao, self).__init__("|", prioridade=2)
+        super(NodoUniao, self).__init__(Operacao.UNIAO.value, prioridade=Prioridade(Operacao.UNIAO))
 
     def descer(self):
         self.getFilhoEsquerdo().descer()
