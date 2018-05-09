@@ -5,7 +5,7 @@ def main():
     texto = "S - > 0B|1BA \n BA-> 0 \n B->0"
     arquivo = c.salvar_gramatica(texto)
     g = c.abrir_gramatica(arquivo)
-    g.printa()
+    #g.printa()
     #print(g.toString())
     af = c.transformar_GR_em_AF(g)
     #af.printa()
