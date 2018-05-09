@@ -1,34 +1,65 @@
+'''
+    Classe que representa um autômato finito.
+'''
 class AutomatoFinito:
 
+    '''
+        Método construtor.
+    '''
     def __init__(self):
-        self.__producoes = {}
+        self.__producoes = {} # conjunto de produções
         self.__simbolos_inicial = None
         self.__simbolos_finais = []
-        self.__vt = set()
+        self.__vt = set() # conjunto de símbolos terminais
 
+    '''
+        Adiciona uma nova produção.
+        \:param chave é o símbolo não-terminal (ou um conjunto deles).
+        \:param producao é dicionário onde a chave é um símbolo terminal e os dados são um conjunto de símbolos não-terminais.
+    '''
     def adiciona_producao(self, chave, producao):
         self.__producoes[chave] = producao
 
     '''
-    def set_producoes(self, producoes):
-        self.__producoes = producoes
+        Retorna o conjunto de produções do autômato.
+        \:return um dicionário onde a chave é um conjunto de símbolos não-terminais e os dados são 
+            um dicionário onde a chave é um símbolo não terminal e os dados são um conjunto de símbolos não-terminais.
     '''
-
     def get_producoes(self):
         return self.__producoes
 
+    '''
+        Modifica o símbolo inicial do autômato.
+        \:param simbolo é o novo símbolo inicial.
+    '''
     def set_simbolo_inicial(self, simbolo):
         self.__simbolos_inicial = simbolo
 
+    '''
+        Modifica o conjunto de símbolos finais do autômato.
+        \:param lista é a lista de novos símbolos finais.
+    '''
     def set_simbolos_finais(self, lista):
         self.__simbolos_finais = lista
 
+    '''
+        Modifica o conjunto de símbolos terminais do autômato.
+        \:param vt é o novo conjunto de símbolos terminais.
+    '''
     def set_vt(self, vt):
         self.__vt = vt
 
+    '''
+        Retorna o conjunto de símbolos terminais do autômato.
+        \:return o conjunto de símbolos terminais do autômato.
+    '''
     def get_vt(self):
         return self.__vt
 
+    '''
+        Transforma um autômato finito em uma gramática.
+        \:return a gramática que gera a mesma linguagem que o autômato reconhece.
+    '''
     def transforma_em_GR(self):
         from model.Gramatica import Gramatica
 
@@ -56,7 +87,9 @@ class AutomatoFinito:
 
         return gramatica
 
-
+    '''
+        Exibe as estruturas do autômato no console.
+    '''
     def printa(self):
         print("VT:")
         for x in self.__vt:

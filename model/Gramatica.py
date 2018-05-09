@@ -1,7 +1,9 @@
 from model.exception.FormatError import FormatError
 from string import ascii_uppercase
 
-
+'''
+    Classe que representa uma gramática regular.
+'''
 class Gramatica:
     __numero = 1 # id do arquivo salvo
 
@@ -16,35 +18,46 @@ class Gramatica:
         self.__vn_dir = set() # conjunto de símbolos não-terminais que aparecem na parte direita das produções
 
     '''
-        Salva um novo símbolo inicial.
-        \param novo símbolo inicial
+        Modifica o símbolo inicial da gramática.
+        \:param simbolo é o novo símbolo inicial.
     '''
     def set_simbolo_inicial(self, simbolo):
         self.__simbolo_inicial = simbolo
 
     '''
         Adiciona uma nova produção.
-        \param chave é o símbolo não-terminal.
-        \param producao é uma lista de tuplas no formato (símbolo terminal, símbolo não-terminal)
+        \:param chave é o símbolo não-terminal.
+        \:param producao é uma lista de tuplas no formato (símbolo terminal, símbolo não-terminal)
     '''
     def adiciona_producao(self, chave, producao):
         self.__producoes[chave] = producao
 
     '''
-        
+        Retorna o conjunto de produções da gramática.
+        \:return um dicionário onde a chave é um não-terminal e os dados são tuplas no formato (símbolo terminal, símbolo não-terminal)
     '''
     def get_producoes(self):
         return self.__producoes
 
-    def get_texto(self):
-        return self.__texto
-
+    '''
+        Modifica o conjunto de símbolos terminais da gramática.
+        \:param vt é o novo conjunto de símbolos terminais.
+    '''
     def set_vt(self, vt):
         self.__vt = vt
 
+    '''
+        Retorna o conjunto de símbolos terminais da gramática.
+        \:return o conjunto de símbolos terminais da gramática.
+    '''
     def get_vt(self):
         return self.__vt
 
+    '''
+        Salva a gramática em um arquivo .txt.
+        \:param texto é a string da gramática a ser salva.
+        \:return o nome do arquivo .txt salvo
+    '''
     def salvar(self, texto):
         nome_arquivo = "gramatica_" + str(self.__numero) + ".txt"
         file = open(nome_arquivo, "w")
@@ -54,6 +67,11 @@ class Gramatica:
         self.__texto = texto
         return nome_arquivo
 
+    '''
+        Lê a gramática de um arquivo.
+        \:param nome_arquivo é o caminho do arquivo a ser lido.
+        \:return True se a leitura ocorrer sem erros.
+    '''
     def abrir(self, nome_arquivo):
         file = open(nome_arquivo, "r")
         self.__texto = file.read()
@@ -63,6 +81,10 @@ class Gramatica:
         self.gera_estrutura_producoes(lista)
         return True
 
+    '''
+        Gera a estrutura da gramática a partir do texto informado pelo usuário.
+        \:param lista é a lista de produções da gramática em texto
+    '''
     def gera_estrutura_producoes(self, lista):
         i = 0
 
@@ -109,6 +131,10 @@ class Gramatica:
             if not(self.__producoes.keys().__contains__(vn)):
                 raise FormatError("A gramática referencia símbolos não terminais com produções não definidas: " + vn)
 
+    '''
+        Transforma a gramática em um autômato finito.
+        \:return o autômato finito que reconhece a mesma linguagem que a gramática gera.
+    '''
     def transformar_em_AF(self):
         from model.AutomatoFinito import AutomatoFinito
 
@@ -162,6 +188,11 @@ class Gramatica:
         else:
             pass #não tem mais letras no alfabeto possiveis pra ser o novo simbolo
 
+    '''
+        Verifica se a string representa um número inteiro.
+        \:param str é a string a ser verificada
+        \:return True se a string representar um número inteiro e False caso contrário.
+    '''
     def is_int(self, str):
         try:
             int(str)
@@ -169,6 +200,10 @@ class Gramatica:
         except ValueError:
             return False
 
+    '''
+        Transforma a gramática em texto.
+        \:return uma string que representa a gramática.
+    '''
     def toString(self):
         if self.__texto != None:
             return self.__texto
@@ -192,6 +227,9 @@ class Gramatica:
                 gramatica += texto + "\n"
             return gramatica
 
+    '''
+        Exibe as estruturas da gramática no console.
+    '''
     def printa(self):
         print("VT:")
         for x in self.__vt:
