@@ -32,7 +32,8 @@ class Expressao:
         if self.verificaValidade(expressao):
             expressao = self.prepararExpressao(expressao)
             self.arvore.setNodoRaiz(self.gerarNodo(expressao))
-
+        self.arvore.costuraArvore()
+    
     def verificaValidade(self, expressao):
         # TODO verificar se a expressao contem apenas caracteres do alfabeto, operadores ou espaços em branco
         # TODO verificar se não tem coisas como "|*" ou "((( bla bla )"

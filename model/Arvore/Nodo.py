@@ -54,6 +54,17 @@ class Nodo:
                 expressao += ")"
         return expressao
 
+    def costuraNodo(self, stack):
+        if self.__filhoEsquerdo != None:
+            stack.append(self)
+            self.__filhoEsquerdo.costuraNodo(stack)
+            stack.pop()
+    
+        if self.__filhoDireito == None:
+            self.__costura = stack[-1]
+        else:
+            self.__filhoDireito.costuraNodo(stack)
+    
     def descer(self):
         pass
 
