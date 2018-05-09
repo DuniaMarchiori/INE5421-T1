@@ -3,7 +3,7 @@ from model.Arvore.Nodo import Nodo
 class NodoOpcional(Nodo):
 
     def __init__(self):
-        super(NodoOpcional, self).__init__("*")
+        super(NodoOpcional, self).__init__("?", prioridade=0)
 
     def descer(self):
         self.getFilhoEsquerdo().descer()

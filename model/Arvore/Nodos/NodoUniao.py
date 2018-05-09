@@ -3,7 +3,7 @@ from model.Arvore.Nodo import Nodo
 class NodoUniao(Nodo):
 
     def __init__(self):
-        super(NodoUniao, self).__init__("|")
+        super(NodoUniao, self).__init__("|", prioridade=2)
 
     def descer(self):
         self.getFilhoEsquerdo().descer()

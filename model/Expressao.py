@@ -30,7 +30,7 @@ class Expressao:
     def gerarArvore(self, expressao):
         self.arvore = Arvore()
         if self.verificaValidade(expressao):
-            expressao = self.limparExpressao(expressao)
+            expressao = self.prepararExpressao(expressao)
             self.arvore.setNodoRaiz(self.gerarNodo(expressao))
 
     def verificaValidade(self, expressao):
@@ -42,16 +42,9 @@ class Expressao:
             # raise ("Caracter desconhecido X na posição Y")
             #pass
 
-    def limparExpressao(self, expressao):
+    def prepararExpressao(self, expressao):
         # Remove espaços em branco
         expressao = "".join(expressao.split())
-
-        # Remove nulos como ()
-        diferente = True
-        while (diferente):
-            expressaoSemNulo = expressao.replace("()", "")
-            diferente = expressaoSemNulo != expressao
-            expressao = expressaoSemNulo
 
         # Adiciona concatenações impricitas
         expressao = self.__exporConcatenacoesImplicitas(expressao)
@@ -64,7 +57,7 @@ class Expressao:
         concatsAdicionadas = 0
         for i in range(0, len(expressao)):
             char = expressao[i]
-            if (charAnterior.isalnum() or charAnterior == (")" or "*" or "?")) and (char.isalnum() or char == ("(" or "*" or "?")):
+            if (charAnterior.isalnum() or charAnterior == ")" or charAnterior == "*" or charAnterior == "?") and (char.isalnum() or char == "("):
                 novaExpressao = novaExpressao[:i+concatsAdicionadas] + '.' + novaExpressao[i+concatsAdicionadas:]
                 concatsAdicionadas += 1
             charAnterior = char
@@ -95,7 +88,7 @@ class Expressao:
                         prioridadeDiv = 2
                         posicaoDiv = i
                         #break TODO ja encontrei o primeiro "|" mais pra esquerda, nem preciso ver o resto, talvez dê pra dar break
-                    if char == "." and prioridadeDiv < 0:
+                    if char == "." and prioridadeDiv < 1:
                         operadorDiv = Operacao.CONCAT
                         prioridadeDiv = 1
                         posicaoDiv = i
@@ -125,18 +118,34 @@ class Expressao:
 
             else: # operadorDiv == Operacao.OPCIONAL:
                 nodo = NodoOpcional()
-                nodo.setFilhoEsquerdo(self.gerarNodo(subexpressao))
+                nodo.setFilhoEsquerdo(self.gerarNodo(subexpressao[0:posicaoDiv]))
 
             return nodo
 
     def __removerParentesesExternos(self, expressao):
-        temParenteses = True
-        while (temParenteses and expressao != None):
-            if expressao[0] == "(" and expressao[-1] == ")":
-                expressao = expressao[1:-1]
+        parentesesEncontrados = 0
+        nivel = 0
+        inicio = True
+        i = 0
+        comprimentoExpr = len(expressao)
+        while i < comprimentoExpr - parentesesEncontrados:
+            char = expressao[i]
+            if char == "(":
+                nivel += 1
+                if inicio:
+                    parentesesEncontrados = nivel
             else:
-                temParenteses = False
-        return expressao
+                inicio = False
+                if char == ")":
+                    nivel -= 1
+                    parentesesEncontrados = min(parentesesEncontrados, nivel)
+            i+=1
+        return expressao[parentesesEncontrados : comprimentoExpr - parentesesEncontrados]
+
+
+    def toString(self):
+        # TODO Adicionar parenteses se o operador filho for de menor prioridade
+        return self.arvore.getEmOrdem()
 
 class Operacao(Enum):
     UNIAO = "|"  # 2

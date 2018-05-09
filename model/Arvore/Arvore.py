@@ -10,3 +10,6 @@ class Arvore:
 
     def getNodoRaiz(self):
         return self.__nodoRaiz
+
+    def getEmOrdem(self):
+        return self.__nodoRaiz.emOrdem("")
