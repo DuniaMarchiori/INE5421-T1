@@ -73,18 +73,20 @@ class AutomatoFinito:
             producoes_g = []
             for a in producoes_af.keys():
                 c = list(producoes_af[a])
+                c = sorted(c, key=str.lower) # Organiza a lista em ordem alfabética
                 if "-" not in c:
-                    c = ', '.join(c)
+                    c = ''.join(c)
                     producoes_g.append((a, c))
                     if c in self.__simbolos_finais:
                         producoes_g.append((a, "&"))
-            b = ', '.join(list(b))
+            b_list = list(b)
+            b_list = sorted(b_list, key=str.lower)
+            b = ''.join(b_list)
             gramatica.adiciona_producao(b, producoes_g)
 
         # Item C do algoritmo visto em aula
         # Se & pertence à linguagem
         if self.__simbolo_inicial in self.__simbolos_finais:
-            # TODO - testar AFND: questão do c = list(producoes) e depois x = join(c)
             simbolo_novo = gramatica.novo_simbolo()
 
             # Copia produções do simbolo inicial atual
@@ -94,8 +96,9 @@ class AutomatoFinito:
             producoes_si = self.__producoes[si]
             for p in producoes_si:
                 c = list(producoes_si[p])
+                c = sorted(c, key=str.lower)
                 if "-" not in c:
-                    c = ', '.join(c)
+                    c = ''.join(c)
                     producoes_novo_si.append((p, c))
 
             # Adiciona produção de & para o novo símbolo inicial
