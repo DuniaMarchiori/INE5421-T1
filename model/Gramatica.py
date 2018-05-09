@@ -147,28 +147,12 @@ class Gramatica:
 
         af = AutomatoFinito()
         af.set_vt(self.__vt)
+        af.set_simbolo_inicial(self.__simbolo_inicial)
 
         # Gera um símbolo novo
-        simbolo_novo = None
-        for letra in ascii_uppercase:
-            if letra not in self.__producoes:
-                simbolo_novo = letra
-                break
-        # Se todas as letras do alfabeto já fazem parte do conjunto de símbolos terminais,
-        # então o símbolo novo recebe a concatenação de duas letras (que não exista no conjunto)
-        if simbolo_novo == None:
-            found = False
-            for l1 in ascii_uppercase:
-                for l2 in ascii_uppercase:
-                    letras = l1 + l2
-                    if letras not in self.__producoes:
-                        simbolo_novo = letras
-                        found = True
-                        break
-                if found:
-                    break
+        simbolo_novo = self.novo_simbolo()
 
-        if letra != None:
+        if simbolo_novo != None:
             # Construção do conjunto de símbolos finais
             simbolos_finais = []
             simbolos_finais.append(simbolo_novo)
@@ -191,10 +175,11 @@ class Gramatica:
                 for p in producoes_g:
                     a = p[0]
                     c = p[1]
-                    if a != "&" and c == "&":
-                        producoes_af[a] = frozenset([simbolo_novo])
-                    else:
-                        producoes_af[a] = frozenset([c])
+                    if a != "&":
+                        if c == "&":
+                            producoes_af[a] = frozenset([simbolo_novo])
+                        else:
+                            producoes_af[a] = frozenset([c])
 
                 af.adiciona_producao(b, producoes_af)
 
@@ -222,6 +207,31 @@ class Gramatica:
             return False
 
     '''
+        Gera um novo símbolo não terminal que não pertence à gramática.
+        \:return um símbolo não terminal que não pertence à gramática.
+    '''
+    def novo_simbolo(self):
+        simbolo_novo = None
+        for letra in ascii_uppercase:
+            if letra not in self.__producoes:
+                simbolo_novo = letra
+                break
+        # Se todas as letras do alfabeto já fazem parte do conjunto de símbolos terminais,
+        # então o símbolo novo recebe a concatenação de duas letras (que não exista no conjunto)
+        if simbolo_novo == None:
+            found = False
+            for l1 in ascii_uppercase:
+                for l2 in ascii_uppercase:
+                    letras = l1 + l2
+                    if letras not in self.__producoes:
+                        simbolo_novo = letras
+                        found = True
+                        break
+                if found:
+                    break
+        return simbolo_novo
+
+    '''
         Transforma a gramática em texto.
         \:return uma string que representa a gramática.
     '''
@@ -230,6 +240,8 @@ class Gramatica:
             return self.__texto
         else:
             gramatica = ""
+            producao_inicial = ""
+            outras_producoes = ""
 
             for s in self.__producoes.keys():
                 texto = ""
@@ -244,8 +256,12 @@ class Gramatica:
                         texto = texto + ''.join(prod)
                     else:
                         texto = texto + prod[0]
+                if s == self.__simbolo_inicial:
+                    producao_inicial += texto
+                else:
+                    outras_producoes += texto + "\n"
 
-                gramatica += texto + "\n"
+            gramatica += producao_inicial + "\n" + outras_producoes
             return gramatica
 
     '''

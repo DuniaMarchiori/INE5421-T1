@@ -8,14 +8,14 @@ class AutomatoFinito:
     '''
     def __init__(self):
         self.__producoes = {} # conjunto de produções
-        self.__simbolos_inicial = None
+        self.__simbolo_inicial = None
         self.__simbolos_finais = []
         self.__vt = set() # conjunto de símbolos terminais
 
     '''
         Adiciona uma nova produção.
         \:param chave é o símbolo não-terminal (ou um conjunto deles).
-        \:param producao é dicionário onde a chave é um símbolo terminal e os dados são um conjunto de símbolos não-terminais.
+        \:param producao é dicionário onde a chave é um símbolo terminal e os dados são um conjunto de símbolos não-terminais (pode ser vazio).
     '''
     def adiciona_producao(self, chave, producao):
         self.__producoes[chave] = producao
@@ -23,7 +23,7 @@ class AutomatoFinito:
     '''
         Retorna o conjunto de produções do autômato.
         \:return um dicionário onde a chave é um conjunto de símbolos não-terminais e os dados são 
-            um dicionário onde a chave é um símbolo não terminal e os dados são um conjunto de símbolos não-terminais.
+            um dicionário onde a chave é um símbolo não terminal e os dados são um conjunto de símbolos não-terminais (pode ser vazio).
     '''
     def get_producoes(self):
         return self.__producoes
@@ -33,7 +33,7 @@ class AutomatoFinito:
         \:param simbolo é o novo símbolo inicial.
     '''
     def set_simbolo_inicial(self, simbolo):
-        self.__simbolos_inicial = simbolo
+        self.__simbolo_inicial = simbolo
 
     '''
         Modifica o conjunto de símbolos finais do autômato.
@@ -65,26 +65,45 @@ class AutomatoFinito:
 
         gramatica = Gramatica()
         gramatica.set_vt(self.__vt)
-        gramatica.set_simbolo_inicial(self.__simbolos_inicial)
+        gramatica.set_simbolo_inicial(self.__simbolo_inicial)
 
-        #item a e b
+        # Construção das produções de acordo com os itens A e B do algoritmo visto em aula
         for b in self.__producoes.keys():
             producoes_af = self.__producoes[b]
             producoes_g = []
             for a in producoes_af.keys():
                 c = list(producoes_af[a])
-                c = ', '.join(c)
-                producoes_g.append((a, c))
-                if self.__simbolos_finais.__contains__(c):
-                    producoes_g.append((a, "&"))
+                if "-" not in c:
+                    c = ', '.join(c)
+                    producoes_g.append((a, c))
+                    if c in self.__simbolos_finais:
+                        producoes_g.append((a, "&"))
             b = ', '.join(list(b))
             gramatica.adiciona_producao(b, producoes_g)
 
-        # item c
-        if self.__simbolos_finais.__contains__(self.__simbolos_inicial):
-            #TODO - não precisa verificar se o simbolo inicial aparece do lado direito das produções
-            pass
+        # Item C do algoritmo visto em aula
+        # Se & pertence à linguagem
+        if self.__simbolo_inicial in self.__simbolos_finais:
+            # TODO - testar AFND: questão do c = list(producoes) e depois x = join(c)
+            simbolo_novo = gramatica.novo_simbolo()
 
+            # Copia produções do simbolo inicial atual
+            si = frozenset([self.__simbolo_inicial])
+            producoes_novo_si = [] # lista de tuplas
+
+            producoes_si = self.__producoes[si]
+            for p in producoes_si:
+                c = list(producoes_si[p])
+                if "-" not in c:
+                    c = ', '.join(c)
+                    producoes_novo_si.append((p, c))
+
+            # Adiciona produção de & para o novo símbolo inicial
+            producoes_novo_si.append(("&", "&"))
+
+            gramatica.adiciona_producao(simbolo_novo, producoes_novo_si)
+            # Atualiza o símbolo inicial
+            gramatica.set_simbolo_inicial(simbolo_novo)
         return gramatica
 
     '''
