@@ -1,74 +1,88 @@
+
 class Nodo:
 
     __valor = None
-    __prioridadeOperador = None
-    __filhoEsquerdo = None
-    __filhoDireito = None
+    __folha = None
+    __prioridade_operador = None
+    __filho_esquerdo = None
+    __filho_direito = None
     __costura = None
 
-    def __init__(self, valor, prioridade=0):
+    def __init__(self, valor, prioridade=0, folha=False):
         self.__valor = valor
-        self.__prioridadeOperador = prioridade
+        self.__prioridade_operador = prioridade
+        self.__folha = folha
 
-    def setValor(self, valor):
+    def set_valor(self, valor):
         self.__valor = valor
 
-    def getValor(self):
+    def get_valor(self):
         return self.__valor
 
-    def setFilhoEsquerdo(self, novoFilhoEsquerdo):
-        self.__filhoEsquerdo = novoFilhoEsquerdo
+    def eh_folha(self):
+        return self.__folha
 
-    def getFilhoEsquerdo(self):
-        return self.__filhoEsquerdo
+    def set_filho_esquerdo(self, novo_filho_esquerdo):
+        self.__filho_esquerdo = novo_filho_esquerdo
 
-    def setFilhoDireito(self, novoFilhoDireito):
-        self.__filhoDireito = novoFilhoDireito
+    def get_filho_esquerdo(self):
+        return self.__filho_esquerdo
 
-    def getFilhoDireito(self):
-        return self.__filhoDireito
+    def set_filho_direito(self, novo_filho_direito):
+        self.__filho_direito = novo_filho_direito
 
-    def setCostura(self, nodoCosturado):
-        self.__costura = nodoCosturado
+    def get_filho_direito(self):
+        return self.__filho_direito
 
-    def getCostura(self):
-        if self.__costura != None:
+    def set_costura(self, nodo_costurado):
+        self.__costura = nodo_costurado
+
+    def get_costura(self):
+        if self.__costura is not None:
             return self.__costura
         else:
-            return self.__filhoDireito.getCostura()
+            return self.__filho_direito.getCostura()
 
-    def emOrdem(self, expressao):
-        if (self.__filhoEsquerdo != None):
-            if (self.__filhoEsquerdo.__prioridadeOperador > self.__prioridadeOperador):
+    def em_ordem(self, expressao):
+        if self.__filho_esquerdo is not None:
+            if self.__filho_esquerdo.__prioridadeOperador > self.__prioridade_operador:
                 expressao += "("
-            expressao = self.__filhoEsquerdo.emOrdem(expressao)
-            if (self.__filhoEsquerdo.__prioridadeOperador > self.__prioridadeOperador):
+            expressao = self.__filho_esquerdo.em_ordem(expressao)
+            if self.__filho_esquerdo.__prioridadeOperador > self.__prioridade_operador:
                 expressao += ")"
         if self.__valor != ".":
             expressao += self.__valor
-        if (self.__filhoDireito != None):
-            if (self.__filhoDireito.__prioridadeOperador > self.__prioridadeOperador):
+        if self.__filho_direito is not None:
+            if self.__filho_direito.__prioridadeOperador > self.__prioridade_operador:
                 expressao += "("
-            expressao = self.__filhoDireito.emOrdem(expressao)
-            if (self.__filhoDireito.__prioridadeOperador > self.__prioridadeOperador):
+            expressao = self.__filho_direito.em_ordem(expressao)
+            if self.__filho_direito.__prioridadeOperador > self.__prioridade_operador:
                 expressao += ")"
         return expressao
 
-    def costuraNodo(self, stack):
-        if self.__filhoEsquerdo != None:
+    def costura_nodo(self, stack):
+        if self.__filho_esquerdo is not None:
             stack.append(self)
-            self.__filhoEsquerdo.costuraNodo(stack)
+            self.__filho_esquerdo.costura_nodo(stack)
             stack.pop()
-    
-        if self.__filhoDireito == None:
+
+        if self.__filho_direito is None:
             self.__costura = stack[-1]
         else:
-            self.__filhoDireito.costuraNodo(stack)
-    
+            self.__filho_direito.costura_nodo(stack)
+
+    def numera_folhas(self, lista):
+        if self.__filho_esquerdo is not None:
+            self.__filho_esquerdo.numera_folhas(lista)
+
+        if self.eh_folha():
+            lista.append(self)
+
+        if self.__filho_direito is not None:
+            self.__filho_direito.numera_folhas(lista)
+
     def descer(self):
         pass
 
     def subir(self):
         pass
-
-

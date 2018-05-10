@@ -1,40 +1,117 @@
 from model.Arvore.Arvore import Arvore
-from model.Arvore.Nodo import Nodo
 from model.Arvore.Nodos.NodoUniao import NodoUniao
 from model.Arvore.Nodos.NodoConcat import NodoConcat
 from model.Arvore.Nodos.NodoFecho import NodoFecho
 from model.Arvore.Nodos.NodoOpcional import NodoOpcional
-from model.Constants import Operacao, Prioridade
+from model.Arvore.Nodos.NodoFolha import NodoFolha
+from model.Constants import Operacao, prioridade
 
 
+'''
+    Classe que representa uma expressão regular.
+'''
 class Expressao:
 
-    arvore = None
-    numero = 1
+    __arvore = None
 
-    def salvar(self, texto):
-        nome_arquivo = "expressao_" + str(self.numero) + ".txt"
-        file = open(nome_arquivo, "w")
-        file.write(texto)
-        file.close()
-        self.numero += 1
-        return nome_arquivo
+    '''
+        Método construtor.
+        \:param expressao é a representação textual da expressão regular.
+    '''
+    def __init__(self, expressao):
+        self.__gerar_arvore(expressao)
 
-    def abrir(self, nome_arquivo):
-        file = open(nome_arquivo, "r")
-        texto = file.read()
-        file.close()
-        print(texto)
-        return texto
+    '''
+        Retorna a representação textual da expressão regular.
+        \:return a representação textual da expressão regular.
+    '''
+    def to_string(self):
+        return self.__arvore.get_em_ordem()
 
-    def gerarArvore(self, expressao):
-        self.arvore = Arvore()
-        if self.verificaValidade(expressao):
-            expressao = self.prepararExpressao(expressao)
-            self.arvore.setNodoRaiz(self.gerarNodo(expressao))
-        self.arvore.costuraArvore()
-    
-    def verificaValidade(self, expressao):
+    '''
+        Metodo utilizado para gerar a arvore a partir da representação textual da expressão regular.
+        \:param expressao é a representação textual da expressão regular.
+    '''
+    def __gerar_arvore(self, expressao):
+        self.__arvore = Arvore()
+        if self.__verifica_validade(expressao):
+            expressao = self.__preparar_expressao(expressao)
+            self.__arvore.set_nodo_raiz(self.__gerar_nodo(expressao))
+        self.__arvore.costura_arvore()
+        self.__arvore.numera_folhas()
+
+    '''
+        Algorítmo recursivo que gera a arvore/sub-arvore a partir da expressão/sub-expressão regular dada.
+
+        Ele percorre a expressão encontrando o operador de menor prioridade na expressão atual, criando um nodo na
+        arvore para este operador, e então chama recursivamente o algoritmo para gerar as sub-arvores passando como
+        parametro a sub-expressão do novo ramo.
+
+        \:param expressao é a representação textual da expressão regular.
+        \:return o nodo raíz da árvore obtida a partir da expressão dada.
+    '''
+    def __gerar_nodo(self, expressao):
+        subexpressao = self.__remover_parenteses_externos(expressao)
+
+        if len(subexpressao) == 1:
+            return NodoFolha(subexpressao)
+        else:
+            operador_div = None
+            prioridade_div = -1
+            posicao_div = None
+
+            parenteses_abertos = 0
+            for i in range(0, len(subexpressao)):
+                char = subexpressao[i]
+                if char == "(":
+                    parenteses_abertos += 1
+                elif char == ")":
+                    parenteses_abertos -= 1
+                elif parenteses_abertos == 0:
+                    if char == "|" and prioridade_div < 2:
+                        operador_div = Operacao.UNIAO
+                        prioridade_div = prioridade(operador_div)
+                        posicao_div = i
+                    if char == "." and prioridade_div < 1:
+                        operador_div = Operacao.CONCAT
+                        prioridade_div = prioridade(operador_div)
+                        posicao_div = i
+                    if char == "*" and prioridade_div < 0:
+                        operador_div = Operacao.FECHO
+                        prioridade_div = prioridade(operador_div)
+                        posicao_div = i
+                    if char == "?" and prioridade_div < 0:
+                        operador_div = Operacao.OPCIONAL
+                        prioridade_div = prioridade(operador_div)
+                        posicao_div = i
+
+            nodo = None
+            if operador_div == Operacao.UNIAO:
+                nodo = NodoUniao()
+                nodo.set_filho_esquerdo(self.__gerar_nodo(subexpressao[0:posicao_div]))
+                nodo.set_filho_direito(self.__gerar_nodo(subexpressao[posicao_div + 1:]))
+
+            elif operador_div == Operacao.CONCAT:
+                nodo = NodoConcat()
+                nodo.set_filho_esquerdo(self.__gerar_nodo(subexpressao[0:posicao_div]))
+                nodo.set_filho_direito(self.__gerar_nodo(subexpressao[posicao_div + 1:]))
+
+            elif operador_div == Operacao.FECHO:
+                nodo = NodoFecho()
+                nodo.set_filho_esquerdo(self.__gerar_nodo(subexpressao[0:posicao_div]))
+
+            else:  # operadorDiv == Operacao.OPCIONAL:
+                nodo = NodoOpcional()
+                nodo.set_filho_esquerdo(self.__gerar_nodo(subexpressao[0:posicao_div]))
+
+            return nodo
+
+    '''
+        Verifica se uma expressão representada em texto possui apenas caracteres válidos em uma posição válida.
+        \:param expressao é a representação textual da expressão regular.
+        \:return True caso a expressão seja válida
+    '''
+    def __verifica_validade(self, expressao):
         # TODO verificar se a expressao contem apenas caracteres do alfabeto, operadores ou espaços em branco
         # TODO verificar se não tem coisas como "|*" ou "((( bla bla )"
         if True:
@@ -43,107 +120,58 @@ class Expressao:
             # raise ("Caracter desconhecido X na posição Y")
             #pass
 
-    def prepararExpressao(self, expressao):
+    '''
+        Prepara a expressão para o alogorítmo de construção da arvore, eliminando espaços e expondo concatenações
+        implicitas.
+        \:param expressao é a representação textual da expressão regular.
+        \:return a expressão preparada para o algoritmo de geração de arvore.
+    '''
+    def __preparar_expressao(self, expressao):
         # Remove espaços em branco
         expressao = "".join(expressao.split())
-
         # Adiciona concatenações impricitas
-        expressao = self.__exporConcatenacoesImplicitas(expressao)
-
+        expressao = self.__expor_concatenacoes_implicitas(expressao)
         return expressao
 
-    def __exporConcatenacoesImplicitas(self, expressao):
-        novaExpressao = expressao
-        charAnterior = ""
-        concatsAdicionadas = 0
+    '''
+        Expõe concatenações implícitas na expressão regular dada.
+        \:param expressao é a representação textual da expressão regular.
+        \:return a expressão com suas concatenações implicitas reveladas.
+    '''
+    def __expor_concatenacoes_implicitas(self, expressao):
+        nova_expressao = expressao
+        char_anterior = " "
+        concats_adicionadas = 0
         for i in range(0, len(expressao)):
             char = expressao[i]
-            if (charAnterior.isalnum() or charAnterior == ")" or charAnterior == "*" or charAnterior == "?") and (char.isalnum() or char == "("):
-                novaExpressao = novaExpressao[:i+concatsAdicionadas] + '.' + novaExpressao[i+concatsAdicionadas:]
-                concatsAdicionadas += 1
-            charAnterior = char
+            if (char_anterior.isalnum() or (char_anterior in ")*?")) and (char.isalnum() or char == "("):
+                nova_expressao = nova_expressao[:i+concats_adicionadas] + '.' + nova_expressao[i+concats_adicionadas:]
+                concats_adicionadas += 1
+            char_anterior = char
 
-        return novaExpressao
+        return nova_expressao
 
-    def gerarNodo(self, expressao):
-        subexpressao = self.__removerParentesesExternos(expressao)
-
-        if len(subexpressao) == 1:
-            # TODO verificar se expressão é realmente um caracter terminal, mas antes tem que ver se tem como chegar aqui sem ser um caracter terminal
-            return Nodo(subexpressao)
-        else:
-            operadorDiv = None
-            prioridadeDiv = -1
-            posicaoDiv = None
-
-            parentesesAbertos = 0
-            for i in range(0, len(subexpressao)):
-                char = subexpressao[i]
-                if char == "(":
-                    parentesesAbertos += 1
-                elif char == ")":
-                    parentesesAbertos -= 1
-                elif parentesesAbertos == 0:
-                    if char == "|" and prioridadeDiv < 2:
-                        operadorDiv = Operacao.UNIAO
-                        prioridadeDiv = Prioridade(operadorDiv)
-                        posicaoDiv = i
-                        #break TODO ja encontrei o primeiro "|" mais pra esquerda, nem preciso ver o resto, talvez dê pra dar break
-                    if char == "." and prioridadeDiv < 1:
-                        operadorDiv = Operacao.CONCAT
-                        prioridadeDiv = Prioridade(operadorDiv)
-                        posicaoDiv = i
-                    if char == "*" and prioridadeDiv < 0:
-                        operadorDiv = Operacao.FECHO
-                        prioridadeDiv = Prioridade(operadorDiv)
-                        posicaoDiv = i
-                    if char == "?" and prioridadeDiv < 0:
-                        operadorDiv = Operacao.OPCIONAL
-                        prioridadeDiv = Prioridade(operadorDiv)
-                        posicaoDiv = i
-
-            nodo = None
-            if operadorDiv == Operacao.UNIAO:
-                nodo = NodoUniao()
-                nodo.setFilhoEsquerdo(self.gerarNodo(subexpressao[0:posicaoDiv]))
-                nodo.setFilhoDireito(self.gerarNodo(subexpressao[posicaoDiv+1:]))
-
-            elif operadorDiv == Operacao.CONCAT:
-                nodo = NodoConcat()
-                nodo.setFilhoEsquerdo(self.gerarNodo(subexpressao[0:posicaoDiv]))
-                nodo.setFilhoDireito(self.gerarNodo(subexpressao[posicaoDiv+1:]))
-
-            elif operadorDiv == Operacao.FECHO:
-                nodo = NodoFecho()
-                nodo.setFilhoEsquerdo(self.gerarNodo(subexpressao[0:posicaoDiv]))
-
-            else: # operadorDiv == Operacao.OPCIONAL:
-                nodo = NodoOpcional()
-                nodo.setFilhoEsquerdo(self.gerarNodo(subexpressao[0:posicaoDiv]))
-
-            return nodo
-
-    def __removerParentesesExternos(self, expressao):
-        parentesesEncontrados = 0
+    '''
+        Remove parenteses redundantes nas extremidades de uma expressão.
+        \:param expressao é a representação textual da expressão regular.
+        \:return a expressão sem parenteses reundantes nas extremidades.
+    '''
+    def __remover_parenteses_externos(self, expressao):
+        parenteses_encontrados = 0
         nivel = 0
         inicio = True
         i = 0
-        comprimentoExpr = len(expressao)
-        while i < comprimentoExpr - parentesesEncontrados:
+        comprimento_expr = len(expressao)
+        while i < comprimento_expr - parenteses_encontrados:
             char = expressao[i]
             if char == "(":
                 nivel += 1
                 if inicio:
-                    parentesesEncontrados = nivel
+                    parenteses_encontrados = nivel
             else:
                 inicio = False
                 if char == ")":
                     nivel -= 1
-                    parentesesEncontrados = min(parentesesEncontrados, nivel)
-            i+=1
-        return expressao[parentesesEncontrados : comprimentoExpr - parentesesEncontrados]
-
-
-    def toString(self):
-        # TODO Adicionar parenteses se o operador filho for de menor prioridade
-        return self.arvore.getEmOrdem()
+                    parenteses_encontrados = min(parenteses_encontrados, nivel)
+            i += 1
+        return expressao[parenteses_encontrados:comprimento_expr - parenteses_encontrados]

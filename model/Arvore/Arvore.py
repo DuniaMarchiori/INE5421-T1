@@ -1,23 +1,26 @@
-from model.Arvore.Nodo import Nodo
+from model.Arvore.Nodos.NodoFolha import NodoFolha
+
 
 class Arvore:
 
-    __nodoRaiz = None
+    __nodo_raiz = None
     __folhas = []
 
     def __init__(self):
         pass
 
-    def setNodoRaiz(self, novoNodoRaiz):
-        self.__nodoRaiz = novoNodoRaiz
+    def set_nodo_raiz(self, novo_nodo_raiz):
+        self.__nodo_raiz = novo_nodo_raiz
 
-    def getNodoRaiz(self):
-        return self.__nodoRaiz
+    def get_nodo_raiz(self):
+        return self.__nodo_raiz
 
-    def getEmOrdem(self):
-        return self.__nodoRaiz.emOrdem("")
+    def get_em_ordem(self):
+        return self.__nodo_raiz.em_ordem("")
 
-    def costuraArvore(self):
-        stack = []
-        stack.append(Nodo("$"))
-        self.__nodoRaiz.costuraNodo(stack)
+    def costura_arvore(self):
+        stack = [NodoFolha("$")]
+        self.__nodo_raiz.costura_nodo(stack)
+        
+    def numera_folhas(self):
+        self.__nodo_raiz.numera_folhas(self.__folhas)
