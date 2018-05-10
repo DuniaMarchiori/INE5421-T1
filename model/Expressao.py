@@ -5,6 +5,7 @@ from model.Arvore.Nodos.NodoFecho import NodoFecho
 from model.Arvore.Nodos.NodoOpcional import NodoOpcional
 from model.Arvore.Nodos.NodoFolha import NodoFolha
 from model.Constants import Operacao, prioridade
+import string
 
 
 '''
@@ -37,8 +38,8 @@ class Expressao:
         if self.__verifica_validade(expressao):
             expressao = self.__preparar_expressao(expressao)
             self.__arvore.set_nodo_raiz(self.__gerar_nodo(expressao))
-        self.__arvore.costura_arvore()
-        self.__arvore.numera_folhas()
+            self.__arvore.costura_arvore()
+            self.__arvore.numera_folhas()
 
     '''
         Algorítmo recursivo que gera a arvore/sub-arvore a partir da expressão/sub-expressão regular dada.
@@ -112,13 +113,28 @@ class Expressao:
         \:return True caso a expressão seja válida
     '''
     def __verifica_validade(self, expressao):
-        # TODO verificar se a expressao contem apenas caracteres do alfabeto, operadores ou espaços em branco
-        # TODO verificar se não tem coisas como "|*" ou "((( bla bla )"
-        if True:
-            return True
-        #else:
-            # raise ("Caracter desconhecido X na posição Y")
-            #pass
+        chars_validos = string.ascii_letters + string.digits + "|.*?()"
+        nivel_parentesis = 0
+        char_anterior = " "
+        for i in range(0, len(expressao)):
+            char = expressao[i]
+            if char in chars_validos:
+                if i > 1:
+                    if char_anterior in "|.(" and char in "|.*?)":
+                        pass  # raise (combinação inválida em i-1)
+                    elif char_anterior in "*?" and char in "*?":
+                        pass  # raise (combinação inválida em i-1)
+
+                    if char == "(":
+                        nivel_parentesis += 1
+                    elif char == ")":
+                        nivel_parentesis -= 1
+                        if nivel_parentesis < 0:
+                            pass  # raise (parenteses desbalanceados em i)
+            else:
+                pass  # raise (caracter inválido em i)
+            char_anterior = char
+        return True
 
     '''
         Prepara a expressão para o alogorítmo de construção da arvore, eliminando espaços e expondo concatenações
