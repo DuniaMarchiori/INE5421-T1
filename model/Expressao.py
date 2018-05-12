@@ -35,8 +35,8 @@ class Expressao:
     '''
     def __gerar_arvore(self, expressao):
         self.__arvore = Arvore()
+        expressao = self.__preparar_expressao(expressao)
         if self.__verifica_validade(expressao):
-            expressao = self.__preparar_expressao(expressao)
             self.__arvore.set_nodo_raiz(self.__gerar_nodo(expressao))
             self.__arvore.costura_arvore()
             self.__arvore.numera_folhas()
