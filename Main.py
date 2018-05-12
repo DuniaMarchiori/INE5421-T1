@@ -1,15 +1,16 @@
 from Controller import Controller
 
 def main():
-
     c = Controller()
-    texto = "S - > 0B|1B|& \n  B->0"
+    texto = "S - > 0B| 1  B|  & \n  B->0"
     arquivo = c.salvar_gramatica(texto)
     g = c.abrir_gramatica(arquivo)
     #g.printa()
     #print(g.to_string())
     af = c.transformar_GR_em_AF(g)
     #af.printa()
+    '''for l in af.to_string():
+        print(l)'''
     g2 = c.transformar_AF_em_GR(af)
     #g2.printa()
     #print(g2.to_string())

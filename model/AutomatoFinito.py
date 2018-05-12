@@ -117,7 +117,6 @@ class AutomatoFinito:
     def to_string(self):
         matriz =[]
         primeira_prod = []
-        simb_inicial = ""
 
         vt = list(self.__vt)
         vt.insert(0, "")
@@ -127,17 +126,22 @@ class AutomatoFinito:
         for p in self.__producoes:
             lista = []
             simbolo = list(p)
+            simbolo = sorted(simbolo, key=str.lower)
+            simb_inicial = self.__simbolo_inicial in simbolo
+            simb_final = False
+            for s in simbolo:
+                simb_final = simb_final or s in self.__simbolos_finais
             simbolo = ''.join(simbolo)
-            if simbolo == self.__simbolo_inicial:
-                simb_inicial = True
+            if simb_inicial:
                 simbolo = "->" + simbolo
-            if simbolo in self.__simbolos_finais:
+            if simb_final:
                 simbolo = "*" + simbolo
             lista.append(simbolo)
             prod = self.__producoes[p]
             for x in vt:
                 if x in prod:
                     estado = list(prod[x])
+                    estado = sorted(estado, key=str.lower)
                     estado = ''.join(estado)
                     lista.append(estado)
                 else:
@@ -145,10 +149,10 @@ class AutomatoFinito:
                     lista.append(estado)
             if simb_inicial:
                 primeira_prod = lista
-                simb_inicial = False
             else:
                 matriz.append(lista)
         matriz.insert(1, primeira_prod)
+        return matriz;
 
     '''
         Exibe as estruturas do autômato no console.
