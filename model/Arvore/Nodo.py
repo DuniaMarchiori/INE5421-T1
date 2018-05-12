@@ -45,18 +45,18 @@ class Nodo:
 
     def em_ordem(self, expressao):
         if self.__filho_esquerdo is not None:
-            if self.__filho_esquerdo.__prioridadeOperador > self.__prioridade_operador:
+            if self.__filho_esquerdo.__prioridade_operador > self.__prioridade_operador:
                 expressao += "("
             expressao = self.__filho_esquerdo.em_ordem(expressao)
-            if self.__filho_esquerdo.__prioridadeOperador > self.__prioridade_operador:
+            if self.__filho_esquerdo.__prioridade_operador > self.__prioridade_operador:
                 expressao += ")"
         if self.__valor != ".":
             expressao += self.__valor
         if self.__filho_direito is not None:
-            if self.__filho_direito.__prioridadeOperador > self.__prioridade_operador:
+            if self.__filho_direito.__prioridade_operador > self.__prioridade_operador:
                 expressao += "("
             expressao = self.__filho_direito.em_ordem(expressao)
-            if self.__filho_direito.__prioridadeOperador > self.__prioridade_operador:
+            if self.__filho_direito.__prioridade_operador > self.__prioridade_operador:
                 expressao += ")"
         return expressao
 

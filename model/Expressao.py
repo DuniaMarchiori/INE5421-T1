@@ -121,19 +121,23 @@ class Expressao:
             if char in chars_validos:
                 if i > 1:
                     if char_anterior in "|.(" and char in "|.*?)":
-                        pass  # raise (combinação inválida em i-1)
+                        return False  # raise (combinação inválida em i-1)
                     elif char_anterior in "*?" and char in "*?":
-                        pass  # raise (combinação inválida em i-1)
+                        return False  # raise (combinação inválida em i-1)
 
-                    if char == "(":
-                        nivel_parentesis += 1
-                    elif char == ")":
-                        nivel_parentesis -= 1
-                        if nivel_parentesis < 0:
-                            pass  # raise (parenteses desbalanceados em i)
+                if char == "(":
+                    nivel_parentesis += 1
+                elif char == ")":
+                    nivel_parentesis -= 1
+                    if nivel_parentesis < 0:
+                        return False  # raise (parenteses desbalanceados em i)
             else:
-                pass  # raise (caracter inválido em i)
+                return False  # raise (caracter inválido em i)
             char_anterior = char
+            i += 1
+
+        if nivel_parentesis > 0:
+            return False  # raise (parenteses desbalanceados em i)
         return True
 
     '''
