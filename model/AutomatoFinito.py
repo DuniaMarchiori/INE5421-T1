@@ -110,6 +110,47 @@ class AutomatoFinito:
         return gramatica
 
     '''
+        Transforma o autômato em uma matriz de strings.
+        A primeira linha é composta pelos símbolos terminais do autômato e as linhas seguintes representam as transições para cada símbolo não terminal.
+        \:return uma matriz de strings.
+    '''
+    def to_string(self):
+        matriz =[]
+        primeira_prod = []
+        simb_inicial = ""
+
+        vt = list(self.__vt)
+        vt.insert(0, "")
+        matriz.append(vt)
+        vt = list(self.__vt)
+        vt = sorted(vt, key=str.lower)
+        for p in self.__producoes:
+            lista = []
+            simbolo = list(p)
+            simbolo = ''.join(simbolo)
+            if simbolo == self.__simbolo_inicial:
+                simb_inicial = True
+                simbolo = "->" + simbolo
+            if simbolo in self.__simbolos_finais:
+                simbolo = "*" + simbolo
+            lista.append(simbolo)
+            prod = self.__producoes[p]
+            for x in vt:
+                if x in prod:
+                    estado = list(prod[x])
+                    estado = ''.join(estado)
+                    lista.append(estado)
+                else:
+                    estado = "-"
+                    lista.append(estado)
+            if simb_inicial:
+                primeira_prod = lista
+                simb_inicial = False
+            else:
+                matriz.append(lista)
+        matriz.insert(1, primeira_prod)
+
+    '''
         Exibe as estruturas do autômato no console.
     '''
     def printa(self):

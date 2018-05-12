@@ -235,7 +235,7 @@ class Gramatica:
         Transforma a gramática em texto.
         \:return uma string que representa a gramática.
     '''
-    def toString(self):
+    def to_string(self):
         if self.__texto != None:
             return self.__texto
         else:

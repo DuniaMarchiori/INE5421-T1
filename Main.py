@@ -7,12 +7,12 @@ def main():
     arquivo = c.salvar_gramatica(texto)
     g = c.abrir_gramatica(arquivo)
     #g.printa()
-    #print(g.toString())
+    #print(g.to_string())
     af = c.transformar_GR_em_AF(g)
-    af.printa()
+    #af.printa()
     g2 = c.transformar_AF_em_GR(af)
-    g2.printa()
-    print(g2.toString())
+    #g2.printa()
+    #print(g2.to_string())
 
     texto = "a*"
     arquivo = c.salvar_expressao(texto)
