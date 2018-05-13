@@ -7,8 +7,10 @@ class NodoConcat(Nodo):
     def __init__(self):
         super(NodoConcat, self).__init__(Operacao.CONCAT.value, prioridade=prioridade(Operacao.CONCAT))
 
-    def descer(self):
-        self.get_filho_esquerdo().descer()
+    def descer(self, composicao):
+        composicao = self.get_filho_esquerdo().descer(composicao)
+        return composicao
 
-    def subir(self):
-        self.get_filho_direito().descer()
+    def subir(self, composicao):
+        composicao = self.get_filho_direito().descer(composicao)
+        return composicao

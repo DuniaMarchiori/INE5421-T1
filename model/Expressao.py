@@ -5,6 +5,7 @@ from model.Arvore.Nodos.NodoFecho import NodoFecho
 from model.Arvore.Nodos.NodoOpcional import NodoOpcional
 from model.Arvore.Nodos.NodoFolha import NodoFolha
 from model.Constants import Operacao, prioridade
+from model.exception.ExpressionParsingError import ExpressionParsingError
 import string
 
 
@@ -121,23 +122,28 @@ class Expressao:
             if char in chars_validos:
                 if i > 1:
                     if char_anterior in "|.(" and char in "|.*?)":
-                        return False  # raise (combinação inválida em i-1)
+                        raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
+                                                     "Simbolo não esperado na posição: " + str(i))
                     elif char_anterior in "*?" and char in "*?":
-                        return False  # raise (combinação inválida em i-1)
+                        raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
+                                                     "Simbolo não esperado na posição: " + str(i))
 
                 if char == "(":
                     nivel_parentesis += 1
                 elif char == ")":
                     nivel_parentesis -= 1
                     if nivel_parentesis < 0:
-                        return False  # raise (parenteses desbalanceados em i)
+                        raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
+                                                     "Parenteses fechado sem correspondente na posição: " + str(i))
             else:
-                return False  # raise (caracter inválido em i)
+                raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
+                                             "Simbolo desconhecido na posição: " + str(i))
             char_anterior = char
             i += 1
 
         if nivel_parentesis > 0:
-            return False  # raise (parenteses desbalanceados em i)
+            raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
+                                         "Parenteses aberto sem correspondente")
         return True
 
     '''
@@ -195,3 +201,31 @@ class Expressao:
                     parenteses_encontrados = min(parenteses_encontrados, nivel)
             i += 1
         return expressao[parenteses_encontrados:comprimento_expr - parenteses_encontrados]
+
+    '''
+        Transforma essa expressão regular em um automato finito através do algoritmo de De Simone.
+        \:return o automato finito que representa a mesma linguagem que esta expressão regular.
+    '''
+    def obter_automato_finito_equivalente(self):
+        folhas = self.__arvore.numera_folhas()
+
+        lista_de_composicoes = []
+        composicao_do_estado = {}  # mapeia estados para sua composição
+        composicao_de_origem = {}  # mapeia estados para sua composição de origem
+
+        prefixo_do_estado = "q"
+        i = 0
+
+        # Cria automato
+        estado_inicial = "q0" # estado_inicial = Estado(prefixo_do_estado + str(i))
+        # adiciona estado_inicial no automato
+        # seta ele como inicial
+
+        composicao_da_raiz = self.__arvore.composicao_da_raiz()
+        composicao_do_estado[estado_inicial] = composicao_da_raiz
+        lista_de_composicoes.append(composicao_da_raiz)
+
+        estados_incompletos = []
+
+        i+= 1
+

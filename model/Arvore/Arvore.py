@@ -23,4 +23,11 @@ class Arvore:
         self.__nodo_raiz.costura_nodo(stack)
         
     def numera_folhas(self):
+        self.__folhas = []
         self.__nodo_raiz.numera_folhas(self.__folhas)
+        return self.__folhas
+
+    def composicao_da_raiz(self):
+        composicao = {}
+        self.__nodo_raiz.descer(composicao)
+        return composicao
