@@ -207,33 +207,37 @@ class Expressao:
         \:return o automato finito que representa a mesma linguagem que esta expressão regular.
     '''
     def obter_automato_finito_equivalente(self):
+        from model.AF.AutomatoFinito import AutomatoFinito
+        from model.AF.Estado import Estado
+
         folhas = self.__arvore.numera_folhas()
 
         obter_composicao = {}  # mapeia estados para sua composição
         obter_estado = {}  # mapeia composicoes para seu estado
 
         prefixo_do_estado = "q"
+        i = 0
 
-        # Cria automato AF
-        estado_inicial = "q0" # estado_inicial = Estado(prefixo_do_estado + str(i))
-        # adiciona estado_inicial no automato
-        # seta ele como inicial
+        estado_inicial = Estado([prefixo_do_estado + str(i)])
+
+        automato = AutomatoFinito()
+        automato.adiciona_estado(estado_inicial)
+        automato.set_estado_inicial(estado_inicial)
 
         composicao_da_raiz = self.__arvore.composicao_da_raiz()
         obter_composicao[estado_inicial] = composicao_da_raiz
         obter_estado[tuple(composicao_da_raiz)] = estado_inicial
 
         estados_incompletos = [estado_inicial]
-        estados_finais = [estado_inicial]
         estados_de_aceitacao = []
 
-        i = 1
+        i += 1
         while len(estados_incompletos) > 0:
             estado_atual = estados_incompletos.pop(0)
             composicao_atual = obter_composicao[estado_atual]
             for simbolo in composicao_atual:
                 if simbolo != "$":
-                    novo_estado = prefixo_do_estado + str(i)
+                    novo_estado = Estado([prefixo_do_estado + str(i)])
                     i += 1
                     nova_composicao = {}
                     for numero_folha in composicao_atual[simbolo]:
@@ -242,12 +246,14 @@ class Expressao:
 
                     if tuple(nova_composicao) not in obter_estado:
                         obter_estado[tuple(nova_composicao)] = novo_estado
+                        automato.adiciona_estado(novo_estado)
                         estados_incompletos.append(novo_estado)
-                        estados_finais.append(novo_estado)
                     else:
                         novo_estado = obter_estado[tuple(nova_composicao)]
 
-                    print(estado_atual + ", " + simbolo + " -> " + novo_estado)
+                    automato.adiciona_transicao(estado_atual, simbolo, novo_estado)
                 else:
                     estados_de_aceitacao.append(estado_atual)
+        automato.set_estados_finais(estados_de_aceitacao)
+        return automato
 
