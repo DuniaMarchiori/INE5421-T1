@@ -1,6 +1,8 @@
 '''
     Classe que representa um autômato finito.
 '''
+from itertools import product
+
 from model.AF.Estado import Estado
 
 
@@ -114,6 +116,56 @@ class AutomatoFinito:
             # Atualiza o símbolo inicial
             gramatica.set_simbolo_inicial(simbolo_novo)
         return gramatica
+
+    '''
+            
+    '''
+    def reconhece_sentenca(self, sentenca):
+        sentenca_lista = list(sentenca)
+        estados = self.__producoes[Estado(self.__estado_inicial)]
+        tamanho_lista = len(sentenca_lista)
+
+        if tamanho_lista == 0 or (tamanho_lista == 1 and sentenca_lista[0] == "&"):
+            if self.__estado_inicial in self.__estados_finais:
+                return True
+
+        for index in range(tamanho_lista):
+            simbolo = sentenca_lista[index]
+            if simbolo in estados:
+                transicoes = estados[simbolo]
+                if index == len(sentenca_lista)-1:
+                    for t in transicoes:
+                        if (t.to_string() in self.__estados_finais):
+                            return True
+            else:
+                return False
+            # Copia produções dos próximos estados
+            estados = {}
+            for t in transicoes:
+                for x in self.__producoes[t]:
+                    estados.setdefault(x, [])
+                    for y in self.__producoes[t][x]:
+                        estados[x].append(y)
+            index = index + 1
+        return False
+
+    '''
+        
+    '''
+    def enumera_sentencas(self, tamanho):
+        sentencas_reconhecidas = []
+        vt = list(self.__vt)
+        combinacoes = []
+
+        if tamanho != 0:
+            combinacoes = product(vt, repeat=tamanho)
+        else:
+            combinacoes.append("&")
+
+        for s in combinacoes:
+            if self.reconhece_sentenca(s):
+                sentencas_reconhecidas.append(s)
+        return sentencas_reconhecidas
 
     '''
         Transforma o autômato em uma matriz de strings.

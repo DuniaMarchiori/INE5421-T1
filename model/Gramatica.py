@@ -80,14 +80,14 @@ class Gramatica:
         file.close()
         self.__texto = self.__texto.replace(" ", "") # Retira todos os espaços em branco
         lista = self.__texto.splitlines()
-        self.gera_estrutura_producoes(lista)
+        self.__gera_estrutura_producoes(lista)
         return True
 
     '''
         Gera a estrutura da gramática a partir do texto informado pelo usuário.
         \:param lista é a lista de produções da gramática em texto
     '''
-    def gera_estrutura_producoes(self, lista):
+    def __gera_estrutura_producoes(self, lista):
         i = 0
         RE_D = re.compile('\d')
 
@@ -175,12 +175,11 @@ class Gramatica:
                 for p in producoes_g:
                     a = p[0]
                     c = p[1]
-                    if a != "&":
-                        if c == "&":
-                            e = Estado(simbolo_novo)
-                        else:
-                            e = Estado(c)
-                        af.adiciona_transicao(b, a, e)
+                    if c == "&":
+                        e = Estado(simbolo_novo)
+                    else:
+                        e = Estado(c)
+                    af.adiciona_transicao(b, a, e)
 
             # Transições indefinidas para o símbolo novo
             chave = Estado(simbolo_novo)
