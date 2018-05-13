@@ -1,5 +1,7 @@
+from model.AF.Estado import Estado
 from model.exception.FormatError import FormatError
 from string import ascii_uppercase
+import re
 
 '''
     Classe que representa uma gramática regular.
@@ -87,6 +89,7 @@ class Gramatica:
     '''
     def gera_estrutura_producoes(self, lista):
         i = 0
+        RE_D = re.compile('\d')
 
         for linha in lista:
             if linha.__contains__("->"):
@@ -111,8 +114,13 @@ class Gramatica:
                             terminal = chars[0] # caractere terminal
                             nao_terminal = chars[1:len(chars)] # caracteres não-terminais
                             all_upper = True if True in [s.isupper() for s in nao_terminal] else False # Todos os caracteres do símbolo não-terminal são maiúsculos
+                            all_letters = True # Não há números no símbolo
+                            for s in nao_terminal:
+                                search = RE_D.search(s) # pesquisa através de expressão regular
+                                all_letters &= (search == None) # se search == None então não há números no símbolo
+
                             # Produção é um símbolo terminal seguido de um não-terminal (que pode ter tamanho maior que um, mas todos os caracteres maíusculos)
-                            if (( terminal.islower() or self.is_int(terminal)) and all_upper):
+                            if (( terminal.islower() or self.is_int(terminal)) and all_upper and all_letters):
                                 simbolo_nt = ''.join(nao_terminal)
                                 producoes.append((terminal, simbolo_nt))
                                 self.__vt.add(terminal)
@@ -120,7 +128,7 @@ class Gramatica:
                             else:
                                 raise FormatError(FormatError.FORMAT_ERROR + "as produções regulares devem seguir o formato aB, onde a é um símbolo terminal e B um símbolo não terminal.")
                 else:
-                    raise FormatError(FormatError.FORMAT_ERROR + "ocorre mais de um símbolo '->' por produção.")
+                    raise FormatError(FormatError.FORMAT_ERROR + "ocorre mais de um símbolo '->' por produção. Cada produção deve estar em uma linha.")
 
                 self.__producoes[chave] = producoes
             else:
@@ -128,7 +136,7 @@ class Gramatica:
 
         # Símbolo não-terminal referenciado não tem produções
         for vn in self.__vn_dir:
-            if not(self.__producoes.keys().__contains__(vn)):
+            if vn not in self.__producoes:
                 raise FormatError("A gramática referencia símbolos não terminais com produções não definidas: " + vn)
 
     '''
@@ -136,19 +144,17 @@ class Gramatica:
         \:return o autômato finito que reconhece a mesma linguagem que a gramática gera.
     '''
     def transformar_em_AF(self):
-        from model.AutomatoFinito import AutomatoFinito
+        from model.AF.AutomatoFinito import AutomatoFinito
 
         af = AutomatoFinito()
         af.set_vt(self.__vt)
+        af.set_estado_inicial(self.__simbolo_inicial)
 
-        simbolo_novo = None
-        # TODO pode ter mais de um símbolo
-        for letra in ascii_uppercase:
-            if not(self.__producoes.keys().__contains__(letra)):
-                simbolo_novo = letra
-                break
+        # Gera um símbolo novo
+        simbolo_novo = self.novo_simbolo()
 
-        if letra != None:
+        if simbolo_novo != None:
+            # Construção do conjunto de símbolos finais
             simbolos_finais = []
             simbolos_finais.append(simbolo_novo)
             # S -> & pertence à P
@@ -156,33 +162,29 @@ class Gramatica:
             for p in producoes_iniciais:
                 if p[0] == "&":
                     simbolos_finais.append(self.__simbolo_inicial)
-            af.set_simbolos_finais(simbolos_finais)
+            af.set_estados_finais(simbolos_finais)
 
             # Construção das produções
-            # chave é um frozen set
-            #produção: é um dicionario: chave -> letrinha, value -> frozen set
+            # chave é um Estado
+            #produção: é um dicionario: chave -> terminal, value -> Estado
 
             for k in self.__producoes.keys():
-                b = frozenset([k])
-                producoes_af = {}
+                b = Estado(k)
 
                 producoes_g = self.__producoes[k]
                 for p in producoes_g:
                     a = p[0]
                     c = p[1]
-                    if a != "&" and c == "&":
-                        producoes_af[a] = frozenset([simbolo_novo])
-                    else:
-                        producoes_af[a] = frozenset([c])
-
-                af.adiciona_producao(b, producoes_af)
+                    if a != "&":
+                        if c == "&":
+                            e = Estado(simbolo_novo)
+                        else:
+                            e = Estado(c)
+                        af.adiciona_transicao(b, a, e)
 
             # Transições indefinidas para o símbolo novo
-            chave = frozenset([simbolo_novo])
-            producoes_af = {}
-            for x in self.__vt:
-                producoes_af[x] = frozenset(["-"])
-            af.adiciona_producao(chave, producoes_af)
+            chave = Estado(simbolo_novo)
+            af.adiciona_estado(chave)
 
             return af
         else:
@@ -201,14 +203,41 @@ class Gramatica:
             return False
 
     '''
+        Gera um novo símbolo não terminal que não pertence à gramática.
+        \:return um símbolo não terminal que não pertence à gramática.
+    '''
+    def novo_simbolo(self):
+        simbolo_novo = None
+        for letra in ascii_uppercase:
+            if letra not in self.__producoes:
+                simbolo_novo = letra
+                break
+        # Se todas as letras do alfabeto já fazem parte do conjunto de símbolos terminais,
+        # então o símbolo novo recebe a concatenação de duas letras (que não exista no conjunto)
+        if simbolo_novo == None:
+            found = False
+            for l1 in ascii_uppercase:
+                for l2 in ascii_uppercase:
+                    letras = l1 + l2
+                    if letras not in self.__producoes:
+                        simbolo_novo = letras
+                        found = True
+                        break
+                if found:
+                    break
+        return simbolo_novo
+
+    '''
         Transforma a gramática em texto.
         \:return uma string que representa a gramática.
     '''
-    def toString(self):
+    def to_string(self):
         if self.__texto != None:
             return self.__texto
         else:
             gramatica = ""
+            producao_inicial = ""
+            outras_producoes = ""
 
             for s in self.__producoes.keys():
                 texto = ""
@@ -223,8 +252,12 @@ class Gramatica:
                         texto = texto + ''.join(prod)
                     else:
                         texto = texto + prod[0]
+                if s == self.__simbolo_inicial:
+                    producao_inicial += texto
+                else:
+                    outras_producoes += texto + "\n"
 
-                gramatica += texto + "\n"
+            gramatica += producao_inicial + "\n" + outras_producoes
             return gramatica
 
     '''
