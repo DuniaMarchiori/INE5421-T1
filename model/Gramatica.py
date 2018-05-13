@@ -148,7 +148,7 @@ class Gramatica:
 
         af = AutomatoFinito()
         af.set_vt(self.__vt)
-        af.set_simbolo_inicial(self.__simbolo_inicial)
+        af.set_estado_inicial(self.__simbolo_inicial)
 
         # Gera um símbolo novo
         simbolo_novo = self.novo_simbolo()
@@ -162,7 +162,7 @@ class Gramatica:
             for p in producoes_iniciais:
                 if p[0] == "&":
                     simbolos_finais.append(self.__simbolo_inicial)
-            af.set_simbolos_finais(simbolos_finais)
+            af.set_estados_finais(simbolos_finais)
 
             # Construção das produções
             # chave é um Estado
@@ -180,13 +180,11 @@ class Gramatica:
                             e = Estado(simbolo_novo)
                         else:
                             e = Estado(c)
-                        af.adiciona_producao(b, a, e)
+                        af.adiciona_transicao(b, a, e)
 
             # Transições indefinidas para o símbolo novo
             chave = Estado(simbolo_novo)
-            e = Estado("-")
-            for x in self.__vt:
-                af.adiciona_producao(chave, x, e)
+            af.adiciona_estado(chave)
 
             return af
         else:

@@ -10,9 +10,9 @@ class AutomatoFinito:
         Método construtor.
     '''
     def __init__(self):
-        self.__producoes = {} # conjunto de produções
-        self.__simbolo_inicial = None
-        self.__simbolos_finais = []
+        self.__producoes = {} # conjunto de transições
+        self.__estado_inicial = None
+        self.__estados_finais = []
         self.__vt = set() # conjunto de símbolos terminais
 
     '''
@@ -21,40 +21,39 @@ class AutomatoFinito:
         \:param caractere é um simbolo terminal.
         \:param destino é um simbolo não-terminal (ou um conjunto deles).s
     '''
-    def adiciona_producao(self, estado, caractere, destino):
+    def adiciona_transicao(self, estado, caractere, destino):
         self.__producoes.setdefault(estado, {})
         self.__producoes[estado].setdefault(caractere, [])
         self.__producoes[estado][caractere].append(destino)
 
     '''
-        Adiciona uma novo estado com suas produções.
+        Adiciona uma novo estado.
         \:param estado é um símbolo não-terminal (ou um conjunto deles).
-        \:param producao é dicionário onde a chave é um símbolo terminal e os dados são um conjunto de símbolos não-terminais (pode ser vazio).
     '''
-    def adiciona_estado(self, estado, producao):
-        self.__producoes[estado] = producao
+    def adiciona_estado(self, estado):
+        self.__producoes.setdefault(estado, {})
 
     '''
-        Retorna o conjunto de produções do autômato.
+        Retorna o conjunto de transições do autômato.
         \:return um dicionário onde a chave é um estado e os dados são 
             um dicionário onde a chave é um símbolo não terminal e os dados são um conjunto de símbolos não-terminais (pode ser vazio).
     '''
-    def get_producoes(self):
+    def get_transicoes(self):
         return self.__producoes
 
     '''
-        Modifica o símbolo inicial do autômato.
-        \:param simbolo é o novo símbolo inicial.
+        Modifica o estado inicial do autômato.
+        \:param estado é o novo estado inicial.
     '''
-    def set_simbolo_inicial(self, simbolo):
-        self.__simbolo_inicial = simbolo
+    def set_estado_inicial(self, estado):
+        self.__estado_inicial = estado
 
     '''
-        Modifica o conjunto de símbolos finais do autômato.
-        \:param lista é a lista de novos símbolos finais.
+        Modifica o conjunto de estados finais do autômato.
+        \:param lista é a lista de novos estados finais.
     '''
-    def set_simbolos_finais(self, lista):
-        self.__simbolos_finais = lista
+    def set_estados_finais(self, lista):
+        self.__estados_finais = lista
 
     '''
         Modifica o conjunto de símbolos terminais do autômato.
@@ -79,7 +78,7 @@ class AutomatoFinito:
 
         gramatica = Gramatica()
         gramatica.set_vt(self.__vt)
-        gramatica.set_simbolo_inicial(self.__simbolo_inicial)
+        gramatica.set_simbolo_inicial(self.__estado_inicial)
 
         # Construção das produções de acordo com os itens A e B do algoritmo visto em aula
         for b in self.__producoes.keys():
@@ -90,18 +89,18 @@ class AutomatoFinito:
                     c = c.to_string()
                     if c != "-":
                         producoes_g.append((a, c))
-                        if c in self.__simbolos_finais:
+                        if c in self.__estados_finais:
                             producoes_g.append((a, "&"))
             b = b.to_string()
             gramatica.adiciona_producao(b, producoes_g)
 
         # Item C do algoritmo visto em aula
         # Se & pertence à linguagem
-        if self.__simbolo_inicial in self.__simbolos_finais:
+        if self.__estado_inicial in self.__estados_finais:
             simbolo_novo = gramatica.novo_simbolo()
 
-            # Copia produções do simbolo inicial atual
-            si = Estado(self.__simbolo_inicial)
+            # Copia produções do estado inicial atual
+            si = Estado(self.__estado_inicial)
             producoes_novo_si = [] # lista de tuplas
 
             producoes_si = gramatica.get_producoes()[si.to_string()]
@@ -134,10 +133,10 @@ class AutomatoFinito:
         for p in self.__producoes:
             linha = []
             simbolo = p.to_list()
-            simb_inicial = self.__simbolo_inicial in simbolo
+            simb_inicial = self.__estado_inicial in simbolo
             simb_final = False
             for s in simbolo:
-                simb_final = simb_final or s in self.__simbolos_finais
+                simb_final = simb_final or s in self.__estados_finais
             simbolo = ''.join(simbolo)
             if simb_inicial:
                 simbolo = "->" + simbolo
@@ -183,8 +182,8 @@ class AutomatoFinito:
             print("{ " + prod + " }")
 
         print("-------")
-        print("Simbolos finais:")
-        for y in self.__simbolos_finais:
+        print("Estados finais:")
+        for y in self.__estados_finais:
             print(y)
 
         print("xxxxxxx")
