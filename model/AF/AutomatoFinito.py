@@ -1,6 +1,9 @@
 '''
     Classe que representa um autômato finito.
 '''
+from model.AF.Estado import Estado
+
+
 class AutomatoFinito:
 
     '''
@@ -13,16 +16,27 @@ class AutomatoFinito:
         self.__vt = set() # conjunto de símbolos terminais
 
     '''
-        Adiciona uma nova produção.
-        \:param chave é o símbolo não-terminal (ou um conjunto deles).
+        Adiciona uma nova produção para um estado a partir de um simbolo terminal.
+        \:param estado é um símbolo não-terminal (ou um conjunto deles).
+        \:param caractere é um simbolo terminal.
+        \:param destino é um simbolo não-terminal (ou um conjunto deles).s
+    '''
+    def adiciona_producao(self, estado, caractere, destino):
+        self.__producoes.setdefault(estado, {})
+        self.__producoes[estado].setdefault(caractere, [])
+        self.__producoes[estado][caractere].append(destino)
+
+    '''
+        Adiciona uma novo estado com suas produções.
+        \:param estado é um símbolo não-terminal (ou um conjunto deles).
         \:param producao é dicionário onde a chave é um símbolo terminal e os dados são um conjunto de símbolos não-terminais (pode ser vazio).
     '''
-    def adiciona_producao(self, chave, producao):
-        self.__producoes[chave] = producao
+    def adiciona_estado(self, estado, producao):
+        self.__producoes[estado] = producao
 
     '''
         Retorna o conjunto de produções do autômato.
-        \:return um dicionário onde a chave é um conjunto de símbolos não-terminais e os dados são 
+        \:return um dicionário onde a chave é um estado e os dados são 
             um dicionário onde a chave é um símbolo não terminal e os dados são um conjunto de símbolos não-terminais (pode ser vazio).
     '''
     def get_producoes(self):
@@ -72,16 +86,13 @@ class AutomatoFinito:
             producoes_af = self.__producoes[b]
             producoes_g = []
             for a in producoes_af.keys():
-                c = list(producoes_af[a])
-                c = sorted(c, key=str.lower) # Organiza a lista em ordem alfabética
-                if "-" not in c:
-                    c = ''.join(c)
-                    producoes_g.append((a, c))
-                    if c in self.__simbolos_finais:
-                        producoes_g.append((a, "&"))
-            b_list = list(b)
-            b_list = sorted(b_list, key=str.lower)
-            b = ''.join(b_list)
+                for c in producoes_af[a]:
+                    c = c.to_string()
+                    if c != "-":
+                        producoes_g.append((a, c))
+                        if c in self.__simbolos_finais:
+                            producoes_g.append((a, "&"))
+            b = b.to_string()
             gramatica.adiciona_producao(b, producoes_g)
 
         # Item C do algoritmo visto em aula
@@ -90,16 +101,12 @@ class AutomatoFinito:
             simbolo_novo = gramatica.novo_simbolo()
 
             # Copia produções do simbolo inicial atual
-            si = frozenset([self.__simbolo_inicial])
+            si = Estado(self.__simbolo_inicial)
             producoes_novo_si = [] # lista de tuplas
 
-            producoes_si = self.__producoes[si]
+            producoes_si = gramatica.get_producoes()[si.to_string()]
             for p in producoes_si:
-                c = list(producoes_si[p])
-                c = sorted(c, key=str.lower)
-                if "-" not in c:
-                    c = ''.join(c)
-                    producoes_novo_si.append((p, c))
+                producoes_novo_si.append(p)
 
             # Adiciona produção de & para o novo símbolo inicial
             producoes_novo_si.append(("&", "&"))
@@ -119,14 +126,14 @@ class AutomatoFinito:
         primeira_prod = []
 
         vt = list(self.__vt)
+        vt = sorted(vt, key=str.lower)
         vt.insert(0, "")
         matriz.append(vt)
         vt = list(self.__vt)
         vt = sorted(vt, key=str.lower)
         for p in self.__producoes:
-            lista = []
-            simbolo = list(p)
-            simbolo = sorted(simbolo, key=str.lower)
+            linha = []
+            simbolo = p.to_list()
             simb_inicial = self.__simbolo_inicial in simbolo
             simb_final = False
             for s in simbolo:
@@ -136,23 +143,23 @@ class AutomatoFinito:
                 simbolo = "->" + simbolo
             if simb_final:
                 simbolo = "*" + simbolo
-            lista.append(simbolo)
+            linha.append(simbolo)
             prod = self.__producoes[p]
             for x in vt:
                 if x in prod:
-                    estado = list(prod[x])
-                    estado = sorted(estado, key=str.lower)
-                    estado = ''.join(estado)
-                    lista.append(estado)
+                    lista_estados = []
+                    for estado in prod[x]:
+                        lista_estados.append(estado.to_string())
+                    linha.append(lista_estados)
                 else:
-                    estado = "-"
-                    lista.append(estado)
+                    estado = ["-"]
+                    linha.append(estado)
             if simb_inicial:
-                primeira_prod = lista
+                primeira_prod = linha
             else:
-                matriz.append(lista)
+                matriz.append(linha)
         matriz.insert(1, primeira_prod)
-        return matriz;
+        return matriz
 
     '''
         Exibe as estruturas do autômato no console.
@@ -165,8 +172,15 @@ class AutomatoFinito:
         print("-------")
         print("Produções:")
         for k in self.__producoes.keys():
-            print(k)
-            print(self.__producoes[k])
+            print(k.to_string())
+            prod = ""
+            for x in self.__producoes[k]:
+                est = ""
+                for y in self.__producoes[k][x]:
+                    y = y.to_string()
+                    est += y + " , "
+                prod += x + ": " + est
+            print("{ " + prod + " }")
 
         print("-------")
         print("Simbolos finais:")

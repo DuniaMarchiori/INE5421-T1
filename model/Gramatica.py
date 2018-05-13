@@ -1,3 +1,4 @@
+from model.AF.Estado import Estado
 from model.exception.FormatError import FormatError
 from string import ascii_uppercase
 import re
@@ -143,7 +144,7 @@ class Gramatica:
         \:return o autômato finito que reconhece a mesma linguagem que a gramática gera.
     '''
     def transformar_em_AF(self):
-        from model.AutomatoFinito import AutomatoFinito
+        from model.AF.AutomatoFinito import AutomatoFinito
 
         af = AutomatoFinito()
         af.set_vt(self.__vt)
@@ -164,12 +165,11 @@ class Gramatica:
             af.set_simbolos_finais(simbolos_finais)
 
             # Construção das produções
-            # chave é um frozen set
-            #produção: é um dicionario: chave -> letrinha, value -> frozen set
+            # chave é um Estado
+            #produção: é um dicionario: chave -> terminal, value -> Estado
 
             for k in self.__producoes.keys():
-                b = frozenset([k])
-                producoes_af = {}
+                b = Estado(k)
 
                 producoes_g = self.__producoes[k]
                 for p in producoes_g:
@@ -177,18 +177,16 @@ class Gramatica:
                     c = p[1]
                     if a != "&":
                         if c == "&":
-                            producoes_af[a] = frozenset([simbolo_novo])
+                            e = Estado(simbolo_novo)
                         else:
-                            producoes_af[a] = frozenset([c])
-
-                af.adiciona_producao(b, producoes_af)
+                            e = Estado(c)
+                        af.adiciona_producao(b, a, e)
 
             # Transições indefinidas para o símbolo novo
-            chave = frozenset([simbolo_novo])
-            producoes_af = {}
+            chave = Estado(simbolo_novo)
+            e = Estado("-")
             for x in self.__vt:
-                producoes_af[x] = frozenset(["-"])
-            af.adiciona_producao(chave, producoes_af)
+                af.adiciona_producao(chave, x, e)
 
             return af
         else:
