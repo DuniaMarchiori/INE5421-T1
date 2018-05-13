@@ -1,4 +1,4 @@
-from model.Arvore.Nodo import Nodo
+from model.ER.Arvore.Nodo import Nodo
 
 
 class NodoFolha(Nodo):

@@ -1,13 +1,13 @@
-from model.Arvore.Arvore import Arvore
-from model.Arvore.Nodos.NodoUniao import NodoUniao
-from model.Arvore.Nodos.NodoConcat import NodoConcat
-from model.Arvore.Nodos.NodoFecho import NodoFecho
-from model.Arvore.Nodos.NodoOpcional import NodoOpcional
-from model.Arvore.Nodos.NodoFolha import NodoFolha
-from model.Constants import Operacao, prioridade
-from model.exception.ExpressionParsingError import ExpressionParsingError
 import string
 
+from model.ER.Arvore.Nodos.NodoConcat import NodoConcat
+from model.ER.Arvore.Nodos.NodoFecho import NodoFecho
+from model.ER.Arvore.Nodos.NodoFolha import NodoFolha
+from model.ER.Arvore.Nodos.NodoOpcional import NodoOpcional
+from model.ER.Arvore.Nodos.NodoUniao import NodoUniao
+from model.ER.Arvore.Arvore import Arvore
+from model.ER.Constants import Operacao, prioridade
+from model.exception.ExpressionParsingError import ExpressionParsingError
 
 '''
     Classe que representa uma expressão regular.

@@ -1,5 +1,5 @@
-from model.Arvore.Nodo import Nodo
-from model.Constants import *
+from model.ER.Arvore.Nodo import Nodo
+from model.ER.Constants import *
 
 
 class NodoConcat(Nodo):
