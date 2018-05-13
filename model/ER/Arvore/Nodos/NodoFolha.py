@@ -20,7 +20,8 @@ class NodoFolha(Nodo):
 
     def subir(self, composicao):
         if self.get_valor() == "$":
-            composicao["$"] = [-1]
+            composicao["$"] = set()
+            composicao["$"].add(-1)
             return composicao
 
         composicao = self.get_costura().subir(composicao)
