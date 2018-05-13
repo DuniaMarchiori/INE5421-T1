@@ -175,11 +175,12 @@ class Gramatica:
                 for p in producoes_g:
                     a = p[0]
                     c = p[1]
-                    if c == "&":
-                        e = Estado(simbolo_novo)
-                    else:
-                        e = Estado(c)
-                    af.adiciona_transicao(b, a, e)
+                    if a != "&":
+                        if c == "&":
+                            e = Estado(simbolo_novo)
+                        else:
+                            e = Estado(c)
+                        af.adiciona_transicao(b, a, e)
 
             # Transições indefinidas para o símbolo novo
             chave = Estado(simbolo_novo)
