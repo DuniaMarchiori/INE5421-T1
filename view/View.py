@@ -93,6 +93,7 @@ class View:
 
         self.__listbox_lista_de_linguagens = Listbox(frame_lista_de_linguagens, selectmode=BROWSE, bd=5, relief=SUNKEN)
         self.__configura_elemento(self.__listbox_lista_de_linguagens, row=1, column=0, rowspan=1, columnspan=3)
+        self.__listbox_lista_de_linguagens.bind('<<ListboxSelect>>', self.seleciona_lista)
         self.__listbox_lista_de_linguagens.configure(background='red')
 
         self.__button_nova_linguagem = Button(frame_lista_de_linguagens, text="Novo", command=self.abrir_janela_novo_elemento)
@@ -276,6 +277,9 @@ class View:
         else:
             self.__altera_tela_operacao(0)
             self.__estado_botoes_da_lista(estado=False)
+
+    def seleciona_lista(self, event):
+        print("Selecionei")
 
     def adicionar_elemento_na_lista(self, nome_do_elemento):
         self.__listbox_lista_de_linguagens.insert(END, nome_do_elemento)
