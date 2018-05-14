@@ -1,4 +1,4 @@
-from model.Expressao import Expressao
+from model.ER.Expressao import Expressao
 from model.Gramatica import Gramatica
 from model.exception.FormatError import FormatError
 

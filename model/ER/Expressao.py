@@ -1,12 +1,13 @@
-from model.Arvore.Arvore import Arvore
-from model.Arvore.Nodos.NodoUniao import NodoUniao
-from model.Arvore.Nodos.NodoConcat import NodoConcat
-from model.Arvore.Nodos.NodoFecho import NodoFecho
-from model.Arvore.Nodos.NodoOpcional import NodoOpcional
-from model.Arvore.Nodos.NodoFolha import NodoFolha
-from model.Constants import Operacao, prioridade
 import string
 
+from model.ER.Arvore.Nodos.NodoConcat import NodoConcat
+from model.ER.Arvore.Nodos.NodoFecho import NodoFecho
+from model.ER.Arvore.Nodos.NodoFolha import NodoFolha
+from model.ER.Arvore.Nodos.NodoOpcional import NodoOpcional
+from model.ER.Arvore.Nodos.NodoUniao import NodoUniao
+from model.ER.Arvore.Arvore import Arvore
+from model.ER.Constants import Operacao, prioridade
+from model.exception.ExpressionParsingError import ExpressionParsingError
 
 '''
     Classe que representa uma expressão regular.
@@ -121,23 +122,28 @@ class Expressao:
             if char in chars_validos:
                 if i > 1:
                     if char_anterior in "|.(" and char in "|.*?)":
-                        return False  # raise (combinação inválida em i-1)
+                        raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
+                                                     "Simbolo não esperado na posição: " + str(i))
                     elif char_anterior in "*?" and char in "*?":
-                        return False  # raise (combinação inválida em i-1)
+                        raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
+                                                     "Simbolo não esperado na posição: " + str(i))
 
                 if char == "(":
                     nivel_parentesis += 1
                 elif char == ")":
                     nivel_parentesis -= 1
                     if nivel_parentesis < 0:
-                        return False  # raise (parenteses desbalanceados em i)
+                        raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
+                                                     "Parenteses fechado sem correspondente na posição: " + str(i))
             else:
-                return False  # raise (caracter inválido em i)
+                raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
+                                             "Simbolo desconhecido na posição: " + str(i))
             char_anterior = char
             i += 1
 
         if nivel_parentesis > 0:
-            return False  # raise (parenteses desbalanceados em i)
+            raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
+                                         "Parenteses aberto sem correspondente")
         return True
 
     '''
@@ -195,3 +201,59 @@ class Expressao:
                     parenteses_encontrados = min(parenteses_encontrados, nivel)
             i += 1
         return expressao[parenteses_encontrados:comprimento_expr - parenteses_encontrados]
+
+    '''
+        Transforma essa expressão regular em um automato finito através do algoritmo de De Simone.
+        \:return o automato finito que representa a mesma linguagem que esta expressão regular.
+    '''
+    def obter_automato_finito_equivalente(self):
+        from model.AF.AutomatoFinito import AutomatoFinito
+        from model.AF.Estado import Estado
+
+        folhas = self.__arvore.numera_folhas()
+
+        obter_composicao = {}  # mapeia estados para sua composição
+        obter_estado = {}  # mapeia composicoes para seu estado
+
+        prefixo_do_estado = "q"
+        i = 0
+
+        estado_inicial = Estado([prefixo_do_estado + str(i)])
+
+        automato = AutomatoFinito()
+        automato.adiciona_estado(estado_inicial)
+        automato.set_estado_inicial(estado_inicial)
+
+        composicao_da_raiz = self.__arvore.composicao_da_raiz()
+        obter_composicao[estado_inicial] = composicao_da_raiz
+        obter_estado[tuple(composicao_da_raiz)] = estado_inicial
+
+        estados_incompletos = [estado_inicial]
+        estados_de_aceitacao = []
+
+        i += 1
+        while len(estados_incompletos) > 0:
+            estado_atual = estados_incompletos.pop(0)
+            composicao_atual = obter_composicao[estado_atual]
+            for simbolo in composicao_atual:
+                if simbolo != "$":
+                    novo_estado = Estado([prefixo_do_estado + str(i)])
+                    i += 1
+                    nova_composicao = {}
+                    for numero_folha in composicao_atual[simbolo]:
+                        folhas[numero_folha].subir(nova_composicao)
+                    obter_composicao[novo_estado] = nova_composicao
+
+                    if tuple(nova_composicao) not in obter_estado:
+                        obter_estado[tuple(nova_composicao)] = novo_estado
+                        automato.adiciona_estado(novo_estado)
+                        estados_incompletos.append(novo_estado)
+                    else:
+                        novo_estado = obter_estado[tuple(nova_composicao)]
+
+                    automato.adiciona_transicao(estado_atual, simbolo, novo_estado)
+                else:
+                    estados_de_aceitacao.append(estado_atual)
+        automato.set_estados_finais(estados_de_aceitacao)
+        return automato
+

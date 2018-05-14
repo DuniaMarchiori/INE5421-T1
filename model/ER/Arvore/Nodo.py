@@ -41,7 +41,7 @@ class Nodo:
         if self.__costura is not None:
             return self.__costura
         else:
-            return self.__filho_direito.getCostura()
+            return self.__filho_direito.get_costura()
 
     def em_ordem(self, expressao):
         if self.__filho_esquerdo is not None:
@@ -75,14 +75,16 @@ class Nodo:
         if self.__filho_esquerdo is not None:
             self.__filho_esquerdo.numera_folhas(lista)
 
-        if self.eh_folha():
-            lista.append(self)
+        self.numera_folha(lista)
 
         if self.__filho_direito is not None:
             self.__filho_direito.numera_folhas(lista)
 
-    def descer(self):
+    def numera_folha(self, lista):
         pass
 
-    def subir(self):
+    def descer(self, composicao):
+        pass
+
+    def subir(self, composicao):
         pass
