@@ -30,15 +30,16 @@ class Criacao:
 
     def __inicializar_menus(self):
         padding = 10
-        self.__frame_menu_principal = Frame(self.__root, pady=padding)
+        self.__frame_menu_principal = Frame(self.__root, padx=padding, pady=padding)
         self.__frame_menu_principal.pack()
 
-        frame_nome = Frame(self.__frame_menu_principal, padx=padding, pady=padding)
+        frame_nome = Frame(self.__frame_menu_principal, pady=padding)
         frame_nome.pack(fill=X)
 
         Label(frame_nome, text="Nome:").pack(side=LEFT)
         self.__entry_nome = Entry(frame_nome)
         self.__entry_nome.pack(fill=X)
+        self.__entry_nome.focus()
 
         self.__notebook_abas_de_elementos = ttk.Notebook(self.__frame_menu_principal)
         self.__notebook_abas_de_elementos.pack(expand=True, fill=BOTH)
@@ -85,7 +86,7 @@ class Criacao:
         self.__inicializar_root()
         self.__inicializar_menus()
         self.__mostrar_menu(True)
-        self.__root.minsize(width=400, height=200)
+        self.__root.minsize(width=400, height=300)
         self.__root.protocol("WM_DELETE_WINDOW", self.close)
         self.__root.mainloop()
 
@@ -94,11 +95,12 @@ class Criacao:
         self.__root = None
 
     def cria_elemento(self):
+        nome = self.__entry_nome.get()
         aba = self.__notebook_abas_de_elementos.index(self.__notebook_abas_de_elementos.select())
         if aba == 0:
             text = self.__text_gramatica.get("1.0", 'end-1c')
-            self.__controller.cb_nova_gramatica(text)
+            self.__controller.cb_nova_gramatica(nome, text)
         else:
             text = self.__text_expressao.get("1.0", 'end-1c')
-            self.__controller.cb_nova_expressao(text)
+            self.__controller.cb_nova_expressao(nome, text)
         self.close()

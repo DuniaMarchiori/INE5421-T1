@@ -13,7 +13,7 @@ class View:
     __root = None
     __frame_menu_principal = None
 
-    __listBox_lista_de_linguagens = None
+    __listbox_lista_de_linguagens = None
 
     __button_nova_linguagem = None
     __button_deletar_linguagem = None
@@ -42,7 +42,7 @@ class View:
         self.__inicializar_variaveis()
         self.__inicializar_menubar()
         self.__inicializar_menus()
-        self.atualiza_operacao(None)
+        self.atualiza_operacao(Gramatica())
         self.mostrar_menu(True)
 
     def __inicializar_variaveis(self):
@@ -91,13 +91,13 @@ class View:
         self.__configura_elemento(frame_lista_de_linguagens, row=0, column=0)
         frame_lista_de_linguagens.configure(background='green')
 
-        self.__listBox_lista_de_linguagens = Listbox(frame_lista_de_linguagens, bd=5, relief=SUNKEN)
-        self.__configura_elemento(self.__listBox_lista_de_linguagens, row=1, column=0, rowspan=1, columnspan=3)
-        self.__listBox_lista_de_linguagens.configure(background='red')
+        self.__listbox_lista_de_linguagens = Listbox(frame_lista_de_linguagens, selectmode=BROWSE, bd=5, relief=SUNKEN)
+        self.__configura_elemento(self.__listbox_lista_de_linguagens, row=1, column=0, rowspan=1, columnspan=3)
+        self.__listbox_lista_de_linguagens.configure(background='red')
 
         self.__button_nova_linguagem = Button(frame_lista_de_linguagens, text="Novo", command=self.abrir_janela_novo_elemento)
         self.__configura_elemento(self.__button_nova_linguagem, row=0, column=0, rowweight=0, columnweight=1)
-        self.__button_deletar_linguagem = Button(frame_lista_de_linguagens, text="Remover")
+        self.__button_deletar_linguagem = Button(frame_lista_de_linguagens, text="Remover", command=self.remover_elemento_da_lista)
         self.__configura_elemento(self.__button_deletar_linguagem, row=0, column=1, rowweight=0, columnweight=1)
         self.__button_clonar_linguagem = Button(frame_lista_de_linguagens, text="Duplicar")
         self.__configura_elemento(self.__button_clonar_linguagem, row=0, column=2, rowweight=0, columnweight=1)
@@ -261,12 +261,6 @@ class View:
                 self.__frame_af_operacao.grid_remove()
                 self.__frame_af_transformacao.grid()
 
-    def mostrar_menu(self, mostrar):
-        if mostrar:
-            self.__frame_menu_principal.pack(expand=True, fill=BOTH)
-        else:
-            self.__frame_menu_principal.pack_forget()
-
     def atualiza_operacao(self, elemento_selecionado):
         if elemento_selecionado is not None:
             self.__estado_botoes_da_lista(estado=True)
@@ -283,9 +277,27 @@ class View:
             self.__altera_tela_operacao(0)
             self.__estado_botoes_da_lista(estado=False)
 
+    def adicionar_elemento_na_lista(self, nome_do_elemento):
+        self.__listbox_lista_de_linguagens.insert(END, nome_do_elemento)
+
+    def remover_elemento_da_lista(self):
+        indice = self.__listbox_lista_de_linguagens.curselection()
+        self.__listbox_lista_de_linguagens.delete(indice)
+        self.atualiza_operacao(None)
+
     def abrir_janela_novo_elemento(self):
         if not self.__popup_novo_elemento.is_showing():
             self.__popup_novo_elemento.show()
+
+    def mostrar_aviso(self, aviso):
+        print(aviso)
+        #TODO Janela popup com o erro
+
+    def mostrar_menu(self, mostrar):
+        if mostrar:
+            self.__frame_menu_principal.pack(expand=True, fill=BOTH)
+        else:
+            self.__frame_menu_principal.pack_forget()
 
     def start(self):
         self.__root.mainloop()
