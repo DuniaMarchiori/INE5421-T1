@@ -309,8 +309,3 @@ class View:
         e.pack()
         b = Button(popup, text="OK", command=lambda: self.__tipo_linguagem_atual.set(e.get()))
         b.pack()
-
-
-# TODO DEBUG apagar antes do ultimo commit
-view = View()
-print("a")

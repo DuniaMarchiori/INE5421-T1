@@ -14,20 +14,14 @@ class Controller:
     '''
     def __init__(self):
         self.__model = Model()  # Fachada do modelo
-        self.__view = View()  # Tela principal da aplicação
+        self.__view = View(self)  # Tela principal da aplicação
         self.__view.start()
 
     def cb_nova_gramatica(self, valor):
-        pass
+        print("GR: " + valor)
 
     def cb_nova_expressao(self, valor):
-        pass
-
-
-
-
-
-
+        print("ER: " + valor)
 
     '''
         Salva uma gramática em um arquivo.

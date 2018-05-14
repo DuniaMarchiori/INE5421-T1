@@ -10,6 +10,8 @@ class Criacao:
     
     __frame_menu_principal = None
 
+    __entry_nome = None
+
     __notebook_abas_de_elementos = None
 
     __text_gramatica = None
@@ -28,20 +30,28 @@ class Criacao:
 
     def __inicializar_menus(self):
         padding = 10
-        self.__frame_menu_principal = Frame(self.__root, padx=padding, pady=padding)
+        self.__frame_menu_principal = Frame(self.__root, pady=padding)
         self.__frame_menu_principal.pack()
+
+        frame_nome = Frame(self.__frame_menu_principal, padx=padding, pady=padding)
+        frame_nome.pack(fill=X)
+
+        Label(frame_nome, text="Nome:").pack(side=LEFT)
+        self.__entry_nome = Entry(frame_nome)
+        self.__entry_nome.pack(fill=X)
+
         self.__notebook_abas_de_elementos = ttk.Notebook(self.__frame_menu_principal)
         self.__notebook_abas_de_elementos.pack(expand=True, fill=BOTH)
         self.__inicializar_aba_gramatica(self.__notebook_abas_de_elementos)
         self.__inicializar_aba_expressao(self.__notebook_abas_de_elementos)
 
     def __inicializar_aba_gramatica(self, notebook):
-        self.__criar_aba_generica(notebook, "Gramática Regular", self.__text_gramatica)
+        self.__text_gramatica = self.__criar_aba_generica(notebook, "Gramática Regular")
 
     def __inicializar_aba_expressao(self, notebook):
-        self.__criar_aba_generica(notebook, "Expressão Regular", self.__text_expressao)
+        self.__text_expressao = self.__criar_aba_generica(notebook, "Expressão Regular")
 
-    def __criar_aba_generica(self, notebook, elemento, text_area):
+    def __criar_aba_generica(self, notebook, elemento):
         aba_elemento = ttk.Frame(notebook)
         notebook.add(aba_elemento, text=elemento)
 
@@ -59,6 +69,8 @@ class Criacao:
         scrollbar_elemento.pack(fill=Y, side=LEFT)
 
         Button(frame_elemento, text="Adicionar Nova " + elemento, command=self.cria_elemento).pack()
+
+        return text_area
 
     def __mostrar_menu(self, mostrar):
         if mostrar:
