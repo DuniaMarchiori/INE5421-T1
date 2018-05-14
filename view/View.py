@@ -36,18 +36,17 @@ class View:
 
     __popup_novo_elemento = None
 
-    def __init__(self):#, controller):
-        #self.__controller = controller
+    def __init__(self, controller):
+        self.__controller = controller
         self.__inicializar_root()
         self.__inicializar_variaveis()
         self.__inicializar_menubar()
         self.__inicializar_menus()
         self.atualiza_operacao(None)
         self.mostrar_menu(True)
-        self.__root.mainloop()
 
     def __inicializar_variaveis(self):
-        self.__popup_novo_elemento = Criacao(self.__root, None)
+        self.__popup_novo_elemento = Criacao(self.__root, self.__controller)
         self.__tipo_linguagem_atual = StringVar()
 
     def __inicializar_root(self):
@@ -287,6 +286,9 @@ class View:
     def abrir_janela_novo_elemento(self):
         if not self.__popup_novo_elemento.is_showing():
             self.__popup_novo_elemento.show()
+
+    def start(self):
+        self.__root.mainloop()
 
 
 

@@ -12,6 +12,9 @@ class Criacao:
 
     __notebook_abas_de_elementos = None
 
+    __text_gramatica = None
+    __text_expressao = None
+
     __parent = None
 
     def __init__(self, parent, controller):
@@ -33,12 +36,12 @@ class Criacao:
         self.__inicializar_aba_expressao(self.__notebook_abas_de_elementos)
 
     def __inicializar_aba_gramatica(self, notebook):
-        self.__criar_aba_generica(notebook, "Gramática Regular")
+        self.__criar_aba_generica(notebook, "Gramática Regular", self.__text_gramatica)
 
     def __inicializar_aba_expressao(self, notebook):
-        self.__criar_aba_generica(notebook, "Expressão Regular")
+        self.__criar_aba_generica(notebook, "Expressão Regular", self.__text_expressao)
 
-    def __criar_aba_generica(self, notebook, elemento):
+    def __criar_aba_generica(self, notebook, elemento, text_area):
         aba_elemento = ttk.Frame(notebook)
         notebook.add(aba_elemento, text=elemento)
 
@@ -48,11 +51,11 @@ class Criacao:
         frame_text_area = Frame(frame_elemento, padx=padding, pady=padding)
         frame_text_area.pack(expand=True, fill=BOTH)
 
-        text_elemento = Text(frame_text_area, width=0, height=0)
-        text_elemento.pack(expand=True, fill=BOTH, side=LEFT)
+        text_area = Text(frame_text_area, width=0, height=0)
+        text_area.pack(expand=True, fill=BOTH, side=LEFT)
 
-        scrollbar_elemento = Scrollbar(frame_text_area, command=text_elemento.yview)
-        text_elemento['yscrollcommand'] = scrollbar_elemento.set
+        scrollbar_elemento = Scrollbar(frame_text_area, command=text_area.yview)
+        text_area['yscrollcommand'] = scrollbar_elemento.set
         scrollbar_elemento.pack(fill=Y, side=LEFT)
 
         Button(frame_elemento, text="Adicionar Nova " + elemento, command=self.cria_elemento).pack()
@@ -81,9 +84,9 @@ class Criacao:
     def cria_elemento(self):
         aba = self.__notebook_abas_de_elementos.index(self.__notebook_abas_de_elementos.select())
         if aba == 0:
-            # controller.adiciona_gramatica(texto)
-            print("Add GR")
+            text = self.__text_gramatica.get("1.0", 'end-1c')
+            self.__controller.cb_nova_gramatica(text)
         else:
-            # controller.adiciona_expressao(texto)
-            print("Add ER")
+            text = self.__text_expressao.get("1.0", 'end-1c')
+            self.__controller.cb_nova_expressao(text)
         self.close()
