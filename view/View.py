@@ -1,11 +1,10 @@
-import sys
-
 from tkinter import *
 from tkinter import ttk
 from model.Gramatica import Gramatica
 from model.Expressao import Expressao
 from model.AF.AutomatoFinito import AutomatoFinito
 from view.Criacao import Criacao
+
 
 class View:
 
@@ -35,6 +34,8 @@ class View:
 
     __tipo_linguagem_atual = None
 
+    __popup_novo_elemento = None
+
     def __init__(self):#, controller):
         #self.__controller = controller
         self.__inicializar_root()
@@ -46,6 +47,7 @@ class View:
         self.__root.mainloop()
 
     def __inicializar_variaveis(self):
+        self.__popup_novo_elemento = Criacao(self.__root, None)
         self.__tipo_linguagem_atual = StringVar()
 
     def __inicializar_root(self):
@@ -70,7 +72,6 @@ class View:
         # TODO DEBUG remover botões de debug
         menu_main.add_command(label="Debug", command=self.debug)
         menu_main.add_command(label="Debug2", command=self.debug2)
-        menu_main.add_command(label="Debug3", command=self.debug3)
 
         self.__root.configure(menu=menu_main)
 
@@ -95,7 +96,7 @@ class View:
         self.__configura_elemento(self.__listBox_lista_de_linguagens, row=1, column=0, rowspan=1, columnspan=3)
         self.__listBox_lista_de_linguagens.configure(background='red')
 
-        self.__button_nova_linguagem = Button(frame_lista_de_linguagens, text="Novo")
+        self.__button_nova_linguagem = Button(frame_lista_de_linguagens, text="Novo", command=self.abrir_janela_novo_elemento)
         self.__configura_elemento(self.__button_nova_linguagem, row=0, column=0, rowweight=0, columnweight=1)
         self.__button_deletar_linguagem = Button(frame_lista_de_linguagens, text="Remover")
         self.__configura_elemento(self.__button_deletar_linguagem, row=0, column=1, rowweight=0, columnweight=1)
@@ -283,6 +284,10 @@ class View:
             self.__altera_tela_operacao(0)
             self.__estado_botoes_da_lista(estado=False)
 
+    def abrir_janela_novo_elemento(self):
+        if not self.__popup_novo_elemento.is_showing():
+            self.__popup_novo_elemento.show()
+
 
 
 
@@ -303,9 +308,6 @@ class View:
         b = Button(popup, text="OK", command=lambda: self.__tipo_linguagem_atual.set(e.get()))
         b.pack()
 
-    def debug3(self):
-        # TODO Esperar fechamento da janela para prossegir
-        popup = Criacao(None)
 
 # TODO DEBUG apagar antes do ultimo commit
 view = View()
