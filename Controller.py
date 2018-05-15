@@ -2,6 +2,7 @@ from model.Model import Model
 from view.View import View
 
 from model.exception.FormatError import FormatError
+from model.exception.ExpressionParsingError import ExpressionParsingError
 
 '''
     Controller do padrão MVC.
@@ -90,7 +91,7 @@ class Controller:
         try:
             self.__model.criar_expressao(nome, entrada)
             self.__view.adicionar_elemento_na_lista(nome)
-        except FormatError as e: #TODO mudar FormatError pro erro de expressão regular quando o branch mergir
+        except ExpressionParsingError as e:
             self.__view.mostrar_aviso(e.get_message())
 
     '''

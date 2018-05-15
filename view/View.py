@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from model.Gramatica import Gramatica
-from model.Expressao import Expressao
+from model.ER.Expressao import Expressao
 from model.AF.AutomatoFinito import AutomatoFinito
 from view.Criacao import Criacao
 
@@ -74,7 +74,7 @@ class View:
 
         self.__root.configure(menu=menu_main)
 
-    def __configura_elemento(self, elemento, row=0, column=0, rowspan=1, columnspan=1, rowweight=1, columnweight=1,sticky=N+S+E+W):
+    def __configura_elemento(self, elemento, row=0, column=0, rowspan=1, columnspan=1, rowweight=1, columnweight=1, sticky=N+S+E+W):
         elemento.grid(row=row, column=column, rowspan=rowspan, columnspan=columnspan, sticky=sticky)
         elemento.master.grid_rowconfigure(row, weight=rowweight)
         elemento.master.grid_columnconfigure(column, weight=columnweight)
@@ -91,14 +91,14 @@ class View:
         self.__configura_elemento(frame_lista_de_linguagens, row=0, column=0)
         frame_lista_de_linguagens.configure(background='green')
 
-        self.__listbox_lista_de_linguagens = Listbox(frame_lista_de_linguagens, selectmode=BROWSE, bd=5, relief=SUNKEN)
+        self.__listbox_lista_de_linguagens = Listbox(frame_lista_de_linguagens, selectmode=SINGLE, bd=5, relief=SUNKEN)
         self.__configura_elemento(self.__listbox_lista_de_linguagens, row=1, column=0, rowspan=1, columnspan=3)
         self.__listbox_lista_de_linguagens.bind('<<ListboxSelect>>', self.seleciona_lista)
         self.__listbox_lista_de_linguagens.configure(background='red')
 
         self.__button_nova_linguagem = Button(frame_lista_de_linguagens, text="Novo", command=self.abrir_janela_novo_elemento)
         self.__configura_elemento(self.__button_nova_linguagem, row=0, column=0, rowweight=0, columnweight=1)
-        self.__button_deletar_linguagem = Button(frame_lista_de_linguagens, text="Remover", command=self.remover_elemento_da_lista)
+        self.__button_deletar_linguagem = Button(frame_lista_de_linguagens, text="Remover", command=lambda: self.remover_elemento_da_lista(self.__listbox_lista_de_linguagens.curselection()))
         self.__configura_elemento(self.__button_deletar_linguagem, row=0, column=1, rowweight=0, columnweight=1)
         self.__button_clonar_linguagem = Button(frame_lista_de_linguagens, text="Duplicar")
         self.__configura_elemento(self.__button_clonar_linguagem, row=0, column=2, rowweight=0, columnweight=1)
@@ -284,8 +284,7 @@ class View:
     def adicionar_elemento_na_lista(self, nome_do_elemento):
         self.__listbox_lista_de_linguagens.insert(END, nome_do_elemento)
 
-    def remover_elemento_da_lista(self):
-        indice = self.__listbox_lista_de_linguagens.curselection()
+    def remover_elemento_da_lista(self, indice):
         self.__listbox_lista_de_linguagens.delete(indice)
         self.atualiza_operacao(None)
 
