@@ -1,4 +1,4 @@
-from model.Elemento import Elemento
+from model.Elemento import *
 from model.ListaElementos import ListaElementos
 from model.ER.Expressao import Expressao
 from model.Gramatica import Gramatica
@@ -22,7 +22,7 @@ class Model:
     '''
     def criar_gramatica(self, nome, entrada):
         # gr = Gramatica(nome, entrada)
-        gr = Elemento(None, nome)
+        gr = Elemento(TipoElemento.GR, nome)
         self.__lista_de_elementos.adiciona_elemento(gr)
 
     '''
@@ -32,7 +32,7 @@ class Model:
     '''
     def criar_expressao(self, nome, entrada):
         # er = Expressao(nome, entrada)
-        er = Elemento(None, nome)
+        er = Elemento(TipoElemento.ER, nome)
         self.__lista_de_elementos.adiciona_elemento(er)
 
     '''
@@ -122,3 +122,6 @@ class Model:
             print("ERRO: O autômato finito a ser transformado em gramática está vazio.")
         else:
             return af.transforma_em_GR()
+
+    def obter_elemento_por_indice(self, indice):
+        return self.__lista_de_elementos.get_elemento(indice)

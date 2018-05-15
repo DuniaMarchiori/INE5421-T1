@@ -10,3 +10,6 @@ class ListaElementos:
 
     def remove_elemento(self, indice):
         self.__lista_de_elementos.pop(indice)
+
+    def get_elemento(self, indice):
+        return self.__lista_de_elementos[indice]

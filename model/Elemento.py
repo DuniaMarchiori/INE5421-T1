@@ -12,6 +12,9 @@ class Elemento:
     def get_nome(self):
         return self.__nome
 
+    def get_tipo(self):
+        return self.__tipo
+
 
 class TipoElemento(Enum):
     GR = 0

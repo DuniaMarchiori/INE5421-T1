@@ -1,8 +1,6 @@
 from tkinter import *
 from tkinter import ttk
-from model.Gramatica import Gramatica
-from model.ER.Expressao import Expressao
-from model.AF.AutomatoFinito import AutomatoFinito
+from model.Elemento import *
 from view.Criacao import Criacao
 
 
@@ -42,7 +40,7 @@ class View:
         self.__inicializar_variaveis()
         self.__inicializar_menubar()
         self.__inicializar_menus()
-        self.atualiza_operacao(Gramatica())
+        self.__atualiza_operacao(None)
         self.mostrar_menu(True)
 
     def __inicializar_variaveis(self):
@@ -93,7 +91,7 @@ class View:
 
         self.__listbox_lista_de_linguagens = Listbox(frame_lista_de_linguagens, selectmode=SINGLE, bd=5, relief=SUNKEN)
         self.__configura_elemento(self.__listbox_lista_de_linguagens, row=1, column=0, rowspan=1, columnspan=3)
-        self.__listbox_lista_de_linguagens.bind('<<ListboxSelect>>', self.seleciona_lista)
+        self.__listbox_lista_de_linguagens.bind('<<ListboxSelect>>', self.cb_seleciona_lista)
         self.__listbox_lista_de_linguagens.configure(background='red')
 
         self.__button_nova_linguagem = Button(frame_lista_de_linguagens, text="Novo", command=self.abrir_janela_novo_elemento)
@@ -138,7 +136,7 @@ class View:
         self.__configura_elemento(frame_expressao)
 
         aba_automato = ttk.Frame(self.__notebook_abas_de_representacao)
-        self.__notebook_abas_de_representacao.add(aba_automato, text='Automato Finito')
+        self.__notebook_abas_de_representacao.add(aba_automato, text='Autômato Finito')
         frame_automato = Frame(aba_automato, bd=5, relief=SUNKEN)
         frame_automato.configure(background='cyan')
         self.__configura_elemento(frame_automato)
@@ -184,54 +182,54 @@ class View:
         # endregion
 
     def __inicializa_tela_gr_operacao(self):
-        l = Label(self.__frame_gr_operacao, text="GrOP")
-        l.pack()
+        label = Label(self.__frame_gr_operacao, text="GrOP")
+        label.pack()
 
     def __inicializa_tela_gr_transformacao(self):
         f = Frame(self.__frame_gr_transformacao)
         f.pack(expand=True)
-        l = Label(f, text="Você precisa transformar esse elemento em uma gramática regular primeiro")
-        l.pack()
+        label = Label(f, text="Você precisa transformar esse elemento em uma gramática regular primeiro")
+        label.pack()
         b = Button(f, text="Transformar")
         b.pack()
 
     def __inicializa_tela_er_operacao(self):
-        l = Label(self.__frame_er_operacao, text="ErOP")
-        l.pack()
+        label = Label(self.__frame_er_operacao, text="ErOP")
+        label.pack()
 
     def __inicializa_tela_er_transformacao(self):
         f = Frame(self.__frame_er_transformacao)
         f.pack(expand=True)
-        l = Label(f, text="Você precisa transformar esse elemento em uma expressão regular primeiro")
-        l.pack()
+        label = Label(f, text="Você precisa transformar esse elemento em uma expressão regular primeiro")
+        label.pack()
         b = Button(f, text="Transformar")
         b.pack()
 
     def __inicializa_tela_af_operacao(self):
-        l = Label(self.__frame_af_operacao, text="AfOP")
-        l.pack()
+        label = Label(self.__frame_af_operacao, text="AfOP")
+        label.pack()
 
     def __inicializa_tela_af_transformacao(self):
         f = Frame(self.__frame_af_transformacao)
         f.pack(expand=True)
-        l = Label(f, text="Você precisa transformar esse elemento em um automato finito primeiro")
-        l.pack()
+        label = Label(f, text="Você precisa transformar esse elemento em um autômato finito primeiro")
+        label.pack()
         b = Button(f, text="Transformar")
         b.pack()
 
     def __inicializa_tela_sem_selecionado(self):
         f = Frame(self.__frame_elemento_nulo)
         f.pack(expand=True)
-        l = Label(f, text="Você não possui nenhum elemento selecionado\n"
-                          "Crie um novo no painel à esquerda ou selecione um já criado")
-        l.pack()
+        label = Label(f, text="Você não possui nenhum elemento selecionado\n"
+                              "Crie um novo no painel à esquerda ou selecione um já criado")
+        label.pack()
     
     def __estado_botoes_da_lista(self, estado=True):
         state = NORMAL
         if not estado:
             state = DISABLED
         self.__button_deletar_linguagem['state'] = state
-        self.__button_clonar_linguagem['state'] = state
+        self.__button_clonar_linguagem['state'] = DISABLED
 
     def __altera_tela_operacao(self, num_tela):
         if num_tela == 0:
@@ -262,39 +260,64 @@ class View:
                 self.__frame_af_operacao.grid_remove()
                 self.__frame_af_transformacao.grid()
 
-    def atualiza_operacao(self, elemento_selecionado):
+    def __atualiza_operacao(self, elemento_selecionado):
         if elemento_selecionado is not None:
             self.__estado_botoes_da_lista(estado=True)
-            if isinstance(elemento_selecionado, Gramatica):
+            if elemento_selecionado.get_tipo() is TipoElemento.GR:
                 self.__altera_tela_operacao(1)
                 self.__frame_manipulacao_elemento.configure(text="Gramática Regular")
-            if isinstance(elemento_selecionado, Expressao):
+            elif elemento_selecionado.get_tipo() is TipoElemento.ER:
                 self.__altera_tela_operacao(2)
                 self.__frame_manipulacao_elemento.configure(text="Expressão Regular")
-            if isinstance(elemento_selecionado, AutomatoFinito):
+            elif elemento_selecionado.get_tipo() is TipoElemento.AF:
                 self.__altera_tela_operacao(3)
-                self.__frame_manipulacao_elemento.configure(text="Automato Finito")
+                self.__frame_manipulacao_elemento.configure(text="Autômato Finito")
         else:
             self.__altera_tela_operacao(0)
             self.__estado_botoes_da_lista(estado=False)
 
-    def seleciona_lista(self, event):
-        print("Selecionei")
+    def atualiza_elemento_selecionado(self, indice, elemento_selecionado):
+        if indice is not None:
+            self.__listbox_lista_de_linguagens.selection_set(indice)
+        self.__atualiza_operacao(elemento_selecionado)
 
-    def adicionar_elemento_na_lista(self, nome_do_elemento):
-        self.__listbox_lista_de_linguagens.insert(END, nome_do_elemento)
+    def cb_seleciona_lista(self, event):
+        selecionado = self.__listbox_lista_de_linguagens.curselection()
+        indice = None
+        if selecionado:
+            indice = selecionado[0]
+
+        self.__controller.cb_alterar_elemento_selecionado(indice)
+
+    def adicionar_elemento_na_lista(self, nome_do_elemento, tipo_do_elemento, select=True):
+        display_name = "(" + tipo_do_elemento + ") " + nome_do_elemento
+        self.__listbox_lista_de_linguagens.insert(END, display_name)
 
     def remover_elemento_da_lista(self, indice):
         self.__listbox_lista_de_linguagens.delete(indice)
-        self.atualiza_operacao(None)
+        self.cb_seleciona_lista(None)
 
     def abrir_janela_novo_elemento(self):
         if not self.__popup_novo_elemento.is_showing():
             self.__popup_novo_elemento.show()
 
-    def mostrar_aviso(self, aviso):
-        print(aviso)
-        #TODO Janela popup com o erro
+    def mostrar_aviso(self, aviso, titulo="Erro"):
+        if self.__popup_novo_elemento.is_showing():
+            current_top = self.__popup_novo_elemento.get_root()
+        else:
+            current_top = self.__root
+
+        popup = Toplevel(current_top)
+        popup.transient(current_top)
+        popup.title(titulo)
+        popup.resizable(width=False, height=False)
+        popup.minsize(width=400, height=200)
+        label = Label(popup, text=aviso)
+        label.pack(expand=True)
+        popup.grab_set()
+        current_top.wait_window(popup)
+        if self.__popup_novo_elemento.is_showing():
+            self.__popup_novo_elemento.pass_set()
 
     def mostrar_menu(self, mostrar):
         if mostrar:

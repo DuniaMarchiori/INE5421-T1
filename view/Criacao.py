@@ -24,7 +24,8 @@ class Criacao:
         self.__parent = parent
 
     def __inicializar_root(self):
-        self.__root = Tk()
+        self.__root = Toplevel(self.__parent)
+        self.__root.transient(self.__parent)
         self.__root.title("Criação de Elemento")
         self.__root.resizable(width=True, height=True)
 
@@ -79,6 +80,9 @@ class Criacao:
         else:
             self.__frame_menu_principal.pack_forget()
 
+    def get_root(self):
+        return self.__root
+
     def is_showing(self):
         return self.__root is not None
 
@@ -88,7 +92,10 @@ class Criacao:
         self.__mostrar_menu(True)
         self.__root.minsize(width=400, height=300)
         self.__root.protocol("WM_DELETE_WINDOW", self.close)
-        self.__root.mainloop()
+        self.__root.grab_set()
+
+    def pass_set(self):
+        self.__root.grab_set()
 
     def close(self):
         self.__root.destroy()
@@ -99,8 +106,10 @@ class Criacao:
         aba = self.__notebook_abas_de_elementos.index(self.__notebook_abas_de_elementos.select())
         if aba == 0:
             text = self.__text_gramatica.get("1.0", 'end-1c')
-            self.__controller.cb_nova_gramatica(nome, text)
+            success = self.__controller.cb_nova_gramatica(nome, text)
         else:
             text = self.__text_expressao.get("1.0", 'end-1c')
-            self.__controller.cb_nova_expressao(nome, text)
-        self.close()
+            success = self.__controller.cb_nova_expressao(nome, text)
+
+        if success:
+            self.close()
