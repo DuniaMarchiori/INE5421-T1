@@ -1,5 +1,3 @@
-from model.Elemento import Elemento
-from model.ListaElementos import ListaElementos
 from model.ER.Expressao import Expressao
 from model.Gramatica import Gramatica
 from model.exception.FormatError import FormatError
