@@ -21,38 +21,6 @@ class Controller:
         self.__view.start()
 
     '''
-        Salva uma gramática em um arquivo.
-        \:param texto é a gramática a ser salva, em formato de texto.
-        \:return o nome do arquivo salvo.
-    '''
-    def __salvar_gramatica(self, texto):
-        return self.__model.salvar_gramatica(texto)
-
-    '''
-        Lê uma gramática de um arquivo.
-        \:param nome_arquivo é o nome do arquivo a ser lido.
-        \:return True se a leitura ocorreu com sucesso.
-    '''
-    def __abrir_gramatica(self, nome_arquivo):
-        return self.__model.abrir_gramatica(nome_arquivo)
-
-    '''
-        Salva uma expressão em um arquivo.
-        \:param texto é a expressão a ser salva, em formato de texto.
-        \:return o nome do arquivo salvo.
-    '''
-    def __salvar_expressao(self, texto):
-        return self.__model.salvar_expressao(texto)
-
-    '''
-        Lê uma expressão de um arquivo.
-        \:param nome_arquivo é o nome do arquivo a ser lido.
-        \:return True se a leitura ocorreu com sucesso.
-    '''
-    def __abrir_expressao(self, nome_arquivo):
-        return self.__model.abrir_expressao(nome_arquivo)
-
-    '''
         Transforma uma gramática em um autômato finito.
         \:param gramatica é a gramática a ser transformada.
         \:return o autômato finito que reconhece a mesma linguagem que a gramática gera.
@@ -121,11 +89,25 @@ class Controller:
     # TODO
     '''
         Callbacks:
-            transformar GR em ER (Da?)
-            transformar GR em AF (Da?)
-            transformar ER em GR (Da?)
-            transformar ER em AF (Da?)
-            transformar AF em GR (Da?)
-            transformar AF em ER (Da?)
-            ver quais operacoes
+        
+            Transformações:
+                OK ER -> AF
+                
+                OK GR -> AF
+                OK AF -> GR
+                
+            Operações sobre Linguagem
+                L intersec L -> AF
+                L diferença L -> AF
+                L reverso -> AF
+                Onde, L pode ser GR, ER ou AF
+        
+            Operações sobre AF
+                TODO Determinizar AF
+                TODO Minimizar AF
+        
+            Operações sobre GR
+                GR união GR
+                GR concat GR
+                GR fecho
     '''

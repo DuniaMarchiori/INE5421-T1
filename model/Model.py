@@ -14,7 +14,6 @@ class Model:
     def __init__(self):
         self.__lista_de_elementos = ListaElementos()
 
-
     '''
         Método que recebe um nome e a entrada de uma gramática e a adiciona no sistema.
         \:param nome é o nome da gramática que será criada.
@@ -41,65 +40,6 @@ class Model:
     '''
     def remover_elemento(self, indice):
         self.__lista_de_elementos.remove_elemento(indice)
-
-    '''
-        Salva uma gramática em um arquivo.
-        \:param texto é a gramática a ser salva, em formato de texto.
-        \:return o nome do arquivo salvo em caso de sucesso. Em caso de erro, retorna nulo.
-    '''
-    def salvar_gramatica(self, texto):
-        g = Gramatica()
-        try:
-            arquivo = g.salvar(texto)
-        except:
-            print("ERRO: Erro ao salvar a gramática.")
-            return None
-        return arquivo
-
-    '''
-        Lê uma gramática de um arquivo.
-        \:param nome_arquivo é o nome do arquivo a ser lido.
-        \:return True se a leitura ocorreu com sucesso. Em caso de erro, retorna nulo.
-    '''
-    def abrir_gramatica(self, nome_arquivo):
-        g = Gramatica()
-        try:
-            g.abrir(nome_arquivo)
-            return g
-        except FormatError as err:
-            print(err.get_message())
-            return None
-        except FileNotFoundError:
-            print("ERRO: Arquivo não encontrado.")
-            return None
-        except:
-            print("ERRO: Erro ao ler o arquivo.")
-            return None
-
-    '''
-        Salva uma expressão em um arquivo.
-        \:param texto é a expressão a ser salva, em formato de texto.
-        \:return o nome do arquivo salvo em caso de sucesso. Em caso de erro, retorna nulo.
-    '''
-    def salvar_expressao(self, texto):
-        e = Expressao()
-        try:
-            arquivo = e.salvar(texto)
-        except:
-            print("ERRO: Erro ao salvar a expressão.")
-            return None
-        return arquivo
-
-    '''
-        Lê uma expressão de um arquivo.
-        \:param nome_arquivo é o nome do arquivo a ser lido.
-        \:return True se a leitura ocorreu com sucesso. EM caso de erro, retorna nulo.
-    '''
-    def abrir_expressao(self, nome_arquivo):
-        e = Expressao()
-        # TODO - botar um try-except aqui
-        texto = e.abrir(nome_arquivo)
-        return texto
 
     '''
         Transforma uma gramática em um autômato finito.

@@ -15,6 +15,9 @@ class Elemento:
     def get_tipo(self):
         return self.__tipo
 
+    def to_string(self):
+        pass
+
 
 class TipoElemento(Enum):
     GR = 0
