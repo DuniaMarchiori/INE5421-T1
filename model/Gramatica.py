@@ -1,3 +1,5 @@
+# Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
+
 from model.AF.Estado import Estado
 from model.exception.FormatError import FormatError
 from string import ascii_uppercase
@@ -148,7 +150,7 @@ class Gramatica:
 
         af = AutomatoFinito()
         af.set_vt(self.__vt)
-        af.set_estado_inicial(self.__simbolo_inicial)
+        af.set_estado_inicial(Estado(self.__simbolo_inicial))
 
         # Gera um símbolo novo
         simbolo_novo = self.novo_simbolo()
@@ -156,12 +158,12 @@ class Gramatica:
         if simbolo_novo != None:
             # Construção do conjunto de símbolos finais
             simbolos_finais = []
-            simbolos_finais.append(simbolo_novo)
+            simbolos_finais.append(Estado(simbolo_novo))
             # S -> & pertence à P
             producoes_iniciais = self.__producoes[self.__simbolo_inicial]
             for p in producoes_iniciais:
                 if p[0] == "&":
-                    simbolos_finais.append(self.__simbolo_inicial)
+                    simbolos_finais.append(Estado(self.__simbolo_inicial))
             af.set_estados_finais(simbolos_finais)
 
             # Construção das produções

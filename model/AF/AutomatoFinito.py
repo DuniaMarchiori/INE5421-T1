@@ -1,11 +1,12 @@
+# Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
+
+from itertools import product
+
+from model.exception.AFNDError import AFNDError
+
 '''
     Classe que representa um autômato finito.
 '''
-from itertools import product
-
-from model.AF.Estado import Estado
-
-
 class AutomatoFinito:
 
     '''
@@ -24,6 +25,7 @@ class AutomatoFinito:
         \:param destino é um simbolo não-terminal (ou um conjunto deles).s
     '''
     def adiciona_transicao(self, estado, caractere, destino):
+        self.__vt.add(caractere)
         self.__producoes.setdefault(estado, {})
         self.__producoes[estado].setdefault(caractere, [])
         self.__producoes[estado][caractere].append(destino)
@@ -80,7 +82,7 @@ class AutomatoFinito:
 
         gramatica = Gramatica()
         gramatica.set_vt(self.__vt)
-        gramatica.set_simbolo_inicial(self.__estado_inicial)
+        gramatica.set_simbolo_inicial(self.__estado_inicial.to_string())
 
         # Construção das produções de acordo com os itens A e B do algoritmo visto em aula
         for b in self.__producoes.keys():
@@ -88,9 +90,9 @@ class AutomatoFinito:
             producoes_g = []
             for a in producoes_af.keys():
                 for c in producoes_af[a]:
-                    c = c.to_string()
-                    if c != "-":
-                        producoes_g.append((a, c))
+                    c_string = c.to_string()
+                    if c_string != "-":
+                        producoes_g.append((a, c_string))
                         if c in self.__estados_finais:
                             producoes_g.append((a, "&"))
             b = b.to_string()
@@ -102,10 +104,9 @@ class AutomatoFinito:
             simbolo_novo = gramatica.novo_simbolo()
 
             # Copia produções do estado inicial atual
-            si = Estado(self.__estado_inicial)
             producoes_novo_si = [] # lista de tuplas
 
-            producoes_si = gramatica.get_producoes()[si.to_string()]
+            producoes_si = gramatica.get_producoes()[self.__estado_inicial.to_string()]
             for p in producoes_si:
                 producoes_novo_si.append(p)
 
@@ -118,39 +119,46 @@ class AutomatoFinito:
         return gramatica
 
     '''
-            
+        Verifica se a sentença dada pertence à linguagem reconhecida pelo AFD.
+        \:param sentenca é a sentença a ser verificada.
+        \:return True se a sentença é reconhecida pelo autômato e False caso contrário.
     '''
     def reconhece_sentenca(self, sentenca):
-        sentenca_lista = list(sentenca)
-        estados = self.__producoes[Estado(self.__estado_inicial)]
-        tamanho_lista = len(sentenca_lista)
 
-        if tamanho_lista == 0 or (tamanho_lista == 1 and sentenca_lista[0] == "&"):
-            if self.__estado_inicial in self.__estados_finais:
-                return True
+        if not self.isAFND():
+            estados = self.__producoes[self.__estado_inicial]
+            tamanho_sentenca = len(sentenca)
 
-        for index in range(tamanho_lista):
-            simbolo = sentenca_lista[index]
-            if simbolo in estados:
-                transicoes = estados[simbolo]
-                if index == len(sentenca_lista)-1:
-                    for t in transicoes:
-                        if (t.to_string() in self.__estados_finais):
-                            return True
-            else:
-                return False
-            # Copia produções dos próximos estados
-            estados = {}
-            for t in transicoes:
-                for x in self.__producoes[t]:
-                    estados.setdefault(x, [])
-                    for y in self.__producoes[t][x]:
-                        estados[x].append(y)
-            index = index + 1
-        return False
+            if tamanho_sentenca == 0 or (tamanho_sentenca == 1 and sentenca[0] == "&"):
+                if self.__estado_inicial in self.__estados_finais:
+                    return True
+
+            for index in range(tamanho_sentenca):
+                simbolo = sentenca[index]
+                if simbolo in estados:
+                    transicoes = estados[simbolo]
+                    if index == tamanho_sentenca-1:
+                        for t in transicoes:
+                            if t in self.__estados_finais:
+                                return True
+                else:
+                    return False
+                # Copia produções dos próximos estados
+                estados = {}
+                for t in transicoes:
+                    for x in self.__producoes[t]:
+                        estados.setdefault(x, [])
+                        for y in self.__producoes[t][x]:
+                            estados[x].append(y)
+                index = index + 1
+            return False
+        else:
+            raise AFNDError("reconhecimento de sentença.")
 
     '''
-        
+        Retorna todas as sentenças reconhecidas pelo autômato do tamanho indicado pelo parâmetro.
+        \:param tamanho é o tamanho das sentenças reconhecidas.
+        \:return uma lista de strings com as sentenças reconhecidas pelo autômato.
     '''
     def enumera_sentencas(self, tamanho):
         sentencas_reconhecidas = []
@@ -164,8 +172,29 @@ class AutomatoFinito:
 
         for s in combinacoes:
             if self.reconhece_sentenca(s):
-                sentencas_reconhecidas.append(s)
+                sentencas_reconhecidas.append(''.join(s))
         return sentencas_reconhecidas
+
+    '''
+        Verifica se o autômato é um autômato finito não determinístico (AFND).
+        \:return True se o autômato for um AFND ou False caso contrário.
+    '''
+    def isAFND(self):
+        for estado in self.__producoes:
+            transicoes = self.__producoes[estado]
+            for t in transicoes:
+                if len(transicoes[t]) > 1: # Se tem mais de uma transição para um símbolo
+                    return True
+                if t == "&" and len(transicoes.keys()) > 1: # Se tem &-transição e mais outras transições através de outros símbolos
+                    return True
+        return False
+
+    '''
+        Verifica se o autômato é completo, ou seja, contém transições para todos os símbolos em cada estado.
+        \:return True se o autômato for completo ou False caso contrário.
+    '''
+    def isComplete(self):
+        return True
 
     '''
         Transforma o autômato em uma matriz de strings.
@@ -236,7 +265,7 @@ class AutomatoFinito:
         print("-------")
         print("Estados finais:")
         for y in self.__estados_finais:
-            print(y)
+            print(y.to_string())
 
         print("xxxxxxx")
         print()
