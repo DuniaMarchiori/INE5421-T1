@@ -13,6 +13,7 @@ class SelecionaElemento:
 	__parent = None
 
 	__int_elemento_selecionado = None
+	__indice_original = None
 
 	def __init__(self, parent):
 		self.__parent = parent
@@ -24,9 +25,9 @@ class SelecionaElemento:
 		self.__root.resizable(width=True, height=True)
 
 	def __inicializar_variaveis(self):
-		self.__int_elemento_selecionado = -1
+		self.__int_elemento_selecionado = None
 
-	def __inicializar_menus(self, lista_de_opcoes):
+	def __inicializar_menus(self, lista_de_opcoes, tipo_especifico):
 		padding = 10
 		self.__frame_menu_principal = Frame(self.__root, padx=padding, pady=padding)
 		self.__frame_menu_principal.pack()
@@ -35,8 +36,15 @@ class SelecionaElemento:
 		l.pack()
 
 		self.__listbox_lista_de_elementos = Listbox(self.__frame_menu_principal, selectmode=SINGLE, exportselection=False)
+		i_original = 0
+		i_novo = 0
+		self.__indice_original = {}
 		for elemento in lista_de_opcoes:
-			self.__listbox_lista_de_elementos.insert(END, elemento)
+			if tipo_especifico in elemento[1:3]:
+				self.__listbox_lista_de_elementos.insert(END, elemento)
+				self.__indice_original[i_novo] = i_original
+				i_novo += 1
+			i_original += 1
 		self.__listbox_lista_de_elementos.pack(expand=True, fill=Y)
 
 		b = Button(self.__frame_menu_principal, text="Realizar Operação", command=self.__cb_confirma_operacao)
@@ -54,8 +62,11 @@ class SelecionaElemento:
 			self.__int_elemento_selecionado = selecionado[0]
 		self.close()
 
-	def get_selecionado(self):
-		return self.__int_elemento_selecionado
+	def get_selecionado_oritinal(self):
+		if self.__int_elemento_selecionado is not None:
+			return self.__indice_original[self.__int_elemento_selecionado]
+		else:
+			return None
 
 	def get_root(self):
 		return self.__root
@@ -63,15 +74,16 @@ class SelecionaElemento:
 	def is_showing(self):
 		return self.__root is not None
 
-	def show(self, lista_de_opcoes):
+	def show(self, lista_de_opcoes, tipo_especifico):
 		self.__inicializar_root()
-		self.__inicializar_menus(lista_de_opcoes)
+		self.__inicializar_variaveis()
+		self.__inicializar_menus(lista_de_opcoes, tipo_especifico)
 		self.__mostrar_menu(True)
 		self.__root.minsize(width=400, height=300)
 		self.__root.protocol("WM_DELETE_WINDOW", self.close)
 		self.__root.grab_set()
 		self.__parent.wait_window(self.__root)
-		return self.get_selecionado()
+		return self.get_selecionado_oritinal()
 
 	def pass_set(self):
 		self.__root.grab_set()

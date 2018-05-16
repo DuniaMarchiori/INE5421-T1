@@ -272,7 +272,7 @@ class View:
         f = Frame(self.__frame_operacoes_gr, pady=padding)
         self.__configura_elemento(f, row=3, column=0, rowweight=0, columnweight=0, sticky=NW)
 
-        button_aplicar_operacao = Button(f, text="Aplicar Operação")
+        button_aplicar_operacao = Button(f, text="Aplicar Operação", command=lambda: self.abrir_janela_seleciona_elemento("GR"))
         self.__configura_elemento(button_aplicar_operacao)
 
     def __inicializa_frame_operacoes_af(self):
@@ -390,11 +390,12 @@ class View:
         if not self.__popup_novo_elemento.is_showing():
             self.__popup_novo_elemento.show()
 
-    def abrir_janela_seleciona_elemento(self):
+    def abrir_janela_seleciona_elemento(self, tipo=""):
         if not self.__popup_seleciona_elemento.is_showing():
             lista_elementos = self.__listbox_lista_de_linguagens.get(0, END)
-            selecionado = self.__popup_seleciona_elemento.show(lista_elementos)
-            print(selecionado)
+            return self.__popup_seleciona_elemento.show(lista_elementos, tipo)
+            # TODO fazer o cb dos botões ser outro metodo que chama esse, mas que depois faz outras coiass com o id do selecionado
+            # (Tipo chamar o callback da operação no controller)
 
     def mostrar_aviso(self, aviso, titulo="Erro"):
         if self.__popup_novo_elemento.is_showing():
