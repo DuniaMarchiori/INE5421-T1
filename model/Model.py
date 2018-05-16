@@ -1,3 +1,4 @@
+# Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
 from model.Elemento import *
 from model.ListaElementos import ListaElementos
 from model.ER.Expressao import Expressao

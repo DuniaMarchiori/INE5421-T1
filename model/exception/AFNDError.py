@@ -1,16 +1,17 @@
 # Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
 
 '''
-    Classe que representa um erro na formatação da gramática escrita pelo usuário.
+    Classe que representa um erro ao usar um método para AFD em um AFND.
 '''
-class FormatError(Exception):
-    FORMAT_ERROR = "A gramática não segue o formato padrão de produções regulares na linha "
+class AFNDError(Exception):
+    IS_AFND = "ERRO: Determinize o autômato antes de fazer a operação de "
 
     '''
         Método construtor.
+        \:param message é a operação que causou o erro.
     '''
     def __init__(self, message):
-        self.__message = "ERRO: " + message
+        self.__message = self.IS_AFND + message
 
     '''
         Retorna a mensagem de erro.
