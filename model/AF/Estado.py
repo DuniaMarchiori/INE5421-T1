@@ -1,3 +1,8 @@
+# Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
+
+'''
+    Classe que representa um estado de um autômato finito.
+'''
 class Estado:
 
     '''

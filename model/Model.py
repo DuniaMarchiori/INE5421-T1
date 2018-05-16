@@ -1,3 +1,4 @@
+# Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
 from model.ER.Expressao import Expressao
 from model.Gramatica import Gramatica
 from model.exception.FormatError import FormatError
