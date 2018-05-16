@@ -16,7 +16,7 @@ class Elemento:
         return self.__tipo
 
     def to_string(self):
-        pass
+        return ""
 
 
 class TipoElemento(Enum):

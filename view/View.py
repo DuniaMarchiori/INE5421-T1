@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk
 from model.Elemento import *
 from view.Criacao import Criacao
+from view.SelecaoElemento import SelecionaElemento
 
 
 class View:
@@ -21,18 +22,22 @@ class View:
     __frame_elemento_nulo = None
     __notebook_abas_de_representacao = None
 
-    __frame_gr_operacao = None
-    __frame_gr_transformacao = None
+    __frame_info = None
+    __label_nome_display = None
+    __label_tipo_display = None
+    __text_visualizacao = None
+    __frame_conversoes = None
+    __frame_operacoes = None
+    __int_operacao_selecionada = None
+    __frame_operacoes_gr = None
+    __int_operacao_gr_selecionada = None
+    __frame_operacoes_af = None
 
-    __frame_er_operacao = None
-    __frame_er_transformacao = None
-
-    __frame_af_operacao = None
-    __frame_af_transformacao = None
-
-    __tipo_linguagem_atual = None
+    __button_converter_para_gr = None
+    __button_converter_para_af = None
 
     __popup_novo_elemento = None
+    __popup_seleciona_elemento = None
 
     def __init__(self, controller):
         self.__controller = controller
@@ -45,7 +50,9 @@ class View:
 
     def __inicializar_variaveis(self):
         self.__popup_novo_elemento = Criacao(self.__root, self.__controller)
-        self.__tipo_linguagem_atual = StringVar()
+        self.__popup_seleciona_elemento = SelecionaElemento(self.__root)
+        self.__int_operacao_selecionada = IntVar()
+        self.__int_operacao_gr_selecionada = IntVar()
 
     def __inicializar_root(self):
         self.__root = Tk()
@@ -89,14 +96,21 @@ class View:
         self.__configura_elemento(frame_lista_de_linguagens, row=0, column=0)
         frame_lista_de_linguagens.configure(background='green')
 
-        self.__listbox_lista_de_linguagens = Listbox(frame_lista_de_linguagens, selectmode=SINGLE, bd=5, relief=SUNKEN)
-        self.__configura_elemento(self.__listbox_lista_de_linguagens, row=1, column=0, rowspan=1, columnspan=3)
+        frame_listbox = Frame(frame_lista_de_linguagens)
+        self.__configura_elemento(frame_listbox, row=1, column=0, rowspan=1, columnspan=3)
+
+        self.__listbox_lista_de_linguagens = Listbox(frame_listbox, selectmode=SINGLE, bd=5, relief=SUNKEN, exportselection=False)
+        self.__configura_elemento(self.__listbox_lista_de_linguagens, row=0, column=0)
         self.__listbox_lista_de_linguagens.bind('<<ListboxSelect>>', self.cb_seleciona_lista)
         self.__listbox_lista_de_linguagens.configure(background='red')
 
+        scrollbar_lista = Scrollbar(frame_listbox, command=self.__listbox_lista_de_linguagens.yview)
+        self.__listbox_lista_de_linguagens['yscrollcommand'] = scrollbar_lista.set
+        self.__configura_elemento(scrollbar_lista, row=0, column=1, rowweight=1, columnweight=0)
+
         self.__button_nova_linguagem = Button(frame_lista_de_linguagens, text="Novo", command=self.abrir_janela_novo_elemento)
         self.__configura_elemento(self.__button_nova_linguagem, row=0, column=0, rowweight=0, columnweight=1)
-        self.__button_deletar_linguagem = Button(frame_lista_de_linguagens, text="Remover", command=lambda: self.remover_elemento_da_lista(self.__listbox_lista_de_linguagens.curselection()))
+        self.__button_deletar_linguagem = Button(frame_lista_de_linguagens, text="Remover",command=lambda: self.remover_elemento_da_lista(self.__listbox_lista_de_linguagens.curselection()))
         self.__configura_elemento(self.__button_deletar_linguagem, row=0, column=1, rowweight=0, columnweight=1)
         self.__button_clonar_linguagem = Button(frame_lista_de_linguagens, text="Duplicar")
         self.__configura_elemento(self.__button_clonar_linguagem, row=0, column=2, rowweight=0, columnweight=1)
@@ -123,99 +137,157 @@ class View:
         self.__notebook_abas_de_representacao = ttk.Notebook(self.__frame_manipulacao_elemento)
         self.__notebook_abas_de_representacao.pack(expand=True, fill=BOTH)
 
-        aba_gramatica = ttk.Frame(self.__notebook_abas_de_representacao)
-        self.__notebook_abas_de_representacao.add(aba_gramatica, text='Gramática Regular')
-        frame_gramatica = Frame(aba_gramatica, bd=5, relief=SUNKEN)
-        frame_gramatica.configure(background='yellow')
-        self.__configura_elemento(frame_gramatica)
+        aba_info = ttk.Frame(self.__notebook_abas_de_representacao)
+        self.__notebook_abas_de_representacao.add(aba_info, text='Informações')
 
-        aba_expressao = ttk.Frame(self.__notebook_abas_de_representacao)
-        self.__notebook_abas_de_representacao.add(aba_expressao, text='Expressão Regular')
-        frame_expressao = Frame(aba_expressao, bd=5, relief=SUNKEN)
-        frame_expressao.configure(background='green')
-        self.__configura_elemento(frame_expressao)
+        aba_conversoes = ttk.Frame(self.__notebook_abas_de_representacao)
+        self.__notebook_abas_de_representacao.add(aba_conversoes, text='Conversões')
 
-        aba_automato = ttk.Frame(self.__notebook_abas_de_representacao)
-        self.__notebook_abas_de_representacao.add(aba_automato, text='Autômato Finito')
-        frame_automato = Frame(aba_automato, bd=5, relief=SUNKEN)
-        frame_automato.configure(background='cyan')
-        self.__configura_elemento(frame_automato)
+        aba_operacoes_linguagem = ttk.Frame(self.__notebook_abas_de_representacao)
+        self.__notebook_abas_de_representacao.add(aba_operacoes_linguagem, text='Operações')
+
+        aba_operacoes_especificas = ttk.Frame(self.__notebook_abas_de_representacao)
+        self.__notebook_abas_de_representacao.add(aba_operacoes_especificas, text='Operações Específicas')
         # endregion
 
-        # region Inicializa frames de GR
-        self.__frame_gr_operacao = Frame(frame_gramatica, bd=5, relief=SUNKEN)
-        self.__configura_elemento(self.__frame_gr_operacao)
-        self.__inicializa_tela_gr_operacao()
-        self.__frame_gr_operacao.grid_remove()
-        self.__frame_gr_operacao.configure(background='green')
+        # region Frames das abas
+        self.__frame_info = Frame(aba_info, bd=5, relief=SUNKEN)
+        self.__frame_info.configure(background='red')
+        self.__configura_elemento(self.__frame_info)
+        self.__inicializa_frame_informacoes()
 
-        self.__frame_gr_transformacao = Frame(frame_gramatica, bd=5, relief=SUNKEN)
-        self.__configura_elemento(self.__frame_gr_transformacao)
-        self.__inicializa_tela_gr_transformacao()
-        self.__frame_gr_transformacao.configure(background='green')
+        self.__frame_conversoes = Frame(aba_conversoes, bd=5, relief=SUNKEN)
+        self.__frame_conversoes.configure(background='green')
+        self.__configura_elemento(self.__frame_conversoes)
+        self.__inicializa_frame_conversoes()
+
+        self.__frame_operacoes = Frame(aba_operacoes_linguagem, bd=5, relief=SUNKEN)
+        self.__frame_operacoes.configure(background='blue')
+        self.__configura_elemento(self.__frame_operacoes)
+        self.__inicializa_frame_operacoes()
+
+        self.__frame_operacoes_gr = Frame(aba_operacoes_especificas, bd=5, relief=SUNKEN)
+        self.__frame_operacoes_gr.configure(background='yellow')
+        self.__configura_elemento(self.__frame_operacoes_gr)
+        self.__inicializa_frame_operacoes_gr()
+        self.__frame_operacoes_gr.grid_remove()
+
+        self.__frame_operacoes_af = Frame(aba_operacoes_especificas, bd=5, relief=SUNKEN)
+        self.__frame_operacoes_af.configure(background='yellow')
+        self.__inicializa_frame_operacoes_af()
+        self.__configura_elemento(self.__frame_operacoes_af)
         # endregion
 
-        # region Inicializa frames de GR
-        self.__frame_er_operacao = Frame(frame_expressao, bd=5, relief=SUNKEN)
-        self.__configura_elemento(self.__frame_er_operacao)
-        self.__inicializa_tela_er_operacao()
-        self.__frame_er_operacao.grid_remove()
-        self.__frame_er_operacao.configure(background='green')
+    def __inicializa_frame_informacoes(self):
+        padding = 10
+        frame_dados = Frame(self.__frame_info, padx=padding, pady=padding)
+        self.__configura_elemento(frame_dados, row=0, column=0, rowweight=0, sticky=NW)
 
-        self.__frame_er_transformacao = Frame(frame_expressao, bd=5, relief=SUNKEN)
-        self.__configura_elemento(self.__frame_er_transformacao)
-        self.__inicializa_tela_er_transformacao()
-        self.__frame_er_transformacao.configure(background='green')
-        # endregion
+        label_nome = Label(frame_dados, text="Nome:")
+        self.__configura_elemento(label_nome, row=0, column=0, rowweight=0, columnweight=0, sticky=W)
+        self.__label_nome_display = Label(frame_dados, text="NOME")
+        self.__configura_elemento(self.__label_nome_display, row=0, column=1, rowweight=0, columnweight=1, sticky=W)
+        label_tipo = Label(frame_dados, text="Tipo:")
+        self.__configura_elemento(label_tipo, row=1, column=0, rowweight=0, columnweight=0, sticky=W)
+        self.__label_tipo_display = Label(frame_dados, text="TIPO")
+        self.__configura_elemento(self.__label_tipo_display, row=1, column=1, rowweight=0, columnweight=1, sticky=W)
 
-        # region Inicializa frames de GR
-        self.__frame_af_operacao = Frame(frame_automato, bd=5, relief=SUNKEN)
-        self.__configura_elemento(self.__frame_af_operacao)
-        self.__inicializa_tela_af_operacao()
-        self.__frame_af_operacao.grid_remove()
-        self.__frame_af_operacao.configure(background='green')
+        frame_visualizacao = Frame(self.__frame_info, padx=padding, pady=padding)
+        self.__configura_elemento(frame_visualizacao, row=1, column=0)
 
-        self.__frame_af_transformacao = Frame(frame_automato, bd=5, relief=SUNKEN)
-        self.__configura_elemento(self.__frame_af_transformacao)
-        self.__inicializa_tela_af_transformacao()
-        self.__frame_af_transformacao.configure(background='green')
-        # endregion
+        label_visualizacao = Label(frame_visualizacao, text="Visualização:")
+        self.__configura_elemento(label_visualizacao, row=0, column=0, columnspan=2, rowweight=0, columnweight=0, sticky=W)
 
-    def __inicializa_tela_gr_operacao(self):
-        label = Label(self.__frame_gr_operacao, text="GrOP")
-        label.pack()
+        self.__text_visualizacao = Text(frame_visualizacao, wrap=NONE)
+        self.__configura_elemento(self.__text_visualizacao, row=1, column=0)
+        self.__text_visualizacao.config(state=DISABLED)
 
-    def __inicializa_tela_gr_transformacao(self):
-        f = Frame(self.__frame_gr_transformacao)
-        f.pack(expand=True)
-        label = Label(f, text="Você precisa transformar esse elemento em uma gramática regular primeiro")
-        label.pack()
-        b = Button(f, text="Transformar")
-        b.pack()
+        scrollbar_visualizacao_y = Scrollbar(frame_visualizacao, command=self.__text_visualizacao.yview)
+        self.__text_visualizacao['yscrollcommand'] = scrollbar_visualizacao_y.set
+        self.__configura_elemento(scrollbar_visualizacao_y, row=1, column=1, columnweight=0)
 
-    def __inicializa_tela_er_operacao(self):
-        label = Label(self.__frame_er_operacao, text="ErOP")
-        label.pack()
+        scrollbar_visualizacao_x = Scrollbar(frame_visualizacao, orient=HORIZONTAL, command=self.__text_visualizacao.xview)
+        self.__text_visualizacao['xscrollcommand'] = scrollbar_visualizacao_x.set
+        self.__configura_elemento(scrollbar_visualizacao_x, row=2, column=0, rowweight=0, columnweight=1)
 
-    def __inicializa_tela_er_transformacao(self):
-        f = Frame(self.__frame_er_transformacao)
-        f.pack(expand=True)
-        label = Label(f, text="Você precisa transformar esse elemento em uma expressão regular primeiro")
-        label.pack()
-        b = Button(f, text="Transformar")
-        b.pack()
+    def __inicializa_frame_conversoes(self):
+        padding = 10
+        label_gr = Label(self.__frame_conversoes, text="Converter para Gramática Regular:", pady=padding)
+        self.__configura_elemento(label_gr, row=0, column=0, rowweight=0, columnweight=0, sticky=W)
 
-    def __inicializa_tela_af_operacao(self):
-        label = Label(self.__frame_af_operacao, text="AfOP")
-        label.pack()
+        self.__button_converter_para_gr = Button(self.__frame_conversoes, text="Converter")
+        self.__configura_elemento(self.__button_converter_para_gr, row=0, column=1, rowweight=0, columnweight=0, sticky=W)
 
-    def __inicializa_tela_af_transformacao(self):
-        f = Frame(self.__frame_af_transformacao)
-        f.pack(expand=True)
-        label = Label(f, text="Você precisa transformar esse elemento em um autômato finito primeiro")
-        label.pack()
-        b = Button(f, text="Transformar")
-        b.pack()
+        label_af = Label(self.__frame_conversoes, text="Converter para Autômato Finito:", pady=padding)
+        self.__configura_elemento(label_af, row=1, column=0, rowweight=0, columnweight=0, sticky=W)
+
+        self.__button_converter_para_af = Button(self.__frame_conversoes, text="Converter")
+        self.__configura_elemento(self.__button_converter_para_af, row=1, column=1, rowweight=0, columnweight=0, sticky=W)
+
+    def __inicializa_frame_operacoes(self):
+        padding = 10
+
+        label__operacao = Label(self.__frame_operacoes, text="Obter autômato finito do(a):")
+        self.__configura_elemento(label__operacao, row=0, column=0, rowweight=0, columnweight=0, sticky=NW)
+
+        frame_seleciona_operacao = LabelFrame(self.__frame_operacoes, text="Operação")
+        self.__configura_elemento(frame_seleciona_operacao, row=1, column=0, rowweight=0, columnweight=0, sticky=NW)
+
+        operacoes = [
+            ("Intersecção deste elemento com outro", 0),
+            ("Diferença deste elemento com outro", 1),
+            ("Reverso deste elemento", 2)
+        ]
+        self.__int_operacao_selecionada.set(0)
+        for texto, valor in operacoes:
+            b = Radiobutton(frame_seleciona_operacao, text=texto,
+                            variable=self.__int_operacao_selecionada, value=valor)
+            self.__configura_elemento(b, row=valor, sticky=NW)
+
+        f = Frame(self.__frame_operacoes, pady=padding)
+        self.__configura_elemento(f, row=3, column=0, rowweight=0, columnweight=0, sticky=NW)
+
+        button_aplicar_operacao = Button(f, text="Aplicar Operação", command=self.abrir_janela_seleciona_elemento)
+        self.__configura_elemento(button_aplicar_operacao)
+
+    def __inicializa_frame_operacoes_gr(self):
+        padding = 10
+        label__operacao = Label(self.__frame_operacoes_gr, text="Obter gramática resultante do(a):")
+        self.__configura_elemento(label__operacao, row=0, column=0, rowweight=0, columnweight=0, sticky=NW)
+
+        frame_seleciona_operacao = LabelFrame(self.__frame_operacoes_gr, text="Operação")
+        self.__configura_elemento(frame_seleciona_operacao, row=1, column=0, rowweight=0, columnweight=0, sticky=NW)
+
+        operacoes = [
+            ("União desta gramática com outra", 0),
+            ("Concatenação desta gramática com outra", 1),
+            ("Fecho desta gramática", 2)
+        ]
+        self.__int_operacao_gr_selecionada.set(0)
+        for texto, valor in operacoes:
+            b = Radiobutton(frame_seleciona_operacao, text=texto,
+                            variable=self.__int_operacao_gr_selecionada, value=valor)
+            self.__configura_elemento(b, row=valor, sticky=NW)
+
+        f = Frame(self.__frame_operacoes_gr, pady=padding)
+        self.__configura_elemento(f, row=3, column=0, rowweight=0, columnweight=0, sticky=NW)
+
+        button_aplicar_operacao = Button(f, text="Aplicar Operação")
+        self.__configura_elemento(button_aplicar_operacao)
+
+    def __inicializa_frame_operacoes_af(self):
+        padding = 10
+        label_det = Label(self.__frame_operacoes_af, text="Obter automato deterministico equivalente:", pady=padding)
+        self.__configura_elemento(label_det, row=0, column=0, rowweight=0, columnweight=0, sticky=W)
+
+        button_determinizar = Button(self.__frame_operacoes_af, text="Determinizar")
+        self.__configura_elemento(button_determinizar, row=0, column=1, rowweight=0, columnweight=0, sticky=W)
+
+        label_af = Label(self.__frame_operacoes_af, text="Obter automato mínimo equivalente:", pady=padding)
+        self.__configura_elemento(label_af, row=1, column=0, rowweight=0, columnweight=0, sticky=W)
+
+        button_converter_para_af = Button(self.__frame_operacoes_af, text="Minimizar")
+        self.__configura_elemento(button_converter_para_af, row=1, column=1, rowweight=0, columnweight=0, sticky=W+E)
 
     def __inicializa_tela_sem_selecionado(self):
         f = Frame(self.__frame_elemento_nulo)
@@ -239,39 +311,44 @@ class View:
             self.__frame_elemento_nulo.grid_remove()
             self.__frame_manipulacao_elemento.grid()
 
-            if num_tela == 1:  # GR Existe
-                self.__frame_gr_transformacao.grid_remove()
-                self.__frame_gr_operacao.grid()
-            else:  # GR Transforma
-                self.__frame_gr_operacao.grid_remove()
-                self.__frame_gr_transformacao.grid()
-
-            if num_tela == 2:  # ER Existe
-                self.__frame_er_transformacao.grid_remove()
-                self.__frame_er_operacao.grid()
-            else:  # ER Transforma
-                self.__frame_er_operacao.grid_remove()
-                self.__frame_er_transformacao.grid()
-
-            if num_tela == 3:  # AF Existe
-                self.__frame_af_transformacao.grid_remove()
-                self.__frame_af_operacao.grid()
-            else:  # AF Transforma
-                self.__frame_af_operacao.grid_remove()
-                self.__frame_af_transformacao.grid()
+            if num_tela == 1:  # GR
+                self.__notebook_abas_de_representacao.tab(3, state=NORMAL)
+                self.__frame_operacoes_af.grid_remove()
+                self.__frame_operacoes_gr.grid()
+            elif num_tela == 2:  # ER
+                self.__notebook_abas_de_representacao.tab(3, state=DISABLED)
+                self.__frame_operacoes_gr.grid_remove()
+                self.__frame_operacoes_af.grid_remove()
+            elif num_tela == 3:  # AF
+                self.__notebook_abas_de_representacao.tab(3, state=NORMAL)
+                self.__frame_operacoes_gr.grid_remove()
+                self.__frame_operacoes_af.grid()
 
     def __atualiza_operacao(self, elemento_selecionado):
         if elemento_selecionado is not None:
             self.__estado_botoes_da_lista(estado=True)
+            nome = elemento_selecionado.get_nome()
+            tipo = None
+            representacao = elemento_selecionado.to_string()
             if elemento_selecionado.get_tipo() is TipoElemento.GR:
                 self.__altera_tela_operacao(1)
-                self.__frame_manipulacao_elemento.configure(text="Gramática Regular")
+                tipo = "Gramática Regular"
+                self.__frame_manipulacao_elemento.configure(text=tipo)
+                self.__button_converter_para_gr['state'] = DISABLED
+                self.__button_converter_para_af['state'] = NORMAL
             elif elemento_selecionado.get_tipo() is TipoElemento.ER:
                 self.__altera_tela_operacao(2)
-                self.__frame_manipulacao_elemento.configure(text="Expressão Regular")
+                tipo = "Expressão Regular"
+                self.__frame_manipulacao_elemento.configure(text=tipo)
+                self.__button_converter_para_gr['state'] = NORMAL
+                self.__button_converter_para_af['state'] = NORMAL
             elif elemento_selecionado.get_tipo() is TipoElemento.AF:
                 self.__altera_tela_operacao(3)
-                self.__frame_manipulacao_elemento.configure(text="Autômato Finito")
+                tipo = "Automato Finito"
+                self.__frame_manipulacao_elemento.configure(text=tipo)
+                self.__button_converter_para_gr['state'] = NORMAL
+                self.__button_converter_para_af['state'] = DISABLED
+            self.__atualiza_visualizacao_do_elemento(nome, tipo, representacao)
         else:
             self.__altera_tela_operacao(0)
             self.__estado_botoes_da_lista(estado=False)
@@ -279,19 +356,31 @@ class View:
     def atualiza_elemento_selecionado(self, indice, elemento_selecionado):
         if indice is not None:
             self.__listbox_lista_de_linguagens.selection_set(indice)
+            self.__listbox_lista_de_linguagens.see(indice)
         self.__atualiza_operacao(elemento_selecionado)
 
-    def cb_seleciona_lista(self, event):
+    def __atualiza_visualizacao_do_elemento(self, nome, tipo, representacao):
+        self.__label_nome_display['text'] = nome
+        self.__label_tipo_display['text'] = tipo
+        self.__text_visualizacao.configure(state='normal')
+        self.__text_visualizacao.delete("1.0", END)
+        self.__text_visualizacao.insert(END, representacao)
+        self.__text_visualizacao.configure(state='disabled')
+
+    def cb_seleciona_lista(self, event=None):
         selecionado = self.__listbox_lista_de_linguagens.curselection()
         indice = None
         if selecionado:
             indice = selecionado[0]
-
         self.__controller.cb_alterar_elemento_selecionado(indice)
 
     def adicionar_elemento_na_lista(self, nome_do_elemento, tipo_do_elemento, select=True):
         display_name = "(" + tipo_do_elemento + ") " + nome_do_elemento
         self.__listbox_lista_de_linguagens.insert(END, display_name)
+        if select:
+            self.__listbox_lista_de_linguagens.selection_clear(0, END)
+            self.__listbox_lista_de_linguagens.select_set(END)
+            self.cb_seleciona_lista()
 
     def remover_elemento_da_lista(self, indice):
         self.__listbox_lista_de_linguagens.delete(indice)
@@ -301,12 +390,19 @@ class View:
         if not self.__popup_novo_elemento.is_showing():
             self.__popup_novo_elemento.show()
 
+    def abrir_janela_seleciona_elemento(self):
+        if not self.__popup_seleciona_elemento.is_showing():
+            lista_elementos = self.__listbox_lista_de_linguagens.get(0, END)
+            selecionado = self.__popup_seleciona_elemento.show(lista_elementos)
+            print(selecionado)
+
     def mostrar_aviso(self, aviso, titulo="Erro"):
         if self.__popup_novo_elemento.is_showing():
             current_top = self.__popup_novo_elemento.get_root()
+        elif self.__popup_seleciona_elemento.is_showing():
+            current_top = self.__popup_seleciona_elemento.get_root()
         else:
             current_top = self.__root
-
         popup = Toplevel(current_top)
         popup.transient(current_top)
         popup.title(titulo)
@@ -318,6 +414,8 @@ class View:
         current_top.wait_window(popup)
         if self.__popup_novo_elemento.is_showing():
             self.__popup_novo_elemento.pass_set()
+        elif self.__popup_seleciona_elemento.is_showing():
+            self.__popup_seleciona_elemento.pass_set()
 
     def mostrar_menu(self, mostrar):
         if mostrar:
