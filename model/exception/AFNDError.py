@@ -8,6 +8,7 @@ class AFNDError(Exception):
 
     '''
         Método construtor.
+        \:param message é a operação que causou o erro.
     '''
     def __init__(self, message):
         self.__message = self.IS_AFND + message

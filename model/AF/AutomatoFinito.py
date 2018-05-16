@@ -158,7 +158,7 @@ class AutomatoFinito:
     '''
         Retorna todas as sentenças reconhecidas pelo autômato do tamanho indicado pelo parâmetro.
         \:param tamanho é o tamanho das sentenças reconhecidas.
-        \:return uma lista de strings com as sentenças reconhecidas pelo autômato.
+        \:return uma lista de strings com as sentenças reconhecidas pelo autômato. Se nenhuma senteça do tamanho dado for reconhecida, a lista será vazia.
     '''
     def enumera_sentencas(self, tamanho):
         sentencas_reconhecidas = []

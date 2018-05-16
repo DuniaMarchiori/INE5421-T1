@@ -72,28 +72,25 @@ class Gramatica:
         return nome_arquivo
 
     '''
-        Lê a gramática de um arquivo.
-        \:param nome_arquivo é o caminho do arquivo a ser lido.
-        \:return True se a leitura ocorrer sem erros.
+        Gera a estrutura da gramática a partir do texto escrito pelo usuário.
+        \:param texto é o texto informado pelo usuário.
+        \:return True caso a estrutura seja gerada com sucesso e False caso contrário.
     '''
-    def abrir(self, nome_arquivo):
-        file = open(nome_arquivo, "r")
-        self.__texto = file.read()
-        file.close()
-        self.__texto = self.__texto.replace(" ", "") # Retira todos os espaços em branco
-        lista = self.__texto.splitlines()
-        self.__gera_estrutura_producoes(lista)
+    def parse(self, texto):
+        self.__texto = texto.replace(" ", "") # Retira todos os espaços em branco
+        linhas = self.__texto.splitlines()
+        self.__gera_estrutura_producoes(linhas)
         return True
 
     '''
         Gera a estrutura da gramática a partir do texto informado pelo usuário.
         \:param lista é a lista de produções da gramática em texto
     '''
-    def __gera_estrutura_producoes(self, lista):
+    def __gera_estrutura_producoes(self, linhas):
         i = 0
         RE_D = re.compile('\d')
 
-        for linha in lista:
+        for linha in linhas:
             if linha.__contains__("->"):
                 l = linha.split("->") # Separa entre o lado esquerdo e direito do "->"
                 if len(l) <= 2:
@@ -110,8 +107,8 @@ class Gramatica:
                                 if p != "&":
                                     self.__vt.add(p)
                             else:
-                                raise FormatError(FormatError.FORMAT_ERROR + "as produções regulares devem seguir o formato aB, onde a é um símbolo terminal e B um símbolo não terminal.")
-                        else:
+                                raise FormatError(FormatError.FORMAT_ERROR + str(linhas.index(linha)+1) + ": as produções regulares devem seguir o formato aB, onde a é um símbolo terminal e B um símbolo não terminal.")
+                        elif len(p) != 0:
                             chars = list(p)
                             terminal = chars[0] # caractere terminal
                             nao_terminal = chars[1:len(chars)] # caracteres não-terminais
@@ -128,13 +125,13 @@ class Gramatica:
                                 self.__vt.add(terminal)
                                 self.__vn_dir.add(simbolo_nt)
                             else:
-                                raise FormatError(FormatError.FORMAT_ERROR + "as produções regulares devem seguir o formato aB, onde a é um símbolo terminal e B um símbolo não terminal.")
+                                raise FormatError(FormatError.FORMAT_ERROR + str(linhas.index(linha)+1) + ": as produções regulares devem seguir o formato aB, onde a é um símbolo terminal e B um símbolo não terminal.")
                 else:
-                    raise FormatError(FormatError.FORMAT_ERROR + "ocorre mais de um símbolo '->' por produção. Cada produção deve estar em uma linha.")
+                    raise FormatError(FormatError.FORMAT_ERROR + str(linhas.index(linha)+1) + ": ocorre mais de um símbolo '->' por produção. Cada produção deve estar em uma linha.")
 
                 self.__producoes[chave] = producoes
             else:
-                raise FormatError(FormatError.FORMAT_ERROR + "produção não apresenta o símbolo '->'")
+                raise FormatError(FormatError.FORMAT_ERROR + str(linhas.index(linha)+1) + ": produção não apresenta o símbolo '->'")
 
         # Símbolo não-terminal referenciado não tem produções
         for vn in self.__vn_dir:
