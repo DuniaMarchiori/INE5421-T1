@@ -423,13 +423,17 @@ class View:
             # TODO fazer o cb dos botões ser outro metodo que chama esse, mas que depois faz outras coiass com o id do selecionado
             # (Tipo chamar o callback da operação no controller)
 
-    def mostrar_aviso(self, aviso, titulo="Erro"):
+    def __get_current_top(self):
         if self.__popup_novo_elemento.is_showing():
             current_top = self.__popup_novo_elemento.get_root()
         elif self.__popup_seleciona_elemento.is_showing():
             current_top = self.__popup_seleciona_elemento.get_root()
         else:
             current_top = self.__root
+        return current_top
+
+    def mostrar_aviso(self, aviso, titulo="Erro"):
+        current_top = self.__get_current_top()
         popup = Toplevel(current_top)
         popup.transient(current_top)
         popup.title(titulo)
@@ -437,6 +441,33 @@ class View:
         popup.minsize(width=400, height=200)
         label = Label(popup, text=aviso)
         label.pack(expand=True)
+        popup.grab_set()
+        current_top.wait_window(popup)
+        if self.__popup_novo_elemento.is_showing():
+            self.__popup_novo_elemento.pass_set()
+        elif self.__popup_seleciona_elemento.is_showing():
+            self.__popup_seleciona_elemento.pass_set()
+
+    def mostrar_lista(self, lista_de_sentencas, tamanho):
+        current_top = self.__get_current_top()
+        popup = Toplevel(current_top)
+        popup.transient(current_top)
+        popup.title("Lista de Sentenças Geradas")
+        popup.resizable(width=False, height=False)
+        popup.minsize(width=400, height=200)
+        label = Label(popup, text="Sentenças de tamanho " + str(tamanho) + ":")
+        label.pack()
+        f = Frame(popup)
+        f.pack()
+        listbox_de_sentencas = Listbox(f)
+        for sentenca in lista_de_sentencas:
+            listbox_de_sentencas.insert(END, sentenca)
+        listbox_de_sentencas.pack(side=LEFT)
+
+        scrollbar_lista = Scrollbar(f, command=listbox_de_sentencas.yview)
+        listbox_de_sentencas['yscrollcommand'] = scrollbar_lista.set
+        scrollbar_lista.pack(fill=Y, side=LEFT)
+
         popup.grab_set()
         current_top.wait_window(popup)
         if self.__popup_novo_elemento.is_showing():
@@ -466,9 +497,4 @@ class View:
         b.pack()
 
     def debug2(self):
-        popup = Tk()
-
-        e = Entry(popup, text="asd")
-        e.pack()
-        b = Button(popup, text="OK", command=lambda: self.__tipo_linguagem_atual.set(e.get()))
-        b.pack()
+        self.mostrar_lista(["aa","ab","ba","bb","aa"], 2)
