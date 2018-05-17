@@ -2,6 +2,7 @@
 
 from itertools import product
 
+from model.AF.Estado import Estado
 from model.exception.AFNDError import AFNDError
 
 '''
@@ -12,11 +13,12 @@ class AutomatoFinito:
     '''
         Método construtor.
     '''
-    def __init__(self):
+    def __init__(self, determinizado = False):
         self.__producoes = {} # conjunto de transições
         self.__estado_inicial = None
-        self.__estados_finais = []
+        self.__estados_finais = set()
         self.__vt = set() # conjunto de símbolos terminais
+        self.__determinizado = determinizado
 
     '''
         Adiciona uma nova produção para um estado a partir de um simbolo terminal.
@@ -176,10 +178,52 @@ class AutomatoFinito:
         return sentencas_reconhecidas
 
     '''
+        
+    '''
+    def determiniza(self):
+        if self.isAFND():
+            af = AutomatoFinito(True) # Indica que o autômato é determinizado
+            af.set_vt(self.__vt)
+            af.set_estado_inicial(self.__estado_inicial)
+
+            estados_visitados = set()
+            estados_criados = set()
+            estados_criados.add(self.__estado_inicial)
+            estados_finais = set()
+            estados_a_visitar = set()
+            estados_a_visitar.add(self.__estado_inicial)
+
+            while len(estados_a_visitar) != 0:
+                estado = estados_a_visitar.pop()
+                estados_visitados.add(estado)
+                for simbolo in self.__vt:
+                    nova_transicao = []
+                    for i in estado.to_list():
+                        e = Estado(i)
+                        if e in self.__estados_finais:
+                            estados_finais.add(estado)
+                        if len(self.__producoes[e]) != 0:
+                            if simbolo in self.__producoes[e]:
+                                transicoes = self.__producoes[e][simbolo]
+                                for t in transicoes:
+                                    nova_transicao.append(t.to_string())
+                    nova_transicao = Estado(nova_transicao)
+                    af.adiciona_transicao(estado, simbolo, nova_transicao)
+                    estados_criados.add(nova_transicao)
+                estados_a_visitar = estados_criados - estados_visitados
+            af.set_estados_finais(list(estados_finais))
+            return af
+        else:
+            raise Exception("O autômato já é um autômato finito determinístico.")
+    '''
         Verifica se o autômato é um autômato finito não determinístico (AFND).
         \:return True se o autômato for um AFND ou False caso contrário.
     '''
     def isAFND(self):
+
+        if self.__determinizado:
+            return False
+
         for estado in self.__producoes:
             transicoes = self.__producoes[estado]
             for t in transicoes:
@@ -201,6 +245,7 @@ class AutomatoFinito:
         A primeira linha é composta pelos símbolos terminais do autômato e as linhas seguintes representam as transições para cada símbolo não terminal.
         \:return uma matriz de strings.
     '''
+    # TODO - diferente para quando o autômato for determinizado(aparece os estados com[])
     def to_string(self):
         matriz =[]
         primeira_prod = []
