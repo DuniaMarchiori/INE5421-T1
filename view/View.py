@@ -151,28 +151,30 @@ class View:
         # endregion
 
         # region Frames das abas
-        self.__frame_info = Frame(aba_info, bd=5, relief=SUNKEN)
+        padding = 10
+
+        self.__frame_info = Frame(aba_info, bd=5, relief=SUNKEN, padx=padding, pady=padding)
         self.__frame_info.configure(background='red')
         self.__configura_elemento(self.__frame_info)
         self.__inicializa_frame_informacoes()
 
-        self.__frame_conversoes = Frame(aba_conversoes, bd=5, relief=SUNKEN)
+        self.__frame_conversoes = Frame(aba_conversoes, bd=5, relief=SUNKEN, padx=padding, pady=padding)
         self.__frame_conversoes.configure(background='green')
         self.__configura_elemento(self.__frame_conversoes)
         self.__inicializa_frame_conversoes()
 
-        self.__frame_operacoes = Frame(aba_operacoes_linguagem, bd=5, relief=SUNKEN)
+        self.__frame_operacoes = Frame(aba_operacoes_linguagem, bd=5, relief=SUNKEN, padx=padding, pady=padding)
         self.__frame_operacoes.configure(background='blue')
         self.__configura_elemento(self.__frame_operacoes)
         self.__inicializa_frame_operacoes()
 
-        self.__frame_operacoes_gr = Frame(aba_operacoes_especificas, bd=5, relief=SUNKEN)
+        self.__frame_operacoes_gr = Frame(aba_operacoes_especificas, bd=5, relief=SUNKEN, padx=padding, pady=padding)
         self.__frame_operacoes_gr.configure(background='yellow')
         self.__configura_elemento(self.__frame_operacoes_gr)
         self.__inicializa_frame_operacoes_gr()
         self.__frame_operacoes_gr.grid_remove()
 
-        self.__frame_operacoes_af = Frame(aba_operacoes_especificas, bd=5, relief=SUNKEN)
+        self.__frame_operacoes_af = Frame(aba_operacoes_especificas, bd=5, relief=SUNKEN, padx=padding, pady=padding)
         self.__frame_operacoes_af.configure(background='yellow')
         self.__inicializa_frame_operacoes_af()
         self.__configura_elemento(self.__frame_operacoes_af)
@@ -180,7 +182,7 @@ class View:
 
     def __inicializa_frame_informacoes(self):
         padding = 10
-        frame_dados = Frame(self.__frame_info, padx=padding, pady=padding)
+        frame_dados = Frame(self.__frame_info)
         self.__configura_elemento(frame_dados, row=0, column=0, rowweight=0, sticky=NW)
 
         label_nome = Label(frame_dados, text="Nome:")
@@ -192,7 +194,7 @@ class View:
         self.__label_tipo_display = Label(frame_dados, text="TIPO")
         self.__configura_elemento(self.__label_tipo_display, row=1, column=1, rowweight=0, columnweight=1, sticky=W)
 
-        frame_visualizacao = Frame(self.__frame_info, padx=padding, pady=padding)
+        frame_visualizacao = Frame(self.__frame_info)
         self.__configura_elemento(frame_visualizacao, row=1, column=0)
 
         label_visualizacao = Label(frame_visualizacao, text="Visualização:")
@@ -278,16 +280,40 @@ class View:
     def __inicializa_frame_operacoes_af(self):
         padding = 10
         label_det = Label(self.__frame_operacoes_af, text="Obter automato deterministico equivalente:", pady=padding)
-        self.__configura_elemento(label_det, row=0, column=0, rowweight=0, columnweight=0, sticky=W)
+        self.__configura_elemento(label_det, row=0, column=0, columnspan=2, rowweight=0, columnweight=0, sticky=W)
 
         button_determinizar = Button(self.__frame_operacoes_af, text="Determinizar")
-        self.__configura_elemento(button_determinizar, row=0, column=1, rowweight=0, columnweight=0, sticky=W)
+        self.__configura_elemento(button_determinizar, row=0, column=2, rowweight=0, columnweight=0, sticky=W)
 
         label_af = Label(self.__frame_operacoes_af, text="Obter automato mínimo equivalente:", pady=padding)
-        self.__configura_elemento(label_af, row=1, column=0, rowweight=0, columnweight=0, sticky=W)
+        self.__configura_elemento(label_af, row=1, column=0, columnspan=2, rowweight=0, columnweight=0, sticky=W)
 
         button_converter_para_af = Button(self.__frame_operacoes_af, text="Minimizar")
-        self.__configura_elemento(button_converter_para_af, row=1, column=1, rowweight=0, columnweight=0, sticky=W+E)
+        self.__configura_elemento(button_converter_para_af, row=1, column=2, rowweight=0, columnweight=0, sticky=W+E)
+
+        label_reconhecer = Label(self.__frame_operacoes_af, text="Reconhecer sentença:", pady=padding)
+        self.__configura_elemento(label_reconhecer, row=2, column=0, rowweight=1, columnweight=0, sticky=W)
+
+        f = Frame(self.__frame_operacoes_af, padx=padding)
+        self.__configura_elemento(f, row=2, column=1, rowweight=0, columnweight=0, sticky=W+E)
+        entry_sentenca = Entry(f)
+        self.__configura_elemento(entry_sentenca)
+
+        button_reconhecer = Button(self.__frame_operacoes_af, text="Reconhecer")
+        self.__configura_elemento(button_reconhecer, row=2, column=2, rowweight=0, columnweight=0, sticky=W+E)
+
+        label_gerar = Label(self.__frame_operacoes_af, text="Gerar sentenças de tamanho ", pady=padding)
+        self.__configura_elemento(label_gerar, row=3, column=0, rowweight=1, columnweight=0, sticky=W)
+
+        f = Frame(self.__frame_operacoes_af, padx=padding)
+        self.__configura_elemento(f, row=3, column=1, rowweight=0, columnweight=0, sticky=W+E)
+        entry_tamanho = Entry(f)
+        self.__configura_elemento(entry_tamanho)
+
+        button_reconhecer = Button(self.__frame_operacoes_af, text="Gerar")
+        self.__configura_elemento(button_reconhecer, row=3, column=2, rowweight=0, columnweight=0, sticky=W+E)
+
+        self.__frame_operacoes_af.grid_columnconfigure(1, minsize=200)
 
     def __inicializa_tela_sem_selecionado(self):
         f = Frame(self.__frame_elemento_nulo)

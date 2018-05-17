@@ -15,6 +15,9 @@ class Elemento:
     def get_tipo(self):
         return self.__tipo
 
+    def parse(self, expressao):
+        pass
+
     def to_string(self):
         return ""
 

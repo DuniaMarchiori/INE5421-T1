@@ -1,5 +1,7 @@
 import string
 
+from model.Elemento import Elemento
+from model.Elemento import TipoElemento
 from model.ER.Arvore.Nodos.NodoConcat import NodoConcat
 from model.ER.Arvore.Nodos.NodoFecho import NodoFecho
 from model.ER.Arvore.Nodos.NodoFolha import NodoFolha
@@ -12,15 +14,22 @@ from model.exception.ExpressionParsingError import ExpressionParsingError
 '''
     Classe que representa uma expressão regular.
 '''
-class Expressao:
+class Expressao(Elemento):
 
     __arvore = None
 
     '''
-        Método construtor.
+        Construtor do elemento expressão regular.
+        \:param nome é o nome do elemento no sistema.
+    '''
+    def __init__(self, nome):
+        super(Expressao, self).__init__(nome, TipoElemento.ER)
+
+    '''
+        Método que recebe a expressão em forma de textual e armazena sua estrutura nesse objeto.
         \:param expressao é a representação textual da expressão regular.
     '''
-    def __init__(self, expressao):
+    def parse(self, expressao):
         self.__gerar_arvore(expressao)
 
     '''
