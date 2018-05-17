@@ -13,6 +13,7 @@ class Estado:
         self.__lista = sorted(nomes, key=str.lower)
         self.__string = ''.join(self.__lista)
         self.__nome = frozenset(nomes)
+        self.__string_com_virgula = ','.join(self.__lista)
 
     '''
         Retorna o estado em formato de lista.
@@ -27,6 +28,14 @@ class Estado:
     '''
     def to_string(self):
         return self.__string
+
+    '''
+            Retorna o estado em formato de texto, com os estados que compoem este estado separados por vírgula.
+            \:return uma string com a composição do estado.
+        '''
+
+    def to_string_com_virgula(self):
+        return self.__string_com_virgula
 
     '''
         Retorna o estado em formato de conjunto.

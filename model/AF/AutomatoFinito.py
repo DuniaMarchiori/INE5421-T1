@@ -19,6 +19,10 @@ class AutomatoFinito:
         self.__estados_finais = set()
         self.__vt = set() # conjunto de símbolos terminais
         self.__determinizado = determinizado
+        if determinizado:
+            self.__deterministico = True
+        else:
+            self.__deterministico = None
 
     '''
         Adiciona uma nova produção para um estado a partir de um simbolo terminal.
@@ -178,7 +182,8 @@ class AutomatoFinito:
         return sentencas_reconhecidas
 
     '''
-        
+        Determiniza este autômato e o retorna como um autômato novo.
+        \:return o autômato determinizado.
     '''
     def determiniza(self):
         if self.isAFND():
@@ -186,30 +191,33 @@ class AutomatoFinito:
             af.set_vt(self.__vt)
             af.set_estado_inicial(self.__estado_inicial)
 
+            estados_finais = set() # Conjuntos de estados finais do novo autômato
             estados_visitados = set()
             estados_criados = set()
             estados_criados.add(self.__estado_inicial)
-            estados_finais = set()
             estados_a_visitar = set()
             estados_a_visitar.add(self.__estado_inicial)
 
-            while len(estados_a_visitar) != 0:
+            while len(estados_a_visitar) != 0: # Se ainda há estados a visitar
                 estado = estados_a_visitar.pop()
                 estados_visitados.add(estado)
                 for simbolo in self.__vt:
                     nova_transicao = []
-                    for i in estado.to_list():
+                    for i in estado.to_list(): # Em um autômato determinizado, um estado do autômato pode ser composto por mais de um estado do autômato anterior
                         e = Estado(i)
                         if e in self.__estados_finais:
                             estados_finais.add(estado)
                         if len(self.__producoes[e]) != 0:
-                            if simbolo in self.__producoes[e]:
+                            if simbolo in self.__producoes[e]: # Se á produções desse estado a partir do símbolo não terminal sendo analisado
                                 transicoes = self.__producoes[e][simbolo]
                                 for t in transicoes:
                                     nova_transicao.append(t.to_string())
-                    nova_transicao = Estado(nova_transicao)
-                    af.adiciona_transicao(estado, simbolo, nova_transicao)
-                    estados_criados.add(nova_transicao)
+                    if len(nova_transicao) != 0: # Se há produções a partir desse estado
+                        nova_transicao = Estado(nova_transicao)
+                        af.adiciona_transicao(estado, simbolo, nova_transicao) # Adiciona a transição ao novo autômato
+                        estados_criados.add(nova_transicao)
+                    else:
+                        af.adiciona_estado(estado) # Se não há produções a partir desse estado, cria um estado com produções vazias
                 estados_a_visitar = estados_criados - estados_visitados
             af.set_estados_finais(list(estados_finais))
             return af
@@ -221,17 +229,18 @@ class AutomatoFinito:
     '''
     def isAFND(self):
 
-        if self.__determinizado:
-            return False
+        if self.__deterministico != None:
+            return not self.__deterministico
 
+        self.__deterministico = True
         for estado in self.__producoes:
             transicoes = self.__producoes[estado]
             for t in transicoes:
                 if len(transicoes[t]) > 1: # Se tem mais de uma transição para um símbolo
-                    return True
+                    self.__deterministico = False
                 if t == "&" and len(transicoes.keys()) > 1: # Se tem &-transição e mais outras transições através de outros símbolos
-                    return True
-        return False
+                    self.__deterministico = False
+        return not self.__deterministico
 
     '''
         Verifica se o autômato é completo, ou seja, contém transições para todos os símbolos em cada estado.
@@ -245,7 +254,6 @@ class AutomatoFinito:
         A primeira linha é composta pelos símbolos terminais do autômato e as linhas seguintes representam as transições para cada símbolo não terminal.
         \:return uma matriz de strings.
     '''
-    # TODO - diferente para quando o autômato for determinizado(aparece os estados com[])
     def to_string(self):
         matriz =[]
         primeira_prod = []
@@ -259,22 +267,32 @@ class AutomatoFinito:
         for p in self.__producoes:
             linha = []
             simbolo = p.to_list()
-            simb_inicial = self.__estado_inicial in simbolo
+            simb_inicial = self.__estado_inicial == Estado(simbolo)
             simb_final = False
             for s in simbolo:
-                simb_final = simb_final or s in self.__estados_finais
-            simbolo = ''.join(simbolo)
+                simb_final = simb_final or Estado(s) in self.__estados_finais
+
+            if self.__determinizado:
+                simbolo = ','.join(simbolo)
+                simbolo = "[" + simbolo + "]"
+            else:
+                simbolo = ''.join(simbolo)
+
             if simb_inicial:
                 simbolo = "->" + simbolo
             if simb_final:
                 simbolo = "*" + simbolo
             linha.append(simbolo)
+
             prod = self.__producoes[p]
             for x in vt:
                 if x in prod:
                     lista_estados = []
                     for estado in prod[x]:
-                        lista_estados.append(estado.to_string())
+                        if not self.__determinizado:
+                            lista_estados.append(estado.to_string())
+                        else:
+                            lista_estados.append(estado.to_string_com_virgula())
                     linha.append(lista_estados)
                 else:
                     estado = ["-"]
@@ -283,6 +301,7 @@ class AutomatoFinito:
                 primeira_prod = linha
             else:
                 matriz.append(linha)
+
         matriz.insert(1, primeira_prod)
         return matriz
 
