@@ -97,9 +97,8 @@ class View:
         self.__inicializa_opcoes_de_manipulacao()
 
     def __inicializa_lista_de_linguagens(self):
-        frame_lista_de_linguagens = LabelFrame(self.__frame_menu_principal, bd=5, relief=SUNKEN, text="Elementos")
+        frame_lista_de_linguagens = LabelFrame(self.__frame_menu_principal, bd=2, relief=GROOVE, text="Elementos")
         self.__configura_elemento(frame_lista_de_linguagens, row=0, column=0)
-        frame_lista_de_linguagens.configure(background='green')
 
         frame_listbox = Frame(frame_lista_de_linguagens)
         self.__configura_elemento(frame_listbox, row=1, column=0, rowspan=1, columnspan=3)
@@ -107,7 +106,6 @@ class View:
         self.__listbox_lista_de_linguagens = Listbox(frame_listbox, selectmode=SINGLE, bd=5, relief=SUNKEN, exportselection=False)
         self.__configura_elemento(self.__listbox_lista_de_linguagens, row=0, column=0)
         self.__listbox_lista_de_linguagens.bind('<<ListboxSelect>>', self.cb_seleciona_lista)
-        self.__listbox_lista_de_linguagens.configure(background='red')
 
         scrollbar_lista = Scrollbar(frame_listbox, command=self.__listbox_lista_de_linguagens.yview)
         self.__listbox_lista_de_linguagens['yscrollcommand'] = scrollbar_lista.set
@@ -121,22 +119,19 @@ class View:
         self.__configura_elemento(self.__button_clonar_linguagem, row=0, column=2, rowweight=0, columnweight=1)
 
     def __inicializa_opcoes_de_manipulacao(self):
-        frame_opcoes_de_manipulacao = LabelFrame(self.__frame_menu_principal, bd=5, relief=SUNKEN, text="Manipulações")
+        frame_opcoes_de_manipulacao = LabelFrame(self.__frame_menu_principal, bd=2, relief=GROOVE, text="Manipulações")
         self.__configura_elemento(frame_opcoes_de_manipulacao, row=0, column=1, columnweight=5)
-        frame_opcoes_de_manipulacao.configure(background='brown')
 
         # region Frame sem elemento selecionado
-        self.__frame_elemento_nulo = Frame(frame_opcoes_de_manipulacao, bd=5, relief=SUNKEN)
+        self.__frame_elemento_nulo = Frame(frame_opcoes_de_manipulacao)
         self.__configura_elemento(self.__frame_elemento_nulo)
         self.__inicializa_tela_sem_selecionado()
-        self.__frame_elemento_nulo.configure(background='pink')
         self.__frame_elemento_nulo.grid_remove()
         # endregion
 
         # region Notebook com as abas
-        self.__frame_manipulacao_elemento = LabelFrame(frame_opcoes_de_manipulacao, bd=5, relief=SUNKEN, text="ER")
+        self.__frame_manipulacao_elemento = LabelFrame(frame_opcoes_de_manipulacao, text="ER", bd=2, relief=GROOVE,)
         self.__configura_elemento(self.__frame_manipulacao_elemento)
-        self.__frame_manipulacao_elemento.configure(background='purple')
         self.__frame_manipulacao_elemento.grid_remove()
 
         self.__notebook_abas_de_representacao = ttk.Notebook(self.__frame_manipulacao_elemento)
@@ -158,29 +153,24 @@ class View:
         # region Frames das abas
         padding = 10
 
-        self.__frame_info = Frame(aba_info, bd=5, relief=SUNKEN, padx=padding, pady=padding)
-        self.__frame_info.configure(background='red')
+        self.__frame_info = Frame(aba_info, padx=padding, pady=padding)
         self.__configura_elemento(self.__frame_info)
         self.__inicializa_frame_informacoes()
 
-        self.__frame_conversoes = Frame(aba_conversoes, bd=5, relief=SUNKEN, padx=padding, pady=padding)
-        self.__frame_conversoes.configure(background='green')
+        self.__frame_conversoes = Frame(aba_conversoes, padx=padding, pady=padding)
         self.__configura_elemento(self.__frame_conversoes)
         self.__inicializa_frame_conversoes()
 
-        self.__frame_operacoes = Frame(aba_operacoes_linguagem, bd=5, relief=SUNKEN, padx=padding, pady=padding)
-        self.__frame_operacoes.configure(background='blue')
+        self.__frame_operacoes = Frame(aba_operacoes_linguagem, padx=padding, pady=padding)
         self.__configura_elemento(self.__frame_operacoes)
         self.__inicializa_frame_operacoes()
 
-        self.__frame_operacoes_gr = Frame(aba_operacoes_especificas, bd=5, relief=SUNKEN, padx=padding, pady=padding)
-        self.__frame_operacoes_gr.configure(background='yellow')
+        self.__frame_operacoes_gr = Frame(aba_operacoes_especificas, padx=padding, pady=padding)
         self.__configura_elemento(self.__frame_operacoes_gr)
         self.__inicializa_frame_operacoes_gr()
         self.__frame_operacoes_gr.grid_remove()
 
-        self.__frame_operacoes_af = Frame(aba_operacoes_especificas, bd=5, relief=SUNKEN, padx=padding, pady=padding)
-        self.__frame_operacoes_af.configure(background='yellow')
+        self.__frame_operacoes_af = Frame(aba_operacoes_especificas, padx=padding, pady=padding)
         self.__inicializa_frame_operacoes_af()
         self.__configura_elemento(self.__frame_operacoes_af)
         # endregion
