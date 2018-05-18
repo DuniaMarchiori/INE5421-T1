@@ -373,18 +373,22 @@ class View:
                 self.__frame_manipulacao_elemento.configure(text=tipo)
                 self.__button_converter_para_gr['state'] = DISABLED
                 self.__button_converter_para_af['state'] = NORMAL
+                self.__button_alterar_elemento['state'] = NORMAL
+                self.__button_alterar_elemento.grid()
             elif elemento_selecionado.get_tipo() is TipoElemento.ER:
                 self.__altera_tela_operacao(2)
                 tipo = "Expressão Regular"
                 self.__frame_manipulacao_elemento.configure(text=tipo)
                 self.__button_converter_para_gr['state'] = NORMAL
                 self.__button_converter_para_af['state'] = NORMAL
+                self.__button_alterar_elemento.grid()
             elif elemento_selecionado.get_tipo() is TipoElemento.AF:
                 self.__altera_tela_operacao(3)
                 tipo = "Automato Finito"
                 self.__frame_manipulacao_elemento.configure(text=tipo)
                 self.__button_converter_para_gr['state'] = NORMAL
                 self.__button_converter_para_af['state'] = DISABLED
+                self.__button_alterar_elemento.grid_remove()
             self.__atualiza_visualizacao_do_elemento(nome, tipo, representacao)
         else:
             self.__altera_tela_operacao(0)
