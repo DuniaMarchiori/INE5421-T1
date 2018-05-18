@@ -1,6 +1,8 @@
 from tkinter import *
 from tkinter import ttk
 
+from model.Elemento import TipoElemento
+
 
 class Criacao:
 
@@ -23,13 +25,16 @@ class Criacao:
         self.__controller = controller
         self.__parent = parent
 
-    def __inicializar_root(self):
+    def __inicializar_root(self, adicao):
         self.__root = Toplevel(self.__parent)
         self.__root.transient(self.__parent)
-        self.__root.title("Criação de Elemento")
+        if adicao:
+            self.__root.title("Criação de Elemento")
+        else:
+            self.__root.title("Edição de Elemento")
         self.__root.resizable(width=True, height=True)
 
-    def __inicializar_menus(self):
+    def __inicializar_menus(self, nome, sentenca, tipo, adicao):
         padding = 10
         self.__frame_menu_principal = Frame(self.__root, padx=padding, pady=padding)
         self.__frame_menu_principal.pack()
@@ -39,21 +44,29 @@ class Criacao:
 
         Label(frame_nome, text="Nome:").pack(side=LEFT)
         self.__entry_nome = Entry(frame_nome)
+        self.__entry_nome.insert(0,nome)
         self.__entry_nome.pack(fill=X)
         self.__entry_nome.focus()
 
         self.__notebook_abas_de_elementos = ttk.Notebook(self.__frame_menu_principal)
         self.__notebook_abas_de_elementos.pack(expand=True, fill=BOTH)
-        self.__inicializar_aba_gramatica(self.__notebook_abas_de_elementos)
-        self.__inicializar_aba_expressao(self.__notebook_abas_de_elementos)
+        self.__inicializar_aba_gramatica(self.__notebook_abas_de_elementos, sentenca, tipo, adicao)
+        self.__inicializar_aba_expressao(self.__notebook_abas_de_elementos, sentenca, tipo, adicao)
 
-    def __inicializar_aba_gramatica(self, notebook):
-        self.__text_gramatica = self.__criar_aba_generica(notebook, "Gramática Regular")
+        if tipo is TipoElemento.ER:
+            self.__notebook_abas_de_elementos.select(1)
 
-    def __inicializar_aba_expressao(self, notebook):
-        self.__text_expressao = self.__criar_aba_generica(notebook, "Expressão Regular")
+    def __inicializar_aba_gramatica(self, notebook, sentenca, tipo, adicao):
+        if tipo is not TipoElemento.GR:
+            sentenca = ""
+        self.__text_gramatica = self.__criar_aba_generica(notebook, "Gramática Regular", sentenca, adicao)
 
-    def __criar_aba_generica(self, notebook, elemento):
+    def __inicializar_aba_expressao(self, notebook, sentenca, tipo, adicao):
+        if tipo is not TipoElemento.ER:
+            sentenca = ""
+        self.__text_expressao = self.__criar_aba_generica(notebook, "Expressão Regular", sentenca, adicao)
+
+    def __criar_aba_generica(self, notebook, elemento, sentenca, adicao):
         aba_elemento = ttk.Frame(notebook)
         notebook.add(aba_elemento, text=elemento)
 
@@ -64,13 +77,16 @@ class Criacao:
         frame_text_area.pack(expand=True, fill=BOTH)
 
         text_area = Text(frame_text_area, width=0, height=0)
+        text_area.insert(END, sentenca)
         text_area.pack(expand=True, fill=BOTH, side=LEFT)
 
         scrollbar_elemento = Scrollbar(frame_text_area, command=text_area.yview)
         text_area['yscrollcommand'] = scrollbar_elemento.set
         scrollbar_elemento.pack(fill=Y, side=LEFT)
-
-        Button(frame_elemento, text="Adicionar Nova " + elemento, command=self.cria_elemento).pack()
+        if adicao:
+            Button(frame_elemento, text="Adicionar Nova " + elemento, command=self.cria_elemento).pack()
+        else:
+            Button(frame_elemento, text="Confirmar Edição", command=self.cria_elemento).pack()
 
         return text_area
 
@@ -86,9 +102,9 @@ class Criacao:
     def is_showing(self):
         return self.__root is not None
 
-    def show(self):
-        self.__inicializar_root()
-        self.__inicializar_menus()
+    def show(self, nome="", sentenca="", tipo=None, adicao=True):
+        self.__inicializar_root(adicao)
+        self.__inicializar_menus(nome, sentenca, tipo, adicao)
         self.__mostrar_menu(True)
         self.__root.minsize(width=400, height=300)
         self.__root.protocol("WM_DELETE_WINDOW", self.close)

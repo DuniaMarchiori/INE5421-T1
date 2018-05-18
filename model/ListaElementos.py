@@ -13,3 +13,7 @@ class ListaElementos:
 
     def get_elemento(self, indice):
         return self.__lista_de_elementos[indice]
+
+    def reposiciona_elemento_editado(self, indice):
+        novo = self.__lista_de_elementos.pop()
+        self.__lista_de_elementos[indice] = novo

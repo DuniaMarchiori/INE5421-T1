@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import filedialog
 from model.Elemento import *
 from view.Criacao import Criacao
 from view.SelecaoElemento import SelecionaElemento
@@ -33,6 +34,8 @@ class View:
     __int_operacao_gr_selecionada = None
     __frame_operacoes_af = None
 
+    __button_alterar_elemento = None
+
     __button_converter_para_gr = None
     __button_converter_para_af = None
 
@@ -52,7 +55,9 @@ class View:
         self.__popup_novo_elemento = Criacao(self.__root, self.__controller)
         self.__popup_seleciona_elemento = SelecionaElemento(self.__root)
         self.__int_operacao_selecionada = IntVar()
-        self.__int_operacao_gr_selecionada = IntVar()
+        self.__int_operacao_gr_selecionada = StringVar()
+        self.__string_sentenca_a_reconhecer = StringVar()
+        self.__string_tamanho_enumerados = StringVar()
 
     def __inicializar_root(self):
         self.__root = Tk()
@@ -66,16 +71,16 @@ class View:
     def __inicializar_menubar(self):
         menu_main = Menu(self.__root)
 
+        menu_abrir = Menu(menu_main, tearoff=0)
+        menu_abrir.add_command(label="Gramática Regular", command=self.cb_carregar_gr)
+        menu_abrir.add_command(label="Expressão Regular", command=self.cb_carregar_er)
+
         menu_arquivo = Menu(menu_main, tearoff=0)
-        menu_arquivo.add_command(label="Abrir", command=print("Abrir"))
-        menu_arquivo.add_command(label="Salvar", command=print("Salvar"))
+        menu_arquivo.add_cascade(label="Abrir", menu=menu_abrir)
+        menu_arquivo.add_command(label="Salvar", command=self.cb_salvar)
 
         menu_main.add_cascade(label="Arquivo", menu=menu_arquivo)
-        menu_main.add_command(label="Sobre", command=print("Sobre"))
-
-        # TODO DEBUG remover botões de debug
-        menu_main.add_command(label="Debug", command=self.debug)
-        menu_main.add_command(label="Debug2", command=self.debug2)
+        menu_main.add_command(label="Sobre", command=lambda: self.mostrar_aviso("Trabalho 1 de INE5421.\nPor:\nDúnia Marchiori\nVinicius Steffani Schweitzer"))
 
         self.__root.configure(menu=menu_main)
 
@@ -110,9 +115,9 @@ class View:
 
         self.__button_nova_linguagem = Button(frame_lista_de_linguagens, text="Novo", command=self.abrir_janela_novo_elemento)
         self.__configura_elemento(self.__button_nova_linguagem, row=0, column=0, rowweight=0, columnweight=1)
-        self.__button_deletar_linguagem = Button(frame_lista_de_linguagens, text="Remover",command=lambda: self.remover_elemento_da_lista(self.__listbox_lista_de_linguagens.curselection()))
+        self.__button_deletar_linguagem = Button(frame_lista_de_linguagens, text="Remover",command=lambda: self.__controller.cb_remover_elemento(self.__get_indice_selecionado()))
         self.__configura_elemento(self.__button_deletar_linguagem, row=0, column=1, rowweight=0, columnweight=1)
-        self.__button_clonar_linguagem = Button(frame_lista_de_linguagens, text="Duplicar")
+        self.__button_clonar_linguagem = Button(frame_lista_de_linguagens, text="Duplicar", command=lambda:self.__controller.cb_duplica_elemento(self.__get_indice_selecionado()))
         self.__configura_elemento(self.__button_clonar_linguagem, row=0, column=2, rowweight=0, columnweight=1)
 
     def __inicializa_opcoes_de_manipulacao(self):
@@ -194,13 +199,13 @@ class View:
         self.__label_tipo_display = Label(frame_dados, text="TIPO")
         self.__configura_elemento(self.__label_tipo_display, row=1, column=1, rowweight=0, columnweight=1, sticky=W)
 
-        frame_visualizacao = Frame(self.__frame_info)
+        frame_visualizacao = Frame(self.__frame_info, pady=10)
         self.__configura_elemento(frame_visualizacao, row=1, column=0)
 
         label_visualizacao = Label(frame_visualizacao, text="Visualização:")
         self.__configura_elemento(label_visualizacao, row=0, column=0, columnspan=2, rowweight=0, columnweight=0, sticky=W)
 
-        self.__text_visualizacao = Text(frame_visualizacao, wrap=NONE)
+        self.__text_visualizacao = Text(frame_visualizacao, wrap=NONE, width=0, height=0)
         self.__configura_elemento(self.__text_visualizacao, row=1, column=0)
         self.__text_visualizacao.config(state=DISABLED)
 
@@ -212,18 +217,24 @@ class View:
         self.__text_visualizacao['xscrollcommand'] = scrollbar_visualizacao_x.set
         self.__configura_elemento(scrollbar_visualizacao_x, row=2, column=0, rowweight=0, columnweight=1)
 
+        frame_alteracao = Frame(self.__frame_info)
+        self.__configura_elemento(frame_alteracao, row=2, column=0, rowweight=0, columnweight=1, sticky=E+W)
+
+        self.__button_alterar_elemento = Button(frame_alteracao, text="Alterar Elemento", command=self.alterar_elemento)
+        self.__configura_elemento(self.__button_alterar_elemento, sticky="")
+
     def __inicializa_frame_conversoes(self):
         padding = 10
         label_gr = Label(self.__frame_conversoes, text="Converter para Gramática Regular:", pady=padding)
         self.__configura_elemento(label_gr, row=0, column=0, rowweight=0, columnweight=0, sticky=W)
 
-        self.__button_converter_para_gr = Button(self.__frame_conversoes, text="Converter")
+        self.__button_converter_para_gr = Button(self.__frame_conversoes, text="Converter", command=lambda: self.__controller.cb_converter_para_gr(self.__get_indice_selecionado()))
         self.__configura_elemento(self.__button_converter_para_gr, row=0, column=1, rowweight=0, columnweight=0, sticky=W)
 
         label_af = Label(self.__frame_conversoes, text="Converter para Autômato Finito:", pady=padding)
         self.__configura_elemento(label_af, row=1, column=0, rowweight=0, columnweight=0, sticky=W)
 
-        self.__button_converter_para_af = Button(self.__frame_conversoes, text="Converter")
+        self.__button_converter_para_af = Button(self.__frame_conversoes, text="Converter", command=lambda: self.__controller.cb_converter_para_af(self.__get_indice_selecionado()))
         self.__configura_elemento(self.__button_converter_para_af, row=1, column=1, rowweight=0, columnweight=0, sticky=W)
 
     def __inicializa_frame_operacoes(self):
@@ -249,7 +260,7 @@ class View:
         f = Frame(self.__frame_operacoes, pady=padding)
         self.__configura_elemento(f, row=3, column=0, rowweight=0, columnweight=0, sticky=NW)
 
-        button_aplicar_operacao = Button(f, text="Aplicar Operação", command=self.abrir_janela_seleciona_elemento)
+        button_aplicar_operacao = Button(f, text="Aplicar Operação", command=self.cb_operacao_sobre_linguagem)
         self.__configura_elemento(button_aplicar_operacao)
 
     def __inicializa_frame_operacoes_gr(self):
@@ -274,7 +285,7 @@ class View:
         f = Frame(self.__frame_operacoes_gr, pady=padding)
         self.__configura_elemento(f, row=3, column=0, rowweight=0, columnweight=0, sticky=NW)
 
-        button_aplicar_operacao = Button(f, text="Aplicar Operação", command=lambda: self.abrir_janela_seleciona_elemento("GR"))
+        button_aplicar_operacao = Button(f, text="Aplicar Operação", command=self.cb_operacao_sobre_gr)
         self.__configura_elemento(button_aplicar_operacao)
 
     def __inicializa_frame_operacoes_af(self):
@@ -296,10 +307,10 @@ class View:
 
         f = Frame(self.__frame_operacoes_af, padx=padding)
         self.__configura_elemento(f, row=2, column=1, rowweight=0, columnweight=0, sticky=W+E)
-        entry_sentenca = Entry(f)
+        entry_sentenca = Entry(f, textvariable=self.__string_sentenca_a_reconhecer)
         self.__configura_elemento(entry_sentenca)
 
-        button_reconhecer = Button(self.__frame_operacoes_af, text="Reconhecer")
+        button_reconhecer = Button(self.__frame_operacoes_af, text="Reconhecer", command=self.cb_reconhece_sentenca)
         self.__configura_elemento(button_reconhecer, row=2, column=2, rowweight=0, columnweight=0, sticky=W+E)
 
         label_gerar = Label(self.__frame_operacoes_af, text="Gerar sentenças de tamanho ", pady=padding)
@@ -307,10 +318,10 @@ class View:
 
         f = Frame(self.__frame_operacoes_af, padx=padding)
         self.__configura_elemento(f, row=3, column=1, rowweight=0, columnweight=0, sticky=W+E)
-        entry_tamanho = Entry(f)
+        entry_tamanho = Entry(f, textvariable=self.__string_tamanho_enumerados)
         self.__configura_elemento(entry_tamanho)
 
-        button_reconhecer = Button(self.__frame_operacoes_af, text="Gerar")
+        button_reconhecer = Button(self.__frame_operacoes_af, text="Gerar", command=self.cb_enumera_sentencas)
         self.__configura_elemento(button_reconhecer, row=3, column=2, rowweight=0, columnweight=0, sticky=W+E)
 
         self.__frame_operacoes_af.grid_columnconfigure(1, minsize=200)
@@ -327,7 +338,7 @@ class View:
         if not estado:
             state = DISABLED
         self.__button_deletar_linguagem['state'] = state
-        self.__button_clonar_linguagem['state'] = DISABLED
+        self.__button_clonar_linguagem['state'] = state
 
     def __altera_tela_operacao(self, num_tela):
         if num_tela == 0:
@@ -393,15 +404,8 @@ class View:
         self.__text_visualizacao.insert(END, representacao)
         self.__text_visualizacao.configure(state='disabled')
 
-    def cb_seleciona_lista(self, event=None):
-        selecionado = self.__listbox_lista_de_linguagens.curselection()
-        indice = None
-        if selecionado:
-            indice = selecionado[0]
-        self.__controller.cb_alterar_elemento_selecionado(indice)
-
     def adicionar_elemento_na_lista(self, nome_do_elemento, tipo_do_elemento, select=True):
-        display_name = "(" + tipo_do_elemento + ") " + nome_do_elemento
+        display_name = "(" + tipo_do_elemento.name + ") " + nome_do_elemento
         self.__listbox_lista_de_linguagens.insert(END, display_name)
         if select:
             self.__listbox_lista_de_linguagens.selection_clear(0, END)
@@ -416,12 +420,23 @@ class View:
         if not self.__popup_novo_elemento.is_showing():
             self.__popup_novo_elemento.show()
 
+    def abrir_janela_edicao_de_elemento(self, nome, sentenca, tipo):
+        current_size = self.__listbox_lista_de_linguagens.size()
+        if not self.__popup_novo_elemento.is_showing():
+            self.__popup_novo_elemento.show(nome, sentenca, tipo, False)
+        self.__root.wait_window(self.__popup_novo_elemento.get_root())
+        return current_size != self.__listbox_lista_de_linguagens.size()
+
+    def reposiciona_elemento_editado(self, indice):
+        novo = self.__listbox_lista_de_linguagens.get(END)
+        self.__listbox_lista_de_linguagens.delete(indice)
+        self.__listbox_lista_de_linguagens.insert(indice, novo)
+        self.__listbox_lista_de_linguagens.delete(END)
+
     def abrir_janela_seleciona_elemento(self, tipo=""):
         if not self.__popup_seleciona_elemento.is_showing():
             lista_elementos = self.__listbox_lista_de_linguagens.get(0, END)
             return self.__popup_seleciona_elemento.show(lista_elementos, tipo)
-            # TODO fazer o cb dos botões ser outro metodo que chama esse, mas que depois faz outras coiass com o id do selecionado
-            # (Tipo chamar o callback da operação no controller)
 
     def __get_current_top(self):
         if self.__popup_novo_elemento.is_showing():
@@ -431,6 +446,14 @@ class View:
         else:
             current_top = self.__root
         return current_top
+
+    def __get_indice_selecionado(self):
+        indice = self.__listbox_lista_de_linguagens.curselection()
+        if indice:
+            indice = indice[0]
+        else:
+            indice = None
+        return indice
 
     def mostrar_aviso(self, aviso, titulo="Erro"):
         current_top = self.__get_current_top()
@@ -484,17 +507,66 @@ class View:
     def start(self):
         self.__root.mainloop()
 
+    def alterar_elemento(self):
+        indice = self.__get_indice_selecionado()
+        self.__controller.cb_alterar_elemento(indice)
 
+    def salvar_arquivo(self):
+        arquivo = filedialog.asksaveasfilename(initialdir="./", title="Aonde você quer salvar?", filetypes=(("txt","*.txt"),("all files","*.*")))
+        return arquivo
 
+    def carregar_arquivo(self):
+        arquivo = filedialog.askopenfilename(initialdir="./", title="Qual arquivo você quer carregar?")
+        return arquivo
 
-    def debug(self):
-        popup = Tk()
-        v = StringVar()
+    def cb_seleciona_lista(self, event=None):
+        indice = self.__get_indice_selecionado()
+        self.__controller.cb_alterar_elemento_selecionado(indice)
 
-        e = Entry(popup, textvariable=v)
-        e.pack()
-        b = Button(popup, text="OK", command=lambda: self.__altera_tela_operacao(int(e.get())))
-        b.pack()
+    def cb_operacao_sobre_linguagem(self):
+        indice_primeiro = self.__get_indice_selecionado()
+        indice_segundo = self.abrir_janela_seleciona_elemento()
+        operacao = self.__int_operacao_selecionada.get()
+        self.__controller.cb_aplica_operacao(indice_primeiro, indice_segundo, operacao)
 
-    def debug2(self):
-        self.mostrar_lista(["aa","ab","ba","bb","aa"], 2)
+    def cb_operacao_sobre_gr(self):
+        indice_primeiro = self.__get_indice_selecionado()
+        operacao = self.__int_operacao_gr_selecionada.get()
+        if operacao is not 2:
+            indice_segundo = self.abrir_janela_seleciona_elemento("GR")
+        else:
+            indice_segundo = None
+        self.__controller.cb_aplica_operacao_gr(indice_primeiro, indice_segundo, operacao)
+
+    def cb_determiniza_af(self):
+        indice_selecionado = self.__get_indice_selecionado()
+        self.__controller.cb_determiniza_af(indice_selecionado)
+
+    def cb_minimiza_af(self):
+        indice_selecionado = self.__get_indice_selecionado()
+        self.__controller.cb_minimiza_af(indice_selecionado)
+
+    def cb_reconhece_sentenca(self):
+        indice_selecionado = self.__get_indice_selecionado()
+        sentenca = self.__string_sentenca_a_reconhecer.get()
+        self.__controller.cb_reconhecimento(indice_selecionado, sentenca)
+
+    def cb_enumera_sentencas(self):
+        indice_selecionado = self.__get_indice_selecionado()
+        tamanho = self.__string_tamanho_enumerados.get()
+        self.__controller.cb_enumeracao(indice_selecionado, tamanho)
+
+    def cb_salvar(self):
+        if self.__get_indice_selecionado() is not None:
+            caminho = self.salvar_arquivo()
+            self.__controller.cb_salvar_elemento(caminho, self.__get_indice_selecionado())
+        else:
+            self.mostrar_aviso("Você precisa selecionar um elemento para salvá-lo.")
+
+    def cb_carregar_gr(self):
+        caminho = self.carregar_arquivo()
+        self.__controller.cb_carregar_gr(caminho)
+
+    def cb_carregar_er(self):
+        caminho = self.carregar_arquivo()
+        self.__controller.cb_carregar_er(caminho)

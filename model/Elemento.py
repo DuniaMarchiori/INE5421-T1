@@ -12,6 +12,9 @@ class Elemento:
     def get_nome(self):
         return self.__nome
 
+    def set_nome(self, novo_nome):
+        self.__nome = novo_nome
+
     def get_tipo(self):
         return self.__tipo
 

@@ -21,21 +21,14 @@ class Controller:
         self.__view = View(self)  # Tela principal da aplicação
         self.__view.start()
 
-    '''
-        Transforma uma gramática em um autômato finito.
-        \:param gramatica é a gramática a ser transformada.
-        \:return o autômato finito que reconhece a mesma linguagem que a gramática gera.
-    '''
-    def __transformar_GR_em_AF(self, gramatica):
-        return self.__model.transformar_GR_em_AF(gramatica)
+    def __adicionar_multiplos_elementos(self, lista_de_elementos):
+        for elemento in lista_de_elementos:
+            self.__adicionar_unico_elemento(elemento)
 
-    '''
-        Transforma um autômato finito em uma gramática.
-        \:param af é o autômato finito a ser transformado.
-        \:return a gramática que gera a mesma linguagem que o autômato reconhece.
-    '''
-    def __transformar_AF_em_GR(self, af):
-        return self.__model.transformar_AF_em_GR(af)
+    def __adicionar_unico_elemento(self, elemento):
+        self.__model.adicionar_elemento_na_lista(elemento)
+        self.__view.adicionar_elemento_na_lista(elemento.get_nome(), elemento.get_tipo())
+        # TODO da erro pois atualmente nem todos os elementos herdam de "Elemento" pra ter get_nome e get_tipo
 
     # Callbacks da interface
 
@@ -47,8 +40,8 @@ class Controller:
     '''
     def cb_nova_gramatica(self, nome, entrada):
         try:
-            self.__model.criar_gramatica(nome, entrada)
-            self.__view.adicionar_elemento_na_lista(nome, "GR")
+            gr = self.__model.criar_gramatica(nome, entrada)
+            self.__adicionar_unico_elemento(gr)
             return True
         except FormatError as e:
             self.__view.mostrar_aviso(e.get_message())
@@ -62,8 +55,8 @@ class Controller:
     '''
     def cb_nova_expressao(self, nome, entrada):
         try:
-            self.__model.criar_expressao(nome, entrada)
-            self.__view.adicionar_elemento_na_lista(nome, "ER")
+            er = self.__model.criar_expressao(nome, entrada)
+            self.__adicionar_unico_elemento(er)
             return True
         except ExpressionParsingError as e:
             self.__view.mostrar_aviso(e.get_message())
@@ -87,28 +80,127 @@ class Controller:
             elemento = self.__model.obter_elemento_por_indice(indice)
         self.__view.atualiza_elemento_selecionado(indice, elemento)
 
-    # TODO
     '''
-        Callbacks:
-        
-            Transformações:
-                OK ER -> AF
-                
-                OK GR -> AF
-                OK AF -> GR
-                
-            Operações sobre Linguagem
-                L intersec L -> AF
-                L diferença L -> AF
-                L reverso -> AF
-                Onde, L pode ser GR, ER ou AF
-        
-            Operações sobre AF
-                TODO Determinizar AF
-                TODO Minimizar AF
-        
-            Operações sobre GR
-                GR união GR
-                GR concat GR
-                GR fecho
+        Método que é chamado ao requisitar a conversao e um elemento para uma gramática regular.
+        \:param indice é o índice do elemento na lista.
     '''
+    def cb_converter_para_gr(self, indice):
+        elementos_novos = self.__model.trnasformar_elemnento_em_gr(indice)
+        self.__adicionar_multiplos_elementos(elementos_novos)
+
+    '''
+        Método que é chamado ao requisitar a conversao e um elemento para uma gramática regular.
+        \:param indice é o índice do elemento na lista.
+    '''
+    def cb_converter_para_af(self, indice):
+        elemento_novo = self.__model.trnasformar_elemnento_em_af(indice)
+        self.__adicionar_unico_elemento(elemento_novo)
+
+    '''
+        Método que é chamado ao requisitar uma operação entre dois elementos.
+        \:param indice_um é o índice na lista do primeiro elemento da operação.
+        \:param indice_dois é o índice na lista do segundo elemento da operação.
+        \:param operacao é o índice da operacao selecionada.
+    '''
+    def cb_aplica_operacao(self, indice_um, indice_dois, operacao):
+        if indice_dois is not None:
+            elementos_novos = self.__model.operacao_elementos(indice_um, indice_dois, operacao)
+            self.__adicionar_multiplos_elementos(elementos_novos)
+        else:
+            self.__view.mostrar_aviso("Você precisa selecionar um segundo\nelemento para aplicar a operação.")
+
+    '''
+        Método que é chamado ao requisitar uma operação entre duas gramáticas regulares.
+        \:param indice_um é o índice na lista da primeira gramática da operação.
+        \:param indice_dois é o índice na lista da segunda gramática da operação.
+        \:param operacao é o índice da operacao selecionada.
+    '''
+    def cb_aplica_operacao_gr(self, indice_um, indice_dois, operacao):
+        if operacao is 2 or indice_dois is not None:
+            elementos_novos = self.__model.operacao_gr(indice_um, indice_dois, operacao)
+            self.__adicionar_unico_elemento(elementos_novos)
+        else:
+            self.__view.mostrar_aviso("Você precisa selecionar uma segunda\ngramática para aplicar a operação.")
+
+    '''
+        Obtem um automato equivalente determinístico.
+        \:param indice é o índice do autômato na lista.
+    '''
+    def cb_determiniza_af(self, indice):
+        # TODO Dar um try catch porque ele da erro se tentar determinizar um ja deterministico
+        novo_elemento = self.__model.determiniza_af(indice)
+        self.__adicionar_unico_elemento(novo_elemento)
+
+    '''
+        Obtem um automato equivalente minimo.
+        \:param indice é o índice do autômato na lista.
+    '''
+    def cb_minimiza_af(self, indice):
+        novo_elemento = self.__model.minimiza_af(indice)
+        self.__adicionar_unico_elemento(novo_elemento)
+
+    '''
+        Informa se dada sentença é reconhecida por um autômato especificado.
+        \:param indice é o índice do autômato na lista.
+        \:param sentenca é a sentença que será reconhecida.
+    '''
+    def cb_reconhecimento(self, indice, sentenca):
+        if self.__model.reconhecimento(indice, sentenca):
+            self.__view.mostrar_aviso("Sentença aceita.", "Reconhecimento de Sentença")
+        else:
+            self.__view.mostrar_aviso("Sentença não aceita.", "Reconhecimento de Sentença")
+
+    '''
+        Obtem as sentenças de um autoômato finito com determinado tamanho.
+        \:param indice é o índice do autômato na lista.
+        \:param tamanho é o tamanho das sentenças que serão enumeradas.
+    '''
+    def cb_enumeracao(self, indice, tamanho):
+        try:
+            sentencas = self.__model.enumeracao(indice, tamanho)
+            self.__view.mostrar_lista(sentencas, tamanho)
+        except ValueError:
+            self.__view.mostrar_aviso("O tamanho da sentença deve ser um inteiro.")
+
+    '''
+        Altera um elemento.
+        \:param indice é o índice do autômato na lista.
+        \:param tamanho é o tamanho das sentenças que serão enumeradas.
+    '''
+    def cb_alterar_elemento(self, indice):
+        elemento = self.__model.obter_elemento_por_indice(indice)
+        try:
+            sucesso = self.__view.abrir_janela_edicao_de_elemento(elemento.get_nome(), elemento.to_string(), elemento.get_tipo())
+            if sucesso:
+                self.__view.reposiciona_elemento_editado(indice)
+                self.__model.reposiciona_elemento_editado(indice)
+                self.cb_alterar_elemento_selecionado(indice)
+        except:
+            self.__view.mostrar_aviso("O elemento não foi alterado.")
+
+    def cb_duplica_elemento(self, indice):
+        copia = self.__model.duplicar(indice)
+        self.__adicionar_unico_elemento(copia)
+
+    def cb_salvar_elemento(self, caminho, indice):
+        resultado = self.__model.salvar_elemento(caminho, indice)
+        if resultado:
+            self.__view.mostrar_aviso("Elemento salvo com sucesso.")
+        else:
+            self.__view.mostrar_aviso("Falha ao salvar arquivo.")
+
+    def cb_carregar_gr(self, caminho):
+        try:
+            conteudo = self.__model.carregar_elemento(caminho)
+            self.cb_nova_gramatica("Gramática Carregada", conteudo)
+            self.__view.mostrar_aviso("Gramática carregada com sucesso.")
+        except:
+            self.__view.mostrar_aviso("Erro ao carregar arquivo.")
+
+    def cb_carregar_er(self, caminho):
+        try:
+            conteudo = self.__model.carregar_elemento(caminho)
+            self.cb_nova_expressao("Expressão Carregada", conteudo)
+            self.__view.mostrar_aviso("Expressão carregada com sucesso.")
+        except:
+            self.__view.mostrar_aviso("Erro ao carregar arquivo.")

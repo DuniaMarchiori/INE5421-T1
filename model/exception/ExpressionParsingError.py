@@ -3,7 +3,7 @@
 '''
 class ExpressionParsingError(Exception):
 
-    EXPRESSION_PARSING_ERROR = "A expressão regular não segue o formato padrão: "
+    EXPRESSION_PARSING_ERROR = "A expressão regular não segue o formato padrão:\n"
 
     '''
         Método construtor.
