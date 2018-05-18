@@ -1,8 +1,8 @@
 # Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
 
 from itertools import product
-
 from model.AF.Estado import Estado
+from string import ascii_uppercase
 from model.exception.AFNDError import AFNDError
 
 '''
@@ -95,12 +95,13 @@ class AutomatoFinito:
             producoes_af = self.__producoes[b]
             producoes_g = []
             for a in producoes_af.keys():
-                for c in producoes_af[a]:
-                    c_string = c.to_string()
-                    if c_string != "-":
-                        producoes_g.append((a, c_string))
-                        if c in self.__estados_finais:
-                            producoes_g.append((a, "&"))
+                if a != "&":
+                    for c in producoes_af[a]:
+                        c_string = c.to_string()
+                        if c_string != "-":
+                            producoes_g.append((a, c_string))
+                            if c in self.__estados_finais:
+                                producoes_g.append((a, "&"))
             b = b.to_string()
             gramatica.adiciona_producao(b, producoes_g)
 
@@ -132,6 +133,7 @@ class AutomatoFinito:
     def reconhece_sentenca(self, sentenca):
 
         if not self.isAFND():
+            index = 0
             estados = self.__producoes[self.__estado_inicial]
             tamanho_sentenca = len(sentenca)
 
@@ -139,16 +141,24 @@ class AutomatoFinito:
                 if self.__estado_inicial in self.__estados_finais:
                     return True
 
-            for index in range(tamanho_sentenca):
+            while index < tamanho_sentenca:
                 simbolo = sentenca[index]
-                if simbolo in estados:
-                    transicoes = estados[simbolo]
+                transicoes = []
+                if "&" in estados:
+                    for t in estados["&"]:
+                        if t.to_string() != "&":
+                            transicoes.append(t)
+                if (simbolo in estados):
+                    for x in estados[simbolo]:
+                        transicoes.append(x)
                     if index == tamanho_sentenca-1:
                         for t in transicoes:
                             if t in self.__estados_finais:
                                 return True
+                    index = index + 1
                 else:
-                    return False
+                    if len(transicoes) == 0:
+                        return False
                 # Copia produções dos próximos estados
                 estados = {}
                 for t in transicoes:
@@ -156,7 +166,6 @@ class AutomatoFinito:
                         estados.setdefault(x, [])
                         for y in self.__producoes[t][x]:
                             estados[x].append(y)
-                index = index + 1
             return False
         else:
             raise AFNDError("reconhecimento de sentença.")
@@ -168,7 +177,7 @@ class AutomatoFinito:
     '''
     def enumera_sentencas(self, tamanho):
         sentencas_reconhecidas = []
-        vt = list(self.__vt)
+        vt = list(self.__vt - set("&"))
         combinacoes = []
 
         if tamanho != 0:
@@ -223,6 +232,161 @@ class AutomatoFinito:
             return af
         else:
             raise Exception("O autômato já é um autômato finito determinístico.")
+
+    '''
+        Minimiza este autômato.
+        \:return o autômato mínimo deste autômato.
+    '''
+
+    def minimiza(self):
+        estados = set(self.__producoes.keys())
+
+        estados_inuteis = self.estados_inacessiveis().union(self.estados_mortos())
+        estados = estados - estados_inuteis
+        estado_indefinicao = self.novo_simbolo()
+        k_f = estados - self.__estados_finais
+        f = estados - k_f
+
+        ce_k_f_anterior = []
+        ce_k_f_anterior.append(k_f)
+        ce_f_anterior = []
+        ce_f_anterior.append(f)
+        novo_ce_k_f = []
+        novo_ce_f = []
+
+        # TODO - considerar que indefinições vão pra "estado_indefinicao"
+        while ce_k_f_anterior != novo_ce_k_f and ce_f_anterior != novo_ce_f:
+            novo_ce_k_f = novo_ce_k_f + ce_k_f_anterior
+            novo_ce_f = novo_ce_f + ce_f_anterior
+            # K-F
+            for conjunto in ce_k_f_anterior:
+                estado = next(iter(conjunto))
+                set_e = set()
+                set_e.add(estado)
+                for outro_estado in conjunto - set_e:
+                    if not self.__estados_equivalentes(estado, outro_estado, ce_k_f_anterior, ce_f_anterior):
+                        adicionado = False
+                        for outro_set in novo_ce_k_f:
+                            for e in outro_set:
+                                if self.__estados_equivalentes(outro_estado, e, ce_k_f_anterior, ce_f_anterior):
+                                    outro_set.add(outro_estado)
+                                    conjunto.remove(outro_estado)
+                                    adicionado = True
+                        if not adicionado:
+                            set_outro_estado = set()
+                            set_outro_estado.add(outro_estado)
+                            novo_ce_k_f.append(set_outro_estado)
+
+            # F
+            for conjunto in ce_f_anterior:
+                estado = next(iter(conjunto))
+                set_e = set()
+                set_e.add(estado)
+                for outro_estado in conjunto - set_e:
+                    if not self.__estados_equivalentes(estado, outro_estado, ce_k_f_anterior, ce_f_anterior):
+                        adicionado = False
+                        for outro_set in novo_ce_f:
+                            for e in outro_set:
+                                if self.__estados_equivalentes(outro_estado, e, ce_k_f_anterior, ce_f_anterior):
+                                    outro_set.add(outro_estado)
+                                    conjunto.remove(outro_estado)
+                                    adicionado = True
+                        if not adicionado:
+                            set_outro_estado = set()
+                            set_outro_estado.add(outro_estado)
+                            novo_ce_f.append(set_outro_estado)
+
+        ce = novo_ce_k_f + novo_ce_f
+        af_minimo = AutomatoFinito()
+        af_minimo.set_vt(self.__vt)
+        # estado inicial
+        for e in ce:
+            if self.__estado_inicial in e:
+                index = ce.index(e)
+                nome_estado = "q" + str(index)
+                af_minimo.set_estado_inicial(Estado(nome_estado))
+                break
+        # estado final
+        estados_finais = set()
+        for e in novo_ce_f:
+            index = ce.index(e)
+            nome_estado = "q" + str(index)
+            estados_finais.add(Estado(nome_estado))
+        af_minimo.set_estados_finais(estados_finais)
+
+        # producoes
+        for estado in self.__producoes:
+            nome_estado = self.__get_ce_respectivo(ce, estado)
+            transicoes = self.__producoes[estado]
+            for t in transicoes:
+                estado_t = transicoes[t]
+                nome_estado_t = self.__get_ce_respectivo(ce, estado_t)
+                af_minimo.adiciona_transicao(Estado(nome_estado), t, Estado(nome_estado_t))
+
+        for l in ce:
+            for e in l:
+                print(e.to_string())
+            print("--")
+
+        return af_minimo
+
+    '''
+        
+    '''
+    def __get_ce_respectivo(self, ce, estado):
+        # TODO
+        return "q0"
+
+    '''
+        
+    '''
+    def __estados_equivalentes(self, estado, outro_estado, k_f, f):
+        # TODO
+        return True
+
+    '''
+        Identifica os estados inacessíveis do autômato, ou seja, estados em que não é possível chegar a partir do estado inicial.
+        \:return o conjunto de estados inacessíveis.
+    '''
+    def estados_inacessiveis(self):
+        estados_alcancados = set()
+        estados_alcancados.add(self.__estado_inicial)
+        estados_a_visitar = estados_alcancados
+
+        while len(estados_a_visitar) != 0:
+            estados_com_transicao = set()
+            for estado in estados_a_visitar:
+                for simbolo in self.__producoes[estado]:
+                    transicoes = self.__producoes[estado][simbolo]
+                    for t in transicoes:
+                        estados_com_transicao.add(t)
+            estados_alcancados = estados_alcancados.union(estados_com_transicao)
+            estados_a_visitar = estados_com_transicao
+
+        return set(self.__producoes.keys() - estados_alcancados)
+
+    '''
+        Identifica os estados mortos do autômato, ou seja, estados que não têm caminho que levem a um estado final a partir deles.
+        \:return o conjunto de estados mortos.
+    '''
+
+    def estados_mortos(self):
+        vivos_atuais = self.__estados_finais
+        vivos_anteriores = set()
+
+        while vivos_atuais != vivos_anteriores:
+            vivos_anteriores = vivos_atuais
+            estados_com_transicao = set()
+            for estado in self.__producoes.keys() - vivos_atuais:
+                for simbolo in self.__producoes[estado]:
+                    transicoes = self.__producoes[estado][simbolo]
+                    for t in transicoes:
+                        if t in vivos_anteriores:
+                            estados_com_transicao.add(estado)
+            vivos_atuais = vivos_anteriores.union(estados_com_transicao)
+
+        return set(self.__producoes.keys() - vivos_atuais)
+
     '''
         Verifica se o autômato é um autômato finito não determinístico (AFND).
         \:return True se o autômato for um AFND ou False caso contrário.
@@ -238,7 +402,7 @@ class AutomatoFinito:
             for t in transicoes:
                 if len(transicoes[t]) > 1: # Se tem mais de uma transição para um símbolo
                     self.__deterministico = False
-                if t == "&" and len(transicoes.keys()) > 1: # Se tem &-transição e mais outras transições através de outros símbolos
+                if t == "&" and len(transicoes.keys()) > 1 and estado != self.__estado_inicial: # Se tem &-transição e mais outras transições através de outros símbolos
                     self.__deterministico = False
         return not self.__deterministico
 
@@ -248,6 +412,31 @@ class AutomatoFinito:
     '''
     def isComplete(self):
         return True
+
+    '''
+        Gera um novo símbolo não terminal que não pertence à gramática.
+        \:return um símbolo não terminal que não pertence à gramática.
+    '''
+    def novo_simbolo(self):
+        simbolo_novo = None
+        for letra in ascii_uppercase:
+            if letra not in self.__producoes:
+                simbolo_novo = letra
+                break
+        # Se todas as letras do alfabeto já fazem parte do conjunto de símbolos terminais,
+        # então o símbolo novo recebe a concatenação de duas letras (que não exista no conjunto)
+        if simbolo_novo == None:
+            found = False
+            for l1 in ascii_uppercase:
+                for l2 in ascii_uppercase:
+                    letras = l1 + l2
+                    if letras not in self.__producoes:
+                        simbolo_novo = letras
+                        found = True
+                        break
+                if found:
+                    break
+        return simbolo_novo
 
     '''
         Transforma o autômato em uma matriz de strings.

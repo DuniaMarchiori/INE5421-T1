@@ -10,10 +10,17 @@ class Estado:
         \:param nomes é uma lista com o nome dos estados que representam este estado.
     '''
     def __init__(self, nomes):
-        self.__lista = sorted(nomes, key=str.lower)
-        self.__string = ''.join(self.__lista)
-        self.__nome = frozenset(nomes)
-        self.__string_com_virgula = ','.join(self.__lista)
+        if isinstance(nomes, list):
+            self.__lista = sorted(nomes, key=str.lower)
+            self.__string = ''.join(self.__lista)
+            self.__nome = frozenset(nomes)
+            self.__string_com_virgula = ','.join(self.__lista)
+        else:
+            self.__lista = []
+            self.__lista.append(nomes)
+            self.__string = nomes
+            self.__nome = frozenset(nomes)
+            self.__string_com_virgula = ','.join(self.__lista)
 
     '''
         Retorna o estado em formato de lista.

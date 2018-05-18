@@ -87,17 +87,16 @@ class Gramatica:
         \:param lista é a lista de produções da gramática em texto
     '''
     def __gera_estrutura_producoes(self, linhas):
-        i = 0
         RE_D = re.compile('\d')
+        gera_epsilon = False
 
         for linha in linhas:
             if linha.__contains__("->"):
                 l = linha.split("->") # Separa entre o lado esquerdo e direito do "->"
                 if len(l) <= 2:
                     chave = l[0] # Símbolo não terminal do lado esquerdo
-                    if i == 0:
+                    if linhas.index(linha) == 0:
                         self.__simbolo_inicial = chave # Define o símbolo inicial
-                        i += 1
                     producoes = []
                     prod = l[1].split("|") # Separa as produções
                     for p in prod:
@@ -106,12 +105,18 @@ class Gramatica:
                                 producoes.append((p, "&"))
                                 if p != "&":
                                     self.__vt.add(p)
+                                if p == "&" and linhas.index(linha) == 0:
+                                    gera_epsilon = True
                             else:
                                 raise FormatError(FormatError.FORMAT_ERROR + str(linhas.index(linha)+1) + ": as produções regulares devem seguir o formato aB, onde a é um símbolo terminal e B um símbolo não terminal.")
                         elif len(p) != 0:
                             chars = list(p)
                             terminal = chars[0] # caractere terminal
                             nao_terminal = chars[1:len(chars)] # caracteres não-terminais
+
+                            if nao_terminal == list(self.__simbolo_inicial) and gera_epsilon:
+                                raise FormatError(": as produções não seguem as regras de geração de &.")
+
                             all_upper = True if True in [s.isupper() for s in nao_terminal] else False # Todos os caracteres do símbolo não-terminal são maiúsculos
                             all_letters = True # Não há números no símbolo
                             for s in nao_terminal:
@@ -154,13 +159,13 @@ class Gramatica:
 
         if simbolo_novo != None:
             # Construção do conjunto de símbolos finais
-            simbolos_finais = []
-            simbolos_finais.append(Estado(simbolo_novo))
+            simbolos_finais = set()
+            simbolos_finais.add(Estado(simbolo_novo))
             # S -> & pertence à P
             producoes_iniciais = self.__producoes[self.__simbolo_inicial]
             for p in producoes_iniciais:
                 if p[0] == "&":
-                    simbolos_finais.append(Estado(self.__simbolo_inicial))
+                    simbolos_finais.add(Estado(self.__simbolo_inicial))
             af.set_estados_finais(simbolos_finais)
 
             # Construção das produções
