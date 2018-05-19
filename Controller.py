@@ -46,6 +46,10 @@ class Controller:
         except FormatError as e:
             self.__view.mostrar_aviso(e.get_message())
             return False
+        except Exception:
+            self.__view.mostrar_aviso("Erro ao criar gramática")
+            return False
+
 
     '''
         Método que recebe um nome e a entrada de uma expressão e a adiciona no sistema, mostrando erro caso aconteça.
@@ -60,6 +64,9 @@ class Controller:
             return True
         except ExpressionParsingError as e:
             self.__view.mostrar_aviso(e.get_message())
+            return False
+        except Exception:
+            self.__view.mostrar_aviso("Erro ao criar expressão")
             return False
 
     '''
@@ -161,6 +168,8 @@ class Controller:
             self.__view.mostrar_lista(sentencas, tamanho)
         except ValueError:
             self.__view.mostrar_aviso("O tamanho da sentença deve ser um inteiro.")
+        except Exception:
+            self.__view.mostrar_aviso("Erro enumerar sentenças")
 
     '''
         Altera um elemento.
@@ -175,7 +184,7 @@ class Controller:
                 self.__view.reposiciona_elemento_editado(indice)
                 self.__model.reposiciona_elemento_editado(indice)
                 self.cb_alterar_elemento_selecionado(indice)
-        except:
+        except Exception:
             self.__view.mostrar_aviso("O elemento não foi alterado.")
 
     def cb_duplica_elemento(self, indice):
@@ -194,7 +203,7 @@ class Controller:
             conteudo = self.__model.carregar_elemento(caminho)
             self.cb_nova_gramatica("Gramática Carregada", conteudo)
             self.__view.mostrar_aviso("Gramática carregada com sucesso.")
-        except:
+        except Exception:
             self.__view.mostrar_aviso("Erro ao carregar arquivo.")
 
     def cb_carregar_er(self, caminho):
@@ -202,5 +211,5 @@ class Controller:
             conteudo = self.__model.carregar_elemento(caminho)
             self.cb_nova_expressao("Expressão Carregada", conteudo)
             self.__view.mostrar_aviso("Expressão carregada com sucesso.")
-        except:
+        except Exception:
             self.__view.mostrar_aviso("Erro ao carregar arquivo.")
