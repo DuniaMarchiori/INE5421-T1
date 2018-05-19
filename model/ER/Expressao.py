@@ -237,7 +237,7 @@ class Expressao(Elemento):
         # TODO Quando a integração for feita o metodo deveria ciar um automato com:
         # nome = nome_atual + " (Convertido para AF)"
         # Uma ideia parecida deveria ser implementada em todos os metodo que geram outros elementos
-        automato = AutomatoFinito()
+        automato = AutomatoFinito(self.get_nome() + "(convertido para AF)")
         automato.adiciona_estado(estado_inicial)
         automato.set_estado_inicial(estado_inicial)
 

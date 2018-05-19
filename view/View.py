@@ -283,13 +283,13 @@ class View:
         label_det = Label(self.__frame_operacoes_af, text="Obter automato deterministico equivalente:", pady=padding)
         self.__configura_elemento(label_det, row=0, column=0, columnspan=2, rowweight=0, columnweight=0, sticky=W)
 
-        button_determinizar = Button(self.__frame_operacoes_af, text="Determinizar")
+        button_determinizar = Button(self.__frame_operacoes_af, text="Determinizar", command=self.cb_determiniza_af)
         self.__configura_elemento(button_determinizar, row=0, column=2, rowweight=0, columnweight=0, sticky=W)
 
         label_af = Label(self.__frame_operacoes_af, text="Obter automato mínimo equivalente:", pady=padding)
         self.__configura_elemento(label_af, row=1, column=0, columnspan=2, rowweight=0, columnweight=0, sticky=W)
 
-        button_converter_para_af = Button(self.__frame_operacoes_af, text="Minimizar")
+        button_converter_para_af = Button(self.__frame_operacoes_af, text="Minimizar", command=self.cb_minimiza_af)
         self.__configura_elemento(button_converter_para_af, row=1, column=2, rowweight=0, columnweight=0, sticky=W+E)
 
         label_reconhecer = Label(self.__frame_operacoes_af, text="Reconhecer sentença:", pady=padding)

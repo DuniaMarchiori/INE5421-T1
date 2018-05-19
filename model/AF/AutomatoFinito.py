@@ -4,16 +4,18 @@ from itertools import product
 from model.AF.Estado import Estado
 from string import ascii_uppercase
 from model.exception.AFNDError import AFNDError
+from model.Elemento import *
 
 '''
     Classe que representa um autômato finito.
 '''
-class AutomatoFinito:
+class AutomatoFinito(Elemento):
 
     '''
         Método construtor.
     '''
-    def __init__(self, determinizado = False):
+    def __init__(self, nome, determinizado = False):
+        super(AutomatoFinito, self).__init__(TipoElemento.AF, nome)
         self.__producoes = {} # conjunto de transições
         self.__estado_inicial = None
         self.__estados_finais = set()
@@ -86,7 +88,7 @@ class AutomatoFinito:
     def transforma_em_GR(self):
         from model.Gramatica import Gramatica
 
-        gramatica = Gramatica()
+        gramatica = Gramatica(self.get_nome() + " (convertido para GR)")
         gramatica.set_vt(self.__vt)
         gramatica.set_simbolo_inicial(self.__estado_inicial.to_string())
 
@@ -196,7 +198,7 @@ class AutomatoFinito:
     '''
     def determiniza(self):
         if self.isAFND():
-            af = AutomatoFinito(True) # Indica que o autômato é determinizado
+            af = AutomatoFinito(self.get_nome() + " (determinizado)", True) # Indica que o autômato é determinizado
             af.set_vt(self.__vt)
             af.set_estado_inicial(self.__estado_inicial)
 
@@ -237,7 +239,6 @@ class AutomatoFinito:
         Minimiza este autômato.
         \:return o autômato mínimo deste autômato.
     '''
-
     def minimiza(self):
         estados = set(self.__producoes.keys())
         estados_inuteis = self.estados_inacessiveis().union(self.estados_mortos())
@@ -311,7 +312,7 @@ class AutomatoFinito:
 
         # Constrói o autômato
         ce = novo_ce_k_f + novo_ce_f
-        af_minimo = AutomatoFinito()
+        af_minimo = AutomatoFinito(self.get_nome() + " (minimizado)")
         af_minimo.set_vt(self.__vt)
 
         # Estado inicial

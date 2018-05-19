@@ -4,17 +4,19 @@ from model.AF.Estado import Estado
 from model.exception.FormatError import FormatError
 from string import ascii_uppercase
 import re
+from model.Elemento import *
 
 '''
     Classe que representa uma gramática regular.
 '''
-class Gramatica:
+class Gramatica(Elemento):
     __numero = 1 # id do arquivo salvo
 
     '''
         Método construtor.
     '''
-    def __init__(self):
+    def __init__(self, nome):
+        super(Gramatica, self).__init__(TipoElemento.GR, nome)
         self.__producoes = {}
         self.__texto = None
         self.__simbolo_inicial = None
@@ -150,7 +152,7 @@ class Gramatica:
     def transformar_em_AF(self):
         from model.AF.AutomatoFinito import AutomatoFinito
 
-        af = AutomatoFinito()
+        af = AutomatoFinito(self.get_nome() + "(convertido para AF)")
         af.set_vt(self.__vt)
         af.set_estado_inicial(Estado(self.__simbolo_inicial))
 
