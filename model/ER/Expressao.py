@@ -1,5 +1,7 @@
 import string
 
+from model.Elemento import Elemento
+from model.Elemento import TipoElemento
 from model.ER.Arvore.Nodos.NodoConcat import NodoConcat
 from model.ER.Arvore.Nodos.NodoFecho import NodoFecho
 from model.ER.Arvore.Nodos.NodoFolha import NodoFolha
@@ -12,15 +14,22 @@ from model.exception.ExpressionParsingError import ExpressionParsingError
 '''
     Classe que representa uma expressão regular.
 '''
-class Expressao:
+class Expressao(Elemento):
 
     __arvore = None
 
     '''
-        Método construtor.
+        Construtor do elemento expressão regular.
+        \:param nome é o nome do elemento no sistema.
+    '''
+    def __init__(self, nome):
+        super(Expressao, self).__init__(TipoElemento.ER, nome)
+
+    '''
+        Método que recebe a expressão em forma de textual e armazena sua estrutura nesse objeto.
         \:param expressao é a representação textual da expressão regular.
     '''
-    def __init__(self, expressao):
+    def parse(self, expressao):
         self.__gerar_arvore(expressao)
 
     '''
@@ -114,19 +123,22 @@ class Expressao:
         \:return True caso a expressão seja válida
     '''
     def __verifica_validade(self, expressao):
+        if not expressao:
+            raise ExpressionParsingError("A expressão não pode ser vazia")
         chars_validos = string.ascii_letters + string.digits + "|.*?()"
         nivel_parentesis = 0
         char_anterior = " "
+        i_real = 0
         for i in range(0, len(expressao)):
             char = expressao[i]
             if char in chars_validos:
                 if i > 1:
                     if char_anterior in "|.(" and char in "|.*?)":
                         raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
-                                                     "Simbolo não esperado na posição: " + str(i))
+                                                     "Simbolo não esperado na posição: " + str(i_real))
                     elif char_anterior in "*?" and char in "*?":
                         raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
-                                                     "Simbolo não esperado na posição: " + str(i))
+                                                     "Simbolo não esperado na posição: " + str(i_real))
 
                 if char == "(":
                     nivel_parentesis += 1
@@ -134,12 +146,14 @@ class Expressao:
                     nivel_parentesis -= 1
                     if nivel_parentesis < 0:
                         raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
-                                                     "Parenteses fechado sem correspondente na posição: " + str(i))
+                                                     "Parenteses fechado sem correspondente na posição: " + str(i_real))
+                elif char == ".":
+                    i_real -= 1
             else:
                 raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
-                                             "Simbolo desconhecido na posição: " + str(i))
+                                             "Simbolo desconhecido na posição: " + str(i_real))
             char_anterior = char
-            i += 1
+            i_real += 1
 
         if nivel_parentesis > 0:
             raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
@@ -220,6 +234,9 @@ class Expressao:
 
         estado_inicial = Estado([prefixo_do_estado + str(i)])
 
+        # TODO Quando a integração for feita o metodo deveria ciar um automato com:
+        # nome = nome_atual + " (Convertido para AF)"
+        # Uma ideia parecida deveria ser implementada em todos os metodo que geram outros elementos
         automato = AutomatoFinito()
         automato.adiciona_estado(estado_inicial)
         automato.set_estado_inicial(estado_inicial)
