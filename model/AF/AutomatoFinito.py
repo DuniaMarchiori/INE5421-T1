@@ -240,38 +240,48 @@ class AutomatoFinito:
 
     def minimiza(self):
         estados = set(self.__producoes.keys())
-
         estados_inuteis = self.estados_inacessiveis().union(self.estados_mortos())
         estados = estados - estados_inuteis
-        estado_indefinicao = self.novo_simbolo()
+
+        estado_indefinicao = self.novo_estado()
+        transicoes_indef = {}
+        lista = [estado_indefinicao]
+        for simbolo in self.__vt:
+            transicoes_indef[simbolo] = lista
+        self.__producoes[estado_indefinicao] = transicoes_indef # Item adicionado apenas para auxiliar na minimização
+
         k_f = estados - self.__estados_finais
+        k_f.add(estado_indefinicao)
         f = estados - k_f
 
         ce_k_f_anterior = []
-        ce_k_f_anterior.append(k_f)
         ce_f_anterior = []
-        ce_f_anterior.append(f)
-        novo_ce_k_f = []
-        novo_ce_f = []
+        novo_ce_k_f = [k_f]
+        novo_ce_f = [f]
 
-        # TODO - considerar que indefinições vão pra "estado_indefinicao"
-        while ce_k_f_anterior != novo_ce_k_f and ce_f_anterior != novo_ce_f:
-            novo_ce_k_f = novo_ce_k_f + ce_k_f_anterior
-            novo_ce_f = novo_ce_f + ce_f_anterior
+        # Forma os conjuntos equivalentes
+        while ce_k_f_anterior != novo_ce_k_f or ce_f_anterior != novo_ce_f:
+            ce_k_f_anterior = list(novo_ce_k_f)
+            ce_f_anterior = list(novo_ce_f)
+            ce = ce_k_f_anterior + ce_f_anterior
+
             # K-F
             for conjunto in ce_k_f_anterior:
                 estado = next(iter(conjunto))
                 set_e = set()
                 set_e.add(estado)
                 for outro_estado in conjunto - set_e:
-                    if not self.__estados_equivalentes(estado, outro_estado, ce_k_f_anterior, ce_f_anterior):
+                    if not self.__estados_equivalentes(estado, outro_estado, ce, estado_indefinicao):
                         adicionado = False
                         for outro_set in novo_ce_k_f:
-                            for e in outro_set:
-                                if self.__estados_equivalentes(outro_estado, e, ce_k_f_anterior, ce_f_anterior):
+                            if outro_set != conjunto:
+                                e = next(iter(outro_set))
+                                if self.__estados_equivalentes(outro_estado, e, ce, estado_indefinicao):
                                     outro_set.add(outro_estado)
-                                    conjunto.remove(outro_estado)
                                     adicionado = True
+                                    break
+                            else:
+                                outro_set.remove(outro_estado)
                         if not adicionado:
                             set_outro_estado = set()
                             set_outro_estado.add(outro_estado)
@@ -283,30 +293,36 @@ class AutomatoFinito:
                 set_e = set()
                 set_e.add(estado)
                 for outro_estado in conjunto - set_e:
-                    if not self.__estados_equivalentes(estado, outro_estado, ce_k_f_anterior, ce_f_anterior):
+                    if not self.__estados_equivalentes(estado, outro_estado, ce, estado_indefinicao):
                         adicionado = False
                         for outro_set in novo_ce_f:
-                            for e in outro_set:
-                                if self.__estados_equivalentes(outro_estado, e, ce_k_f_anterior, ce_f_anterior):
+                            if outro_set != conjunto:
+                                e = next(iter(outro_set))
+                                if self.__estados_equivalentes(outro_estado, e, ce, estado_indefinicao):
                                     outro_set.add(outro_estado)
-                                    conjunto.remove(outro_estado)
                                     adicionado = True
+                                    break
+                            else:
+                                outro_set.remove(outro_estado)
                         if not adicionado:
                             set_outro_estado = set()
                             set_outro_estado.add(outro_estado)
                             novo_ce_f.append(set_outro_estado)
 
+        # Constrói o autômato
         ce = novo_ce_k_f + novo_ce_f
         af_minimo = AutomatoFinito()
         af_minimo.set_vt(self.__vt)
-        # estado inicial
+
+        # Estado inicial
         for e in ce:
             if self.__estado_inicial in e:
                 index = ce.index(e)
                 nome_estado = "q" + str(index)
                 af_minimo.set_estado_inicial(Estado(nome_estado))
                 break
-        # estado final
+
+        # Estados finais
         estados_finais = set()
         for e in novo_ce_f:
             index = ce.index(e)
@@ -314,34 +330,60 @@ class AutomatoFinito:
             estados_finais.add(Estado(nome_estado))
         af_minimo.set_estados_finais(estados_finais)
 
-        # producoes
+        # Produções
+        ce_indefinido =  self.__get_ce_respectivo(ce, estado_indefinicao)
         for estado in self.__producoes:
             nome_estado = self.__get_ce_respectivo(ce, estado)
             transicoes = self.__producoes[estado]
-            for t in transicoes:
-                estado_t = transicoes[t]
-                nome_estado_t = self.__get_ce_respectivo(ce, estado_t)
-                af_minimo.adiciona_transicao(Estado(nome_estado), t, Estado(nome_estado_t))
+            for simbolo in self.__vt:
+                if simbolo in transicoes:
+                    estado_t = transicoes[simbolo]
+                    nome_estado_t = self.__get_ce_respectivo(ce, estado_t[0])
+                    af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(nome_estado_t))
+                else:
+                    af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(ce_indefinido))
 
-        for l in ce:
-            for e in l:
-                print(e.to_string())
-            print("--")
+        del self.__producoes[estado_indefinicao] # Deleta a entrada auxiliar
 
         return af_minimo
 
     '''
-        
+        Determina a qual conjunto de equivalência o estado pertence durante o processo de minimização.
+        \:param ce é o conjunto total de conjuntos de equivalência.
+        \:param estado é o estado que se deseja determinar o conjunto a qual ele pertence.
+        \:return o nome do estado que representa o conjunto de equivalência.
     '''
     def __get_ce_respectivo(self, ce, estado):
-        # TODO
-        return "q0"
+        for e in ce:
+            if estado in e:
+                index = ce.index(e)
+                return "q" + str(index)
 
     '''
-        
+        Determina se dois estados são equivalentes de acordo com os conjuntos de equivalência no processo de minimização.
+        \:param estado é um dos dois estados usados na comparação.
+        \:param outro_estado é o segundo estado usado na comparação.
+        \:param ce é o conjunto total de conjuntos de equivalência.
+        \:param estado_indefinicao é o estado criado para representar a indefinicao no autômato.
+        \:return True se os dois estados são equivalentes e False caso não sejam.
     '''
-    def __estados_equivalentes(self, estado, outro_estado, k_f, f):
-        # TODO
+    def __estados_equivalentes(self, estado, outro_estado, ce, estado_indefinicao):
+        for simbolo in self.__vt:
+            if simbolo in self.__producoes[estado]:
+                transicao_estado = self.__producoes[estado][simbolo]
+            else:
+                transicao_estado = [estado_indefinicao]
+
+            if simbolo in self.__producoes[outro_estado]:
+                transicao_outro_estado = self.__producoes[outro_estado][simbolo]
+            else:
+                transicao_outro_estado = [estado_indefinicao]
+
+            ce_estado = self.__get_ce_respectivo(ce, transicao_estado[0])
+            ce_outro_estado = self.__get_ce_respectivo(ce, transicao_outro_estado[0])
+            if ce_estado != ce_outro_estado:
+                return False
+
         return True
 
     '''
@@ -417,10 +459,10 @@ class AutomatoFinito:
         Gera um novo símbolo não terminal que não pertence à gramática.
         \:return um símbolo não terminal que não pertence à gramática.
     '''
-    def novo_simbolo(self):
+    def novo_estado(self):
         simbolo_novo = None
         for letra in ascii_uppercase:
-            if letra not in self.__producoes:
+            if Estado(letra) not in self.__producoes:
                 simbolo_novo = letra
                 break
         # Se todas as letras do alfabeto já fazem parte do conjunto de símbolos terminais,
@@ -430,13 +472,13 @@ class AutomatoFinito:
             for l1 in ascii_uppercase:
                 for l2 in ascii_uppercase:
                     letras = l1 + l2
-                    if letras not in self.__producoes:
+                    if Estado(letras) not in self.__producoes:
                         simbolo_novo = letras
                         found = True
                         break
                 if found:
                     break
-        return simbolo_novo
+        return Estado(simbolo_novo)
 
     '''
         Transforma o autômato em uma matriz de strings.
