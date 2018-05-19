@@ -47,7 +47,7 @@ class Controller:
             self.__view.mostrar_aviso(e.get_message())
             return False
         except Exception:
-            self.__view.mostrar_aviso("Erro ao criar gramática")
+            self.__view.mostrar_aviso("Erro ao criar gramática.")
             return False
 
 
@@ -66,7 +66,7 @@ class Controller:
             self.__view.mostrar_aviso(e.get_message())
             return False
         except Exception:
-            self.__view.mostrar_aviso("Erro ao criar expressão")
+            self.__view.mostrar_aviso("Erro ao criar expressão.")
             return False
 
     '''
@@ -169,7 +169,7 @@ class Controller:
         except ValueError:
             self.__view.mostrar_aviso("O tamanho da sentença deve ser um inteiro.")
         except Exception:
-            self.__view.mostrar_aviso("Erro enumerar sentenças")
+            self.__view.mostrar_aviso("Erro ao enumerar sentenças.")
 
     '''
         Altera um elemento.
