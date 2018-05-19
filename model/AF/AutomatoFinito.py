@@ -539,9 +539,6 @@ class AutomatoFinito(Elemento):
     def to_string(self):
         matriz = self.to_matrix()
         string = []
-        for linha in matriz:
-            if not linha:
-                matriz.remove(linha)
 
         maior_estado = self.__maior_estado_na_coluna(matriz, 0)
         for i in range(0, len(matriz)):
