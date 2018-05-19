@@ -48,6 +48,7 @@ class View:
         self.__inicializar_variaveis()
         self.__inicializar_menubar()
         self.__inicializar_menus()
+        self.centralizar(self.__root)
         self.__atualiza_operacao(None)
         self.mostrar_menu(True)
 
@@ -80,7 +81,7 @@ class View:
         menu_arquivo.add_command(label="Salvar", command=self.cb_salvar)
 
         menu_main.add_cascade(label="Arquivo", menu=menu_arquivo)
-        menu_main.add_command(label="Sobre", command=lambda: self.mostrar_aviso("Trabalho 1 de INE5421.\nPor:\nDúnia Marchiori\nVinicius Steffani Schweitzer"))
+        menu_main.add_command(label="Sobre", command=lambda: self.mostrar_aviso("Trabalho 1 de INE5421\n\nPor:\nDúnia Marchiori\nVinicius Steffani Schweitzer"))
 
         self.__root.configure(menu=menu_main)
 
@@ -280,13 +281,13 @@ class View:
 
     def __inicializa_frame_operacoes_af(self):
         padding = 10
-        label_det = Label(self.__frame_operacoes_af, text="Obter automato deterministico equivalente:", pady=padding)
+        label_det = Label(self.__frame_operacoes_af, text="Obter autômato determinístico equivalente:", pady=padding)
         self.__configura_elemento(label_det, row=0, column=0, columnspan=2, rowweight=0, columnweight=0, sticky=W)
 
         button_determinizar = Button(self.__frame_operacoes_af, text="Determinizar", command=self.cb_determiniza_af)
         self.__configura_elemento(button_determinizar, row=0, column=2, rowweight=0, columnweight=0, sticky=W)
 
-        label_af = Label(self.__frame_operacoes_af, text="Obter automato mínimo equivalente:", pady=padding)
+        label_af = Label(self.__frame_operacoes_af, text="Obter autômato mínimo equivalente:", pady=padding)
         self.__configura_elemento(label_af, row=1, column=0, columnspan=2, rowweight=0, columnweight=0, sticky=W)
 
         button_converter_para_af = Button(self.__frame_operacoes_af, text="Minimizar", command=self.cb_minimiza_af)
@@ -374,7 +375,7 @@ class View:
                 self.__button_alterar_elemento.grid()
             elif elemento_selecionado.get_tipo() is TipoElemento.AF:
                 self.__altera_tela_operacao(3)
-                tipo = "Automato Finito"
+                tipo = "Autômato Finito"
                 self.__frame_manipulacao_elemento.configure(text=tipo)
                 self.__button_converter_para_gr['state'] = NORMAL
                 self.__button_converter_para_af['state'] = DISABLED
@@ -388,6 +389,7 @@ class View:
         if indice is not None:
             self.__listbox_lista_de_linguagens.selection_set(indice)
             self.__listbox_lista_de_linguagens.see(indice)
+            self.__notebook_abas_de_representacao.select(0)
         self.__atualiza_operacao(elemento_selecionado)
 
     def __atualiza_visualizacao_do_elemento(self, nome, tipo, representacao):
@@ -455,9 +457,13 @@ class View:
         popup.transient(current_top)
         popup.title(titulo)
         popup.resizable(width=False, height=False)
-        popup.minsize(width=400, height=200)
-        label = Label(popup, text=aviso)
+        popup.minsize(width=300, height=100)
+        label = Label(popup, text=aviso, wraplength=280, justify=LEFT)
         label.pack(expand=True)
+        frame_btn = Frame(popup, pady=10)
+        frame_btn.pack()
+        Button(frame_btn, text="OK", width=10, command=lambda:popup.destroy()).pack()
+        self.centralizar(popup)
         popup.grab_set()
         current_top.wait_window(popup)
         if self.__popup_novo_elemento.is_showing():
@@ -470,21 +476,26 @@ class View:
         popup = Toplevel(current_top)
         popup.transient(current_top)
         popup.title("Lista de Sentenças Geradas")
-        popup.resizable(width=False, height=False)
-        popup.minsize(width=400, height=200)
+        popup.resizable(width=False, height=True)
+        popup.minsize(width=400, height=231)
         label = Label(popup, text="Sentenças de tamanho " + str(tamanho) + ":")
         label.pack()
         f = Frame(popup)
-        f.pack()
+        f.pack(expand=True, fill=Y)
         listbox_de_sentencas = Listbox(f)
         for sentenca in lista_de_sentencas:
             listbox_de_sentencas.insert(END, sentenca)
-        listbox_de_sentencas.pack(side=LEFT)
+        listbox_de_sentencas.pack(side=LEFT, fill=Y)
 
         scrollbar_lista = Scrollbar(f, command=listbox_de_sentencas.yview)
         listbox_de_sentencas['yscrollcommand'] = scrollbar_lista.set
         scrollbar_lista.pack(fill=Y, side=LEFT)
 
+        frame_btn = Frame(popup, pady=10)
+        frame_btn.pack()
+        Button(frame_btn, text="OK", width=10, command=lambda:popup.destroy()).pack()
+
+        self.centralizar(popup)
         popup.grab_set()
         current_top.wait_window(popup)
         if self.__popup_novo_elemento.is_showing():
@@ -505,13 +516,27 @@ class View:
         indice = self.__get_indice_selecionado()
         self.__controller.cb_alterar_elemento(indice)
 
-    def salvar_arquivo(self):
-        arquivo = filedialog.asksaveasfilename(initialdir="./", title="Aonde você quer salvar?", filetypes=(("txt","*.txt"),("all files","*.*")))
+    def salvar_arquivo(self, nome):
+        nome = nome + ".txt"
+        arquivo = filedialog.asksaveasfilename(initialdir="./", title="Aonde você quer salvar?", initialfile=nome, filetypes=(("txt","*.txt"),("all files","*.*")))
         return arquivo
 
     def carregar_arquivo(self):
         arquivo = filedialog.askopenfilename(initialdir="./", title="Qual arquivo você quer carregar?")
         return arquivo
+
+    def centralizar(self, janela):
+        janela.update_idletasks()
+        width = janela.winfo_width()
+        frm_width = janela.winfo_rootx() - janela.winfo_x()
+        win_width = width + 2 * frm_width
+        height = janela.winfo_height()
+        titlebar_height = janela.winfo_rooty() - janela.winfo_y()
+        win_height = height + titlebar_height + frm_width
+        x = janela.winfo_screenwidth() // 2 - win_width // 2
+        y = janela.winfo_screenheight() // 2 - win_height // 2
+        janela.geometry('{}x{}+{}+{}'.format(width, height, x, y))
+        janela.deiconify()
 
     def cb_seleciona_lista(self, event=None):
         indice = self.__get_indice_selecionado()
@@ -552,8 +577,7 @@ class View:
 
     def cb_salvar(self):
         if self.__get_indice_selecionado() is not None:
-            caminho = self.salvar_arquivo()
-            self.__controller.cb_salvar_elemento(caminho, self.__get_indice_selecionado())
+            self.__controller.cb_salvar_elemento(self.__get_indice_selecionado())
         else:
             self.mostrar_aviso("Você precisa selecionar um elemento para salvá-lo.")
 

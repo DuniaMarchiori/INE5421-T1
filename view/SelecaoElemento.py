@@ -88,6 +88,7 @@ class SelecionaElemento:
         self.__mostrar_menu(True)
         self.__root.minsize(width=400, height=300)
         self.__root.protocol("WM_DELETE_WINDOW", self.close)
+        self.centralizar(self.__root)
         self.__root.grab_set()
         self.__parent.wait_window(self.__root)
         return self.get_selecionado_oritinal()
@@ -98,3 +99,16 @@ class SelecionaElemento:
     def close(self):
         self.__root.destroy()
         self.__root = None
+
+    def centralizar(self, janela):
+        janela.update_idletasks()
+        width = janela.winfo_width()
+        frm_width = janela.winfo_rootx() - janela.winfo_x()
+        win_width = width + 2 * frm_width
+        height = janela.winfo_height()
+        titlebar_height = janela.winfo_rooty() - janela.winfo_y()
+        win_height = height + titlebar_height + frm_width
+        x = janela.winfo_screenwidth() // 2 - win_width // 2
+        y = janela.winfo_screenheight() // 2 - win_height // 2
+        janela.geometry('{}x{}+{}+{}'.format(width, height, x, y))
+        janela.deiconify()

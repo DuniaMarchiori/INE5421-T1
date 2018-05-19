@@ -53,8 +53,11 @@ class Criacao:
         self.__inicializar_aba_gramatica(self.__notebook_abas_de_elementos, sentenca, tipo, adicao)
         self.__inicializar_aba_expressao(self.__notebook_abas_de_elementos, sentenca, tipo, adicao)
 
-        if tipo is TipoElemento.ER:
-            self.__notebook_abas_de_elementos.select(1)
+        if tipo is not None:
+            if tipo is TipoElemento.ER:
+                self.__notebook_abas_de_elementos.tab(0, state=DISABLED)
+            else:
+                self.__notebook_abas_de_elementos.tab(1, state=DISABLED)
 
     def __inicializar_aba_gramatica(self, notebook, sentenca, tipo, adicao):
         if tipo is not TipoElemento.GR:
@@ -108,6 +111,7 @@ class Criacao:
         self.__mostrar_menu(True)
         self.__root.minsize(width=400, height=300)
         self.__root.protocol("WM_DELETE_WINDOW", self.close)
+        self.centralizar(self.__root)
         self.__root.grab_set()
 
     def pass_set(self):
@@ -129,3 +133,16 @@ class Criacao:
 
         if success:
             self.close()
+
+    def centralizar(self, janela):
+        janela.update_idletasks()
+        width = janela.winfo_width()
+        frm_width = janela.winfo_rootx() - janela.winfo_x()
+        win_width = width + 2 * frm_width
+        height = janela.winfo_height()
+        titlebar_height = janela.winfo_rooty() - janela.winfo_y()
+        win_height = height + titlebar_height + frm_width
+        x = janela.winfo_screenwidth() // 2 - win_width // 2
+        y = janela.winfo_screenheight() // 2 - win_height // 2
+        janela.geometry('{}x{}+{}+{}'.format(width, height, x, y))
+        janela.deiconify()

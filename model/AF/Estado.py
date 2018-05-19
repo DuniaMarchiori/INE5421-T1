@@ -19,7 +19,7 @@ class Estado:
             self.__lista = []
             self.__lista.append(nomes)
             self.__string = nomes
-            self.__nome = frozenset(nomes)
+            self.__nome = frozenset([nomes])
             self.__string_com_virgula = ','.join(self.__lista)
 
     '''
