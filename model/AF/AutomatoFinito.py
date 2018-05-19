@@ -524,7 +524,10 @@ class AutomatoFinito(Elemento):
                             lista_estados.append(estado.to_string())
                         else:
                             lista_estados.append(estado.to_string_com_virgula())
-                    linha.append(", ".join(lista_estados))
+                    estado = ", ".join(lista_estados)
+                    if self.__determinizado:
+                        estado = "[" + estado + "]"
+                    linha.append(estado)
                 else:
                     estado = "-"
                     linha.append(estado)
@@ -556,8 +559,6 @@ class AutomatoFinito(Elemento):
             string[0] += "   " + (" "*(maior_estado_coluna-len(s))) + s
             for j in range(1, len(matriz)):
                 estado = matriz[j][i]
-                if self.__determinizado:
-                    estado = "[" + estado + "]"
                 string[j] += " | " + (" "*(maior_estado_coluna-len(estado))) + estado
 
         string_final = ""
@@ -569,8 +570,6 @@ class AutomatoFinito(Elemento):
         maior_estado = 0
         for i in range(0, len(matriz_de_strings)):
             estado = matriz_de_strings[i][coluna]
-            if self.__determinizado:
-                estado = "[" + estado + "]"
             if len(estado) > maior_estado:
                 maior_estado = len(estado)
         return maior_estado
