@@ -453,6 +453,7 @@ class AutomatoFinito:
         \:return True se o autômato for completo ou False caso contrário.
     '''
     def isComplete(self):
+        # TODO
         return True
 
     '''
