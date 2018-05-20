@@ -150,7 +150,7 @@ class Controller:
             novo_elemento = self.__model.minimiza_af(indice)
             self.__adicionar_unico_elemento(novo_elemento)
         except Exception:
-            self.__view.mostrar_aviso("É preciso determinizar o autômato primeiro.")
+            self.__view.mostrar_aviso("É preciso que o autômato seja determinístico.")
 
     '''
         Informa se dada sentença é reconhecida por um autômato especificado.
@@ -213,7 +213,7 @@ class Controller:
             caminho = self.__view.salvar_arquivo(elemento.get_nome())
             resultado = self.__model.salvar_elemento(caminho, indice)
             if resultado:
-                self.__view.mostrar_aviso("Elemento salvo com sucesso.")
+                self.__view.mostrar_aviso("Elemento salvo com sucesso.", titulo="Sucesso")
             else:
                 self.__view.mostrar_aviso("Falha ao salvar arquivo.")
         else:
@@ -224,7 +224,7 @@ class Controller:
             conteudo = self.__model.carregar_elemento(caminho)
             resultado = self.cb_nova_gramatica("Gramática Carregada", conteudo)
             if resultado:
-                self.__view.mostrar_aviso("Gramática carregada com sucesso.")
+                self.__view.mostrar_aviso("Gramática carregada com sucesso.", titulo="Sucesso")
         except Exception:
             self.__view.mostrar_aviso("Erro ao carregar arquivo.")
 
@@ -233,6 +233,6 @@ class Controller:
             conteudo = self.__model.carregar_elemento(caminho)
             resultado = self.cb_nova_expressao("Expressão Carregada", conteudo)
             if resultado:
-                self.__view.mostrar_aviso("Expressão carregada com sucesso.")
+                self.__view.mostrar_aviso("Expressão carregada com sucesso.", titulo="Sucesso")
         except Exception:
             self.__view.mostrar_aviso("Erro ao carregar arquivo.")

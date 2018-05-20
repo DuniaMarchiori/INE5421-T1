@@ -146,7 +146,8 @@ class Model:
     '''
     def minimiza_af(self, indice):
         elemento = self.obter_elemento_por_indice(indice)
-        #TODO o automato não tem um metodo de minimização ainda
+        if elemento.isAFND():
+            raise Exception("É preciso que o autômato seja determinístico.")
         return elemento.minimiza()
 
     '''

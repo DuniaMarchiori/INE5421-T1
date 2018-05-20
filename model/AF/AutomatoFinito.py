@@ -25,6 +25,7 @@ class AutomatoFinito(Elemento):
             self.__deterministico = True
         else:
             self.__deterministico = None
+        self.__completo = None
 
     '''
         Adiciona uma nova produção para um estado a partir de um simbolo terminal.
@@ -92,6 +93,8 @@ class AutomatoFinito(Elemento):
         gramatica.set_vt(self.__vt)
         gramatica.set_simbolo_inicial(self.__estado_inicial.to_string())
 
+        traducao_nomes = {}
+        novos_nomes = []
         # Construção das produções de acordo com os itens A e B do algoritmo visto em aula
         for b in self.__producoes.keys():
             producoes_af = self.__producoes[b]
@@ -101,10 +104,26 @@ class AutomatoFinito(Elemento):
                     for c in producoes_af[a]:
                         c_string = c.to_string()
                         if c_string != "-":
+                            if c_string[0] == "q":
+                                if c_string not in traducao_nomes:
+                                    novo_nome = self.novo_estado(novos_nomes).to_string()
+                                    novos_nomes.append(novo_nome)
+                                    traducao_nomes[c_string] = novo_nome
+                                    c_string = novo_nome
+                                else:
+                                    c_string = traducao_nomes[c_string]
                             producoes_g.append((a, c_string))
                             if c in self.__estados_finais:
                                 producoes_g.append((a, "&"))
             b = b.to_string()
+            if b[0] == "q":
+                if b not in traducao_nomes:
+                    novo_nome = self.novo_estado(novos_nomes).to_string()
+                    novos_nomes.append(novo_nome)
+                    traducao_nomes[b] = novo_nome
+                    b = novo_nome
+                else:
+                    b = traducao_nomes[b]
             gramatica.adiciona_producao(b, producoes_g)
 
         # Item C do algoritmo visto em aula
@@ -115,7 +134,10 @@ class AutomatoFinito(Elemento):
             # Copia produções do estado inicial atual
             producoes_novo_si = [] # lista de tuplas
 
-            producoes_si = gramatica.get_producoes()[self.__estado_inicial.to_string()]
+            si = self.__estado_inicial.to_string()
+            if si[0] == "q":
+                si = traducao_nomes[si]
+            producoes_si = gramatica.get_producoes()[si]
             for p in producoes_si:
                 producoes_novo_si.append(p)
 
@@ -247,12 +269,14 @@ class AutomatoFinito(Elemento):
         estado_indefinicao = self.novo_estado()
         transicoes_indef = {}
         lista = [estado_indefinicao]
-        for simbolo in self.__vt:
-            transicoes_indef[simbolo] = lista
-        self.__producoes[estado_indefinicao] = transicoes_indef # Item adicionado apenas para auxiliar na minimização
+        if not self.is_complete():
+            for simbolo in self.__vt:
+                transicoes_indef[simbolo] = lista
+            self.__producoes[estado_indefinicao] = transicoes_indef # Item adicionado apenas para auxiliar na minimização
 
-        k_f = estados - self.__estados_finais
-        k_f.add(estado_indefinicao)
+        k_f = estados - set(self.__estados_finais)
+        if not self.is_complete():
+            k_f.add(estado_indefinicao)
         f = estados - k_f
 
         ce_k_f_anterior = []
@@ -344,7 +368,8 @@ class AutomatoFinito(Elemento):
                 else:
                     af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(ce_indefinido))
 
-        del self.__producoes[estado_indefinicao] # Deleta a entrada auxiliar
+        if not self.is_complete():
+            del self.__producoes[estado_indefinicao] # Deleta a entrada auxiliar
 
         return af_minimo
 
@@ -403,8 +428,8 @@ class AutomatoFinito(Elemento):
                     transicoes = self.__producoes[estado][simbolo]
                     for t in transicoes:
                         estados_com_transicao.add(t)
+            estados_a_visitar = estados_com_transicao - estados_alcancados
             estados_alcancados = estados_alcancados.union(estados_com_transicao)
-            estados_a_visitar = estados_com_transicao
 
         return set(self.__producoes.keys() - estados_alcancados)
 
@@ -414,7 +439,7 @@ class AutomatoFinito(Elemento):
     '''
 
     def estados_mortos(self):
-        vivos_atuais = self.__estados_finais
+        vivos_atuais = set(self.__estados_finais)
         vivos_anteriores = set()
 
         while vivos_atuais != vivos_anteriores:
@@ -445,26 +470,38 @@ class AutomatoFinito(Elemento):
             for t in transicoes:
                 if len(transicoes[t]) > 1: # Se tem mais de uma transição para um símbolo
                     self.__deterministico = False
+                    return not self.__deterministico
                 if t == "&" and len(transicoes.keys()) > 1 and estado != self.__estado_inicial: # Se tem &-transição e mais outras transições através de outros símbolos
                     self.__deterministico = False
+                    return not self.__deterministico
         return not self.__deterministico
 
     '''
         Verifica se o autômato é completo, ou seja, contém transições para todos os símbolos em cada estado.
         \:return True se o autômato for completo ou False caso contrário.
     '''
-    def isComplete(self):
-        # TODO
-        return True
+    def is_complete(self):
+
+        if self.__completo != None:
+            return self.__completo
+
+        self.__completo = True
+        for estado in self.__producoes:
+            transicoes = self.__producoes[estado]
+            for simbolo in self.__vt:
+                if simbolo not in transicoes:
+                    self.__completo = False
+                    return self.__completo
+        return self.__completo
 
     '''
         Gera um novo símbolo não terminal que não pertence à gramática.
         \:return um símbolo não terminal que não pertence à gramática.
     '''
-    def novo_estado(self):
+    def novo_estado(self, lista=[]):
         simbolo_novo = None
         for letra in ascii_uppercase:
-            if Estado(letra) not in self.__producoes:
+            if Estado(letra) not in self.__producoes and letra not in lista:
                 simbolo_novo = letra
                 break
         # Se todas as letras do alfabeto já fazem parte do conjunto de símbolos terminais,
@@ -474,7 +511,7 @@ class AutomatoFinito(Elemento):
             for l1 in ascii_uppercase:
                 for l2 in ascii_uppercase:
                     letras = l1 + l2
-                    if Estado(letras) not in self.__producoes:
+                    if Estado(letras) not in self.__producoes and letra not in lista:
                         simbolo_novo = letras
                         found = True
                         break
