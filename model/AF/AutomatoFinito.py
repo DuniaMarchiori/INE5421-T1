@@ -92,6 +92,8 @@ class AutomatoFinito(Elemento):
         gramatica.set_vt(self.__vt)
         gramatica.set_simbolo_inicial(self.__estado_inicial.to_string())
 
+        traducao_nomes = {}
+        novos_nomes = []
         # Construção das produções de acordo com os itens A e B do algoritmo visto em aula
         for b in self.__producoes.keys():
             producoes_af = self.__producoes[b]
@@ -101,10 +103,26 @@ class AutomatoFinito(Elemento):
                     for c in producoes_af[a]:
                         c_string = c.to_string()
                         if c_string != "-":
+                            if c_string[0] == "q":
+                                if c_string not in traducao_nomes:
+                                    novo_nome = self.novo_estado(novos_nomes).to_string()
+                                    novos_nomes.append(novo_nome)
+                                    traducao_nomes[c_string] = novo_nome
+                                    c_string = novo_nome
+                                else:
+                                    c_string = traducao_nomes[c_string]
                             producoes_g.append((a, c_string))
                             if c in self.__estados_finais:
                                 producoes_g.append((a, "&"))
             b = b.to_string()
+            if b[0] == "q":
+                if b not in traducao_nomes:
+                    novo_nome = self.novo_estado(novos_nomes).to_string()
+                    novos_nomes.append(novo_nome)
+                    traducao_nomes[b] = novo_nome
+                    b = novo_nome
+                else:
+                    b = traducao_nomes[b]
             gramatica.adiciona_producao(b, producoes_g)
 
         # Item C do algoritmo visto em aula
@@ -115,7 +133,10 @@ class AutomatoFinito(Elemento):
             # Copia produções do estado inicial atual
             producoes_novo_si = [] # lista de tuplas
 
-            producoes_si = gramatica.get_producoes()[self.__estado_inicial.to_string()]
+            si = self.__estado_inicial.to_string()
+            if si[0] == "q":
+                si = traducao_nomes[si]
+            producoes_si = gramatica.get_producoes()[si]
             for p in producoes_si:
                 producoes_novo_si.append(p)
 
@@ -461,10 +482,10 @@ class AutomatoFinito(Elemento):
         Gera um novo símbolo não terminal que não pertence à gramática.
         \:return um símbolo não terminal que não pertence à gramática.
     '''
-    def novo_estado(self):
+    def novo_estado(self, lista=[]):
         simbolo_novo = None
         for letra in ascii_uppercase:
-            if Estado(letra) not in self.__producoes:
+            if Estado(letra) not in self.__producoes and letra not in lista:
                 simbolo_novo = letra
                 break
         # Se todas as letras do alfabeto já fazem parte do conjunto de símbolos terminais,
@@ -474,7 +495,7 @@ class AutomatoFinito(Elemento):
             for l1 in ascii_uppercase:
                 for l2 in ascii_uppercase:
                     letras = l1 + l2
-                    if Estado(letras) not in self.__producoes:
+                    if Estado(letras) not in self.__producoes and letra not in lista:
                         simbolo_novo = letras
                         found = True
                         break
