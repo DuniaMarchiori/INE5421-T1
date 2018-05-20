@@ -50,6 +50,11 @@ class Expressao(Elemento):
             self.__arvore.set_nodo_raiz(self.__gerar_nodo(expressao))
             self.__arvore.costura_arvore()
             self.__arvore.numera_folhas()
+        try:
+            self.__verifica_validade(self.to_string())
+        except:
+            raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
+                                         "Expressão possui operadores redundantes que resultam em recursão infinita.")
 
     '''
         Algorítmo recursivo que gera a arvore/sub-arvore a partir da expressão/sub-expressão regular dada.
@@ -234,10 +239,7 @@ class Expressao(Elemento):
 
         estado_inicial = Estado([prefixo_do_estado + str(i)])
 
-        # TODO Quando a integração for feita o metodo deveria ciar um automato com:
-        # nome = nome_atual + " (Convertido para AF)"
-        # Uma ideia parecida deveria ser implementada em todos os metodo que geram outros elementos
-        automato = AutomatoFinito()
+        automato = AutomatoFinito(self.get_nome() + " (convertido para AF)")
         automato.adiciona_estado(estado_inicial)
         automato.set_estado_inicial(estado_inicial)
 

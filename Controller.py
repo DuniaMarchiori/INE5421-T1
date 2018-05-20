@@ -3,7 +3,9 @@ from model.Model import Model
 from view.View import View
 
 from model.exception.FormatError import FormatError
+from model.exception.AFNDError import AFNDError
 from model.exception.ExpressionParsingError import ExpressionParsingError
+from model.Elemento import TipoElemento
 
 '''
     Controller do padrão MVC.
@@ -28,7 +30,6 @@ class Controller:
     def __adicionar_unico_elemento(self, elemento):
         self.__model.adicionar_elemento_na_lista(elemento)
         self.__view.adicionar_elemento_na_lista(elemento.get_nome(), elemento.get_tipo())
-        # TODO da erro pois atualmente nem todos os elementos herdam de "Elemento" pra ter get_nome e get_tipo
 
     # Callbacks da interface
 
@@ -134,17 +135,22 @@ class Controller:
         \:param indice é o índice do autômato na lista.
     '''
     def cb_determiniza_af(self, indice):
-        # TODO Dar um try catch porque ele da erro se tentar determinizar um ja deterministico
-        novo_elemento = self.__model.determiniza_af(indice)
-        self.__adicionar_unico_elemento(novo_elemento)
+        try:
+            novo_elemento = self.__model.determiniza_af(indice)
+            self.__adicionar_unico_elemento(novo_elemento)
+        except Exception:
+            self.__view.mostrar_aviso("O autômato ja é determinístico.")
 
     '''
         Obtem um automato equivalente minimo.
         \:param indice é o índice do autômato na lista.
     '''
     def cb_minimiza_af(self, indice):
-        novo_elemento = self.__model.minimiza_af(indice)
-        self.__adicionar_unico_elemento(novo_elemento)
+        try:
+            novo_elemento = self.__model.minimiza_af(indice)
+            self.__adicionar_unico_elemento(novo_elemento)
+        except Exception:
+            self.__view.mostrar_aviso("É preciso determinizar o autômato primeiro.")
 
     '''
         Informa se dada sentença é reconhecida por um autômato especificado.
@@ -152,10 +158,15 @@ class Controller:
         \:param sentenca é a sentença que será reconhecida.
     '''
     def cb_reconhecimento(self, indice, sentenca):
-        if self.__model.reconhecimento(indice, sentenca):
-            self.__view.mostrar_aviso("Sentença aceita.", "Reconhecimento de Sentença")
-        else:
-            self.__view.mostrar_aviso("Sentença não aceita.", "Reconhecimento de Sentença")
+        try:
+            if self.__model.reconhecimento(indice, sentenca):
+                self.__view.mostrar_aviso("A sentença \"" + sentenca + "\" é reconhecida pelo autômato.", "Reconhecimento de Sentença")
+            else:
+                self.__view.mostrar_aviso("A sentença \"" + sentenca + "\" não é reconhecida pelo autômato.", "Reconhecimento de Sentença")
+        except AFNDError:
+            self.__view.mostrar_aviso("O autômato precisa ser determinístico para reconhecer uma sentença.")
+        except Exception:
+            self.__view.mostrar_aviso("Erro ao reconhecer sentença.")
 
     '''
         Obtem as sentenças de um autoômato finito com determinado tamanho.
@@ -165,9 +176,14 @@ class Controller:
     def cb_enumeracao(self, indice, tamanho):
         try:
             sentencas = self.__model.enumeracao(indice, tamanho)
-            self.__view.mostrar_lista(sentencas, tamanho)
+            if sentencas:
+                self.__view.mostrar_lista(sentencas, tamanho)
+            else:
+                self.__view.mostrar_aviso("Nenhuma sentença de tamanho " + tamanho + " é reconhecida.")
         except ValueError:
             self.__view.mostrar_aviso("O tamanho da sentença deve ser um inteiro.")
+        except AFNDError:
+            self.__view.mostrar_aviso("O autômato precisa ser determinístico para enumerar sentenças.")
         except Exception:
             self.__view.mostrar_aviso("Erro ao enumerar sentenças.")
 
@@ -191,25 +207,32 @@ class Controller:
         copia = self.__model.duplicar(indice)
         self.__adicionar_unico_elemento(copia)
 
-    def cb_salvar_elemento(self, caminho, indice):
-        resultado = self.__model.salvar_elemento(caminho, indice)
-        if resultado:
-            self.__view.mostrar_aviso("Elemento salvo com sucesso.")
+    def cb_salvar_elemento(self, indice):
+        elemento = self.__model.obter_elemento_por_indice(indice)
+        if elemento.get_tipo() is not TipoElemento.AF:
+            caminho = self.__view.salvar_arquivo(elemento.get_nome())
+            resultado = self.__model.salvar_elemento(caminho, indice)
+            if resultado:
+                self.__view.mostrar_aviso("Elemento salvo com sucesso.")
+            else:
+                self.__view.mostrar_aviso("Falha ao salvar arquivo.")
         else:
-            self.__view.mostrar_aviso("Falha ao salvar arquivo.")
+            self.__view.mostrar_aviso("Não é possível salvar autômatos finitos.")
 
     def cb_carregar_gr(self, caminho):
         try:
             conteudo = self.__model.carregar_elemento(caminho)
-            self.cb_nova_gramatica("Gramática Carregada", conteudo)
-            self.__view.mostrar_aviso("Gramática carregada com sucesso.")
+            resultado = self.cb_nova_gramatica("Gramática Carregada", conteudo)
+            if resultado:
+                self.__view.mostrar_aviso("Gramática carregada com sucesso.")
         except Exception:
             self.__view.mostrar_aviso("Erro ao carregar arquivo.")
 
     def cb_carregar_er(self, caminho):
         try:
             conteudo = self.__model.carregar_elemento(caminho)
-            self.cb_nova_expressao("Expressão Carregada", conteudo)
-            self.__view.mostrar_aviso("Expressão carregada com sucesso.")
+            resultado = self.cb_nova_expressao("Expressão Carregada", conteudo)
+            if resultado:
+                self.__view.mostrar_aviso("Expressão carregada com sucesso.")
         except Exception:
             self.__view.mostrar_aviso("Erro ao carregar arquivo.")

@@ -4,16 +4,18 @@ from itertools import product
 from model.AF.Estado import Estado
 from string import ascii_uppercase
 from model.exception.AFNDError import AFNDError
+from model.Elemento import *
 
 '''
     Classe que representa um autômato finito.
 '''
-class AutomatoFinito:
+class AutomatoFinito(Elemento):
 
     '''
         Método construtor.
     '''
-    def __init__(self, determinizado = False):
+    def __init__(self, nome, determinizado = False):
+        super(AutomatoFinito, self).__init__(TipoElemento.AF, nome)
         self.__producoes = {} # conjunto de transições
         self.__estado_inicial = None
         self.__estados_finais = set()
@@ -86,7 +88,7 @@ class AutomatoFinito:
     def transforma_em_GR(self):
         from model.Gramatica import Gramatica
 
-        gramatica = Gramatica()
+        gramatica = Gramatica(self.get_nome() + " (convertido para GR)")
         gramatica.set_vt(self.__vt)
         gramatica.set_simbolo_inicial(self.__estado_inicial.to_string())
 
@@ -196,7 +198,7 @@ class AutomatoFinito:
     '''
     def determiniza(self):
         if self.isAFND():
-            af = AutomatoFinito(True) # Indica que o autômato é determinizado
+            af = AutomatoFinito(self.get_nome() + " (determinizado)", True) # Indica que o autômato é determinizado
             af.set_vt(self.__vt)
             af.set_estado_inicial(self.__estado_inicial)
 
@@ -237,7 +239,6 @@ class AutomatoFinito:
         Minimiza este autômato.
         \:return o autômato mínimo deste autômato.
     '''
-
     def minimiza(self):
         estados = set(self.__producoes.keys())
         estados_inuteis = self.estados_inacessiveis().union(self.estados_mortos())
@@ -311,7 +312,7 @@ class AutomatoFinito:
 
         # Constrói o autômato
         ce = novo_ce_k_f + novo_ce_f
-        af_minimo = AutomatoFinito()
+        af_minimo = AutomatoFinito(self.get_nome() + " (minimizado)")
         af_minimo.set_vt(self.__vt)
 
         # Estado inicial
@@ -486,7 +487,7 @@ class AutomatoFinito:
         A primeira linha é composta pelos símbolos terminais do autômato e as linhas seguintes representam as transições para cada símbolo não terminal.
         \:return uma matriz de strings.
     '''
-    def to_string(self):
+    def to_matrix(self):
         matriz =[]
         primeira_prod = []
 
@@ -500,9 +501,7 @@ class AutomatoFinito:
             linha = []
             simbolo = p.to_list()
             simb_inicial = self.__estado_inicial == Estado(simbolo)
-            simb_final = False
-            for s in simbolo:
-                simb_final = simb_final or Estado(s) in self.__estados_finais
+            simb_final = p in self.__estados_finais
 
             if self.__determinizado:
                 simbolo = ','.join(simbolo)
@@ -525,9 +524,12 @@ class AutomatoFinito:
                             lista_estados.append(estado.to_string())
                         else:
                             lista_estados.append(estado.to_string_com_virgula())
-                    linha.append(lista_estados)
+                    estado = ", ".join(lista_estados)
+                    if self.__determinizado:
+                        estado = "[" + estado + "]"
+                    linha.append(estado)
                 else:
-                    estado = ["-"]
+                    estado = "-"
                     linha.append(estado)
             if simb_inicial:
                 primeira_prod = linha
@@ -536,6 +538,41 @@ class AutomatoFinito:
 
         matriz.insert(1, primeira_prod)
         return matriz
+
+    def to_string(self):
+        matriz = self.to_matrix()
+        string = []
+
+        maior_estado = self.__maior_estado_na_coluna(matriz, 0)
+        for i in range(0, len(matriz)):
+            estado = matriz[i][0]
+            nome_estado = (" "*(maior_estado-len(estado))) + estado
+            string.append(nome_estado)
+        if self.__determinizado:
+            string[0] += " "
+
+        for i in range(1, len(matriz[0])):
+            maior_estado_coluna = self.__maior_estado_na_coluna(matriz, i)
+            s = matriz[0][i]
+            if self.__determinizado:
+                s = " " + s + " "
+            string[0] += "   " + (" "*(maior_estado_coluna-len(s))) + s
+            for j in range(1, len(matriz)):
+                estado = matriz[j][i]
+                string[j] += " | " + (" "*(maior_estado_coluna-len(estado))) + estado
+
+        string_final = ""
+        for linha in string:
+            string_final += linha + "\n"
+        return string_final
+
+    def __maior_estado_na_coluna(self, matriz_de_strings, coluna):
+        maior_estado = 0
+        for i in range(0, len(matriz_de_strings)):
+            estado = matriz_de_strings[i][coluna]
+            if len(estado) > maior_estado:
+                maior_estado = len(estado)
+        return maior_estado
 
     '''
         Exibe as estruturas do autômato no console.

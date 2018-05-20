@@ -2,6 +2,7 @@
 from model.Elemento import *
 from model.ListaElementos import ListaElementos
 from model.ER.Expressao import Expressao
+from model.Gramatica import Gramatica
 from model.FileManager.FileManager import FileManager
 
 from copy import deepcopy
@@ -28,10 +29,8 @@ class Model:
         \:param entrada é a representação textual da gramática.
     '''
     def criar_gramatica(self, nome, entrada):
-        # TODO, fazer esse metodo quando for fazer a GR herdar de Elemento
-        # gr = Gramatica(nome)
-        # gr.parse(entrada)
-        gr = Elemento(nome, TipoElemento.GR)  # Deletar quando fizer o TODO acima
+        gr = Gramatica(nome)
+        gr.parse(entrada)
         return gr
 
     '''
