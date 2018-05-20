@@ -518,7 +518,7 @@ class View:
 
     def salvar_arquivo(self, nome):
         nome = nome + ".txt"
-        arquivo = filedialog.asksaveasfilename(initialdir="./", title="Aonde você quer salvar?", initialfile=nome, filetypes=(("txt","*.txt"),("all files","*.*")))
+        arquivo = filedialog.asksaveasfilename(initialdir="./", title="Onde você deseja salvar?", initialfile=nome, filetypes=(("txt","*.txt"),("all files","*.*")))
         return arquivo
 
     def carregar_arquivo(self):
