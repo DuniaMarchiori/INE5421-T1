@@ -269,13 +269,13 @@ class AutomatoFinito(Elemento):
         estado_indefinicao = self.novo_estado()
         transicoes_indef = {}
         lista = [estado_indefinicao]
-        if not self.isComplete():
+        if not self.is_complete():
             for simbolo in self.__vt:
                 transicoes_indef[simbolo] = lista
             self.__producoes[estado_indefinicao] = transicoes_indef # Item adicionado apenas para auxiliar na minimização
 
         k_f = estados - set(self.__estados_finais)
-        if not self.isComplete():
+        if not self.is_complete():
             k_f.add(estado_indefinicao)
         f = estados - k_f
 
@@ -368,7 +368,7 @@ class AutomatoFinito(Elemento):
                 else:
                     af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(ce_indefinido))
 
-        if not self.isComplete():
+        if not self.is_complete():
             del self.__producoes[estado_indefinicao] # Deleta a entrada auxiliar
 
         return af_minimo
@@ -480,7 +480,7 @@ class AutomatoFinito(Elemento):
         Verifica se o autômato é completo, ou seja, contém transições para todos os símbolos em cada estado.
         \:return True se o autômato for completo ou False caso contrário.
     '''
-    def isComplete(self):
+    def is_complete(self):
 
         if self.__completo != None:
             return self.__completo
