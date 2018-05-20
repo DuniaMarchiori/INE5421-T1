@@ -25,6 +25,7 @@ class AutomatoFinito(Elemento):
             self.__deterministico = True
         else:
             self.__deterministico = None
+        self.__completo = None
 
     '''
         Adiciona uma nova produção para um estado a partir de um simbolo terminal.
@@ -268,12 +269,14 @@ class AutomatoFinito(Elemento):
         estado_indefinicao = self.novo_estado()
         transicoes_indef = {}
         lista = [estado_indefinicao]
-        for simbolo in self.__vt:
-            transicoes_indef[simbolo] = lista
-        self.__producoes[estado_indefinicao] = transicoes_indef # Item adicionado apenas para auxiliar na minimização
+        if not self.isComplete():
+            for simbolo in self.__vt:
+                transicoes_indef[simbolo] = lista
+            self.__producoes[estado_indefinicao] = transicoes_indef # Item adicionado apenas para auxiliar na minimização
 
-        k_f = estados - self.__estados_finais
-        k_f.add(estado_indefinicao)
+        k_f = estados - set(self.__estados_finais)
+        if not self.isComplete():
+            k_f.add(estado_indefinicao)
         f = estados - k_f
 
         ce_k_f_anterior = []
@@ -365,7 +368,8 @@ class AutomatoFinito(Elemento):
                 else:
                     af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(ce_indefinido))
 
-        del self.__producoes[estado_indefinicao] # Deleta a entrada auxiliar
+        if not self.isComplete():
+            del self.__producoes[estado_indefinicao] # Deleta a entrada auxiliar
 
         return af_minimo
 
@@ -424,8 +428,8 @@ class AutomatoFinito(Elemento):
                     transicoes = self.__producoes[estado][simbolo]
                     for t in transicoes:
                         estados_com_transicao.add(t)
+            estados_a_visitar = estados_com_transicao - estados_alcancados
             estados_alcancados = estados_alcancados.union(estados_com_transicao)
-            estados_a_visitar = estados_com_transicao
 
         return set(self.__producoes.keys() - estados_alcancados)
 
@@ -435,7 +439,7 @@ class AutomatoFinito(Elemento):
     '''
 
     def estados_mortos(self):
-        vivos_atuais = self.__estados_finais
+        vivos_atuais = set(self.__estados_finais)
         vivos_anteriores = set()
 
         while vivos_atuais != vivos_anteriores:
@@ -466,8 +470,10 @@ class AutomatoFinito(Elemento):
             for t in transicoes:
                 if len(transicoes[t]) > 1: # Se tem mais de uma transição para um símbolo
                     self.__deterministico = False
+                    return not self.__deterministico
                 if t == "&" and len(transicoes.keys()) > 1 and estado != self.__estado_inicial: # Se tem &-transição e mais outras transições através de outros símbolos
                     self.__deterministico = False
+                    return not self.__deterministico
         return not self.__deterministico
 
     '''
@@ -475,8 +481,18 @@ class AutomatoFinito(Elemento):
         \:return True se o autômato for completo ou False caso contrário.
     '''
     def isComplete(self):
-        # TODO
-        return True
+
+        if self.__completo != None:
+            return self.__completo
+
+        self.__completo = True
+        for estado in self.__producoes:
+            transicoes = self.__producoes[estado]
+            for simbolo in self.__vt:
+                if simbolo not in transicoes:
+                    self.__completo = False
+                    return self.__completo
+        return self.__completo
 
     '''
         Gera um novo símbolo não terminal que não pertence à gramática.
