@@ -110,9 +110,9 @@ class Model:
                 elementos_gerados.append(elemento_op_dois)
 
         ''' TODO descomentar quando os metodos interseccao, diferenca e reverso estiverem implementadas
-        if operacao == '0':  # Intersecção
+        if operacao == 0:  # Intersecção
             elementos_gerados.append(elemento_op_um.interseccao(elemento_op_dois))
-        elif operacao == '1':  # Diferenca
+        elif operacao == 1:  # Diferenca
             elementos_gerados.append(elemento_op_um.diferenca(elemento_op_dois))
         else:  # Reverso
             elementos_gerados.append(elemento_op_um.reverso(elemento_op_dois))
@@ -125,9 +125,9 @@ class Model:
             gramatica_dois = self.obter_elemento_por_indice(indice_dois)
         gramatica_resultante = None
         ''' TODO descomentar quando os metodos interseccao, diferenca e reverso estiverem implementadas
-        if operacao == '0':  # União
+        if operacao == 0:  # União
             gramatica_resultante = gramatica_um.uniao(gramatica_dois)
-        elif operacao == '1':  # Concatenação
+        elif operacao == 1:  # Concatenação
             gramatica_resultante = gramatica_um.concatenacao(gramatica_dois)
         else:  # Fecho
             gramatica_resultante = gramatica_um.fecho()
