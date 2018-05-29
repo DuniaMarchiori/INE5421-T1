@@ -93,7 +93,7 @@ class Controller:
         \:param indice é o índice do elemento na lista.
     '''
     def cb_converter_para_gr(self, indice):
-        elementos_novos = self.__model.trnasformar_elemnento_em_gr(indice)
+        elementos_novos = self.__model.transformar_elemento_em_gr(indice)
         self.__adicionar_multiplos_elementos(elementos_novos)
 
     '''
@@ -101,7 +101,7 @@ class Controller:
         \:param indice é o índice do elemento na lista.
     '''
     def cb_converter_para_af(self, indice):
-        elemento_novo = self.__model.trnasformar_elemnento_em_af(indice)
+        elemento_novo = self.__model.transformar_elemento_em_af(indice)
         self.__adicionar_unico_elemento(elemento_novo)
 
     '''
@@ -111,7 +111,7 @@ class Controller:
         \:param operacao é o índice da operacao selecionada.
     '''
     def cb_aplica_operacao(self, indice_um, indice_dois, operacao):
-        if indice_dois is not None:
+        if operacao == 2 or indice_dois is not None:
             elementos_novos = self.__model.operacao_elementos(indice_um, indice_dois, operacao)
             self.__adicionar_multiplos_elementos(elementos_novos)
         else:
@@ -124,7 +124,7 @@ class Controller:
         \:param operacao é o índice da operacao selecionada.
     '''
     def cb_aplica_operacao_gr(self, indice_um, indice_dois, operacao):
-        if operacao is 2 or indice_dois is not None:
+        if operacao == 2 or indice_dois is not None:
             elementos_novos = self.__model.operacao_gr(indice_um, indice_dois, operacao)
             self.__adicionar_unico_elemento(elementos_novos)
         else:

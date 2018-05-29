@@ -56,7 +56,7 @@ class View:
         self.__popup_novo_elemento = Criacao(self.__root, self.__controller)
         self.__popup_seleciona_elemento = SelecionaElemento(self.__root)
         self.__int_operacao_selecionada = IntVar()
-        self.__int_operacao_gr_selecionada = StringVar()
+        self.__int_operacao_gr_selecionada = IntVar()
         self.__string_sentenca_a_reconhecer = StringVar()
         self.__string_tamanho_enumerados = StringVar()
 
@@ -544,14 +544,17 @@ class View:
 
     def cb_operacao_sobre_linguagem(self):
         indice_primeiro = self.__get_indice_selecionado()
-        indice_segundo = self.abrir_janela_seleciona_elemento()
         operacao = self.__int_operacao_selecionada.get()
+        if operacao != 2:
+            indice_segundo = self.abrir_janela_seleciona_elemento()
+        else:
+            indice_segundo = None
         self.__controller.cb_aplica_operacao(indice_primeiro, indice_segundo, operacao)
 
     def cb_operacao_sobre_gr(self):
         indice_primeiro = self.__get_indice_selecionado()
         operacao = self.__int_operacao_gr_selecionada.get()
-        if operacao is not 2:
+        if operacao != 2:
             indice_segundo = self.abrir_janela_seleciona_elemento("GR")
         else:
             indice_segundo = None

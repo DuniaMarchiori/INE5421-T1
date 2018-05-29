@@ -66,7 +66,7 @@ class Model:
         \:param indice é o índice do elemento na lista.
         \:return a gramática regular que reconhece a mesma linguagem que o elemento original gerava.
     '''
-    def trnasformar_elemnento_em_gr(self, indice):
+    def transformar_elemento_em_gr(self, indice):
         elemento = self.obter_elemento_por_indice(indice)
         tipo = elemento.get_tipo()
         if tipo == TipoElemento.AF:
@@ -82,7 +82,7 @@ class Model:
         \:param indice é o índice do elemento na lista.
         \:return o autômato finito que reconhece a mesma linguagem que o elemento original gerava.
     '''
-    def trnasformar_elemnento_em_af(self, indice):
+    def transformar_elemento_em_af(self, indice):
         elemento = self.obter_elemento_por_indice(indice)
         tipo = elemento.get_tipo()
         if tipo == TipoElemento.GR:
@@ -93,21 +93,26 @@ class Model:
             return af_resultante
 
     def operacao_elementos(self, indice_um, indice_dois, operacao):
-        elemento_um = self.obter_elemento_por_indice(indice_um)
-        elemento_dois = self.obter_elemento_por_indice(indice_dois)
         elementos_gerados = []
+
+        elemento_um = self.obter_elemento_por_indice(indice_um)
         elemento_op_um = elemento_um
-        elemento_op_dois = elemento_dois
         if elemento_um.get_tipo() is not TipoElemento.AF:
-            elemento_op_um = self.trnasformar_elemnento_em_af(indice_um)
+            elemento_op_um = self.transformar_elemento_em_af(indice_um)
             elementos_gerados.append(elemento_op_um)
-        if elemento_dois.get_tipo() is not TipoElemento.AF:
-            elemento_op_dois = self.trnasformar_elemnento_em_af(indice_dois)
-            elementos_gerados.append(elemento_op_dois)
+
+        elemento_op_dois = None
+        if operacao != 2:
+            elemento_dois = self.obter_elemento_por_indice(indice_dois)
+            elemento_op_dois = elemento_dois
+            if elemento_dois.get_tipo() is not TipoElemento.AF:
+                elemento_op_dois = self.transformar_elemento_em_af(indice_dois)
+                elementos_gerados.append(elemento_op_dois)
+
         ''' TODO descomentar quando os metodos interseccao, diferenca e reverso estiverem implementadas
-        if operacao == 0:  # Intersecção
+        if operacao == '0':  # Intersecção
             elementos_gerados.append(elemento_op_um.interseccao(elemento_op_dois))
-        elif operacao == 1:  # Diferenca
+        elif operacao == '1':  # Diferenca
             elementos_gerados.append(elemento_op_um.diferenca(elemento_op_dois))
         else:  # Reverso
             elementos_gerados.append(elemento_op_um.reverso(elemento_op_dois))
@@ -116,13 +121,13 @@ class Model:
 
     def operacao_gr(self, indice_um, indice_dois, operacao):
         gramatica_um = self.obter_elemento_por_indice(indice_um)
-        if operacao is not 3:
+        if operacao != 2:
             gramatica_dois = self.obter_elemento_por_indice(indice_dois)
         gramatica_resultante = None
         ''' TODO descomentar quando os metodos interseccao, diferenca e reverso estiverem implementadas
-        if operacao == 0:  # União
+        if operacao == '0':  # União
             gramatica_resultante = gramatica_um.uniao(gramatica_dois)
-        elif operacao == 1:  # Concatenação
+        elif operacao == '1':  # Concatenação
             gramatica_resultante = gramatica_um.concatenacao(gramatica_dois)
         else:  # Fecho
             gramatica_resultante = gramatica_um.fecho()
