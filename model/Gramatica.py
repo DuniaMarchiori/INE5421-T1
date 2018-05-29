@@ -198,6 +198,34 @@ class Gramatica(Elemento):
             pass #não tem mais letras no alfabeto possiveis pra ser o novo simbolo
 
     '''
+        Cria uma segunda gramática que corresponde ao fechamento desta.
+        \:return uma gramática que gera o fechamento desta.
+    '''
+    def fechamento(self):
+        gera_epsilon = False
+        gramatica_fecho = Gramatica(self.get_nome() + "(Fecho)")
+        gramatica_fecho.set_simbolo_inicial(self.__simbolo_inicial)
+        gramatica_fecho.set_vt(self.__vt)
+
+        for x in self.__producoes:
+            producoes_x = list(self.__producoes[x])
+            for p in producoes_x:
+                if p[0] != "&" and p[1] == "&":
+                    producoes_x.append((p[0], self.__simbolo_inicial))
+                if x == self.__simbolo_inicial and p[0] == "&" and not gera_epsilon:
+                    gera_epsilon = True
+            gramatica_fecho.adiciona_producao(x, producoes_x)
+
+        # Gera &
+        if not gera_epsilon:
+            producoes_inicial = list(gramatica_fecho.get_producoes()[self.__simbolo_inicial])
+            producoes_inicial.append(("&", "&"))
+            novo_inicial = self.novo_simbolo()
+            gramatica_fecho.adiciona_producao(novo_inicial, producoes_inicial)
+            gramatica_fecho.set_simbolo_inicial(novo_inicial)
+        return gramatica_fecho
+
+    '''
         Verifica se a string representa um número inteiro.
         \:param str é a string a ser verificada
         \:return True se a string representar um número inteiro e False caso contrário.
