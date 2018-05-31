@@ -52,7 +52,7 @@ class AutomatoFinito(Elemento):
         \:return um dicionário onde a chave é um estado e os dados são 
             um dicionário onde a chave é um símbolo não terminal e os dados são um conjunto de símbolos não-terminais (pode ser vazio).
     '''
-    def get_transicoes(self):
+    def get_producoes(self):
         return self.__producoes
 
     '''
@@ -513,8 +513,8 @@ class AutomatoFinito(Elemento):
         af_reverso.adiciona_estado(novo_inicial)
         af_reverso.set_estado_inicial(novo_inicial)
         for estado_final in self.__estados_finais:
-            for simbolo in af_reverso.__producoes[estado_final]:
-                for estado_destido in self.__producoes[estado_final][simbolo]:
+            for simbolo in af_reverso.get_producoes()[estado_final]:
+                for estado_destido in af_reverso.get_producoes()[estado_final][simbolo]:
                     af_reverso.adiciona_transicao(novo_inicial, simbolo, estado_destido)
 
         novo_final = deepcopy(self.__estado_inicial)
