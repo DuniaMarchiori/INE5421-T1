@@ -1,5 +1,6 @@
 # Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
 
+from copy import deepcopy
 from itertools import product
 from model.AF.Estado import Estado
 from string import ascii_uppercase
@@ -437,7 +438,6 @@ class AutomatoFinito(Elemento):
         Identifica os estados mortos do autômato, ou seja, estados que não têm caminho que levem a um estado final a partir deles.
         \:return o conjunto de estados mortos.
     '''
-
     def estados_mortos(self):
         vivos_atuais = set(self.__estados_finais)
         vivos_anteriores = set()
@@ -454,6 +454,78 @@ class AutomatoFinito(Elemento):
             vivos_atuais = vivos_anteriores.union(estados_com_transicao)
 
         return set(self.__producoes.keys() - vivos_atuais)
+
+    '''
+        Obtem o complemento do autômato que chama a função.
+        \:return O autômato que representa o complemento deste autômato
+    '''
+    def complemento(self):
+        af_complemento = AutomatoFinito(self.get_nome() + " (complemento)", determinizado=self.__determinizado)
+        estados_finais = []
+        for estado in self.__producoes:
+            copia_estado = deepcopy(estado)
+            af_complemento.adiciona_estado(copia_estado)
+            for simbolo in self.__producoes[estado]:
+                for estado_destido in self.__producoes[estado][simbolo]:
+                    copia_estado_destino = deepcopy(estado_destido)
+                    af_complemento.adiciona_estado(copia_estado_destino)
+                    af_complemento.adiciona_transicao(copia_estado, simbolo, copia_estado_destino)
+            if estado not in self.__estados_finais:
+                estados_finais.append(estado)
+        af_complemento.set_estado_inicial(deepcopy(self.__estado_inicial))
+        af_complemento.set_estados_finais(estados_finais)
+        return af_complemento
+
+    '''
+        Obtem a intersecção deste autômato com outro.
+        \:param o segundo autômato da intersecçãp.
+        \:return O autômato resultante da intersecção desse autômato com o autômato passado por parâmetro.
+    '''
+    def interseccao(self, segundo_automato):
+        pass
+
+    '''
+        Obtem a diferença deste autômato com outro.
+        \:param o segundo autômato da diferença.
+        \:return O autômato resultante da diferença desse autômato com o autômato passado por parâmetro.
+    '''
+    def diferenca(self, segundo_automato):
+        pass
+
+    '''
+        Obtem o reverso da linguagem do autômato que chama a função.
+        \:return O autômato que representa o reverso da linguagem formata por este autômato.
+    '''
+    def reverso(self):
+        af_reverso = AutomatoFinito(self.get_nome() + " (reverso)")
+        for estado in self.__producoes:
+            copia_estado = deepcopy(estado)
+            af_reverso.adiciona_estado(copia_estado)
+            for simbolo in self.__producoes[estado]:
+                for estado_destido in self.__producoes[estado][simbolo]:
+                    copia_estado_destino = deepcopy(estado_destido)
+                    af_reverso.adiciona_estado(copia_estado_destino)
+                    af_reverso.adiciona_transicao(copia_estado_destino, simbolo, copia_estado)
+
+        novo_inicial = Estado("qx")
+        while novo_inicial in self.__producoes:
+            novo_inicial = Estado(novo_inicial.to_string() + "'")
+        af_reverso.adiciona_estado(novo_inicial)
+        af_reverso.set_estado_inicial(novo_inicial)
+        for estado_final in self.__estados_finais:
+            for simbolo in af_reverso.__producoes[estado_final]:
+                for estado_destido in self.__producoes[estado_final][simbolo]:
+                    af_reverso.adiciona_transicao(novo_inicial, simbolo, estado_destido)
+
+        novo_final = deepcopy(self.__estado_inicial)
+        novos_finais = [novo_final]
+        if self.__estado_inicial in self.__estados_finais:
+            novos_finais.append(novo_inicial)
+        af_reverso.set_estados_finais(novos_finais)
+
+        print(self.to_string())
+        print(af_reverso.to_string())
+        return af_reverso
 
     '''
         Verifica se o autômato é um autômato finito não determinístico (AFND).
@@ -495,8 +567,8 @@ class AutomatoFinito(Elemento):
         return self.__completo
 
     '''
-        Gera um novo símbolo não terminal que não pertence à gramática.
-        \:return um símbolo não terminal que não pertence à gramática.
+        Gera um novo estado que não pertence ao automato.
+        \:return um estado que não pertence ao automato.
     '''
     def novo_estado(self, lista=[]):
         simbolo_novo = None

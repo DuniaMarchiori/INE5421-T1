@@ -100,23 +100,30 @@ class Model:
         if elemento_um.get_tipo() is not TipoElemento.AF:
             elemento_op_um = self.transformar_elemento_em_af(indice_um)
             elementos_gerados.append(elemento_op_um)
+            if elemento_op_um.isAFND():
+                elemento_op_um = elemento_op_um.determiniza()
+                elementos_gerados.append(elemento_op_um)
 
         elemento_op_dois = None
-        if operacao != 2:
+        if operacao < 2:
             elemento_dois = self.obter_elemento_por_indice(indice_dois)
             elemento_op_dois = elemento_dois
             if elemento_dois.get_tipo() is not TipoElemento.AF:
                 elemento_op_dois = self.transformar_elemento_em_af(indice_dois)
                 elementos_gerados.append(elemento_op_dois)
+                if elemento_op_dois.isAFND():
+                    elemento_op_dois = elemento_op_dois.determiniza()
+                    elementos_gerados.append(elemento_op_dois)
 
-        ''' TODO descomentar quando os metodos interseccao, diferenca e reverso estiverem implementadas
         if operacao == 0:  # Intersecção
             elementos_gerados.append(elemento_op_um.interseccao(elemento_op_dois))
         elif operacao == 1:  # Diferenca
             elementos_gerados.append(elemento_op_um.diferenca(elemento_op_dois))
-        else:  # Reverso
-            elementos_gerados.append(elemento_op_um.reverso(elemento_op_dois))
-        '''
+        elif operacao == 2:  # Reverso
+            elementos_gerados.append(elemento_op_um.reverso())
+        else:  # Complemento
+            elementos_gerados.append(elemento_op_um.complemento())
+
         return elementos_gerados
 
     def operacao_gr(self, indice_um, indice_dois, operacao):
@@ -141,7 +148,6 @@ class Model:
     '''
     def determiniza_af(self, indice):
         elemento = self.obter_elemento_por_indice(indice)
-        #TODO o automato não tem um metodo de determinização ainda
         return elemento.determiniza()
 
     '''

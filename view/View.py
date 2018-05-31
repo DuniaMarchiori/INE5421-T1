@@ -73,8 +73,8 @@ class View:
         menu_main = Menu(self.__root)
 
         menu_abrir = Menu(menu_main, tearoff=0)
-        menu_abrir.add_command(label="Gramática Regular", command=self.cb_carregar_gr)
         menu_abrir.add_command(label="Expressão Regular", command=self.cb_carregar_er)
+        menu_abrir.add_command(label="Gramática Regular", command=self.cb_carregar_gr)
 
         menu_arquivo = Menu(menu_main, tearoff=0)
         menu_arquivo.add_cascade(label="Abrir", menu=menu_abrir)
@@ -240,7 +240,8 @@ class View:
         operacoes = [
             ("Intersecção deste elemento com outro", 0),
             ("Diferença deste elemento com outro", 1),
-            ("Reverso deste elemento", 2)
+            ("Reverso deste elemento", 2),
+            ("Complemento deste elemento", 3)
         ]
         self.__int_operacao_selecionada.set(0)
         for texto, valor in operacoes:
@@ -545,7 +546,7 @@ class View:
     def cb_operacao_sobre_linguagem(self):
         indice_primeiro = self.__get_indice_selecionado()
         operacao = self.__int_operacao_selecionada.get()
-        if operacao != 2:
+        if operacao < 2:
             indice_segundo = self.abrir_janela_seleciona_elemento()
         else:
             indice_segundo = None
