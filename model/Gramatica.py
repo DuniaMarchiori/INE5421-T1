@@ -46,6 +46,13 @@ class Gramatica(Elemento):
         return self.__producoes
 
     '''
+        Retorna o símbolo inicial da gramática.
+        \:return o símbolo inicial da gramática.
+    '''
+    def get_simbolo_inicial(self):
+        return self.__simbolo_inicial
+
+    '''
         Modifica o conjunto de símbolos terminais da gramática.
         \:param vt é o novo conjunto de símbolos terminais.
     '''
@@ -226,6 +233,68 @@ class Gramatica(Elemento):
         return gramatica_fecho
 
     '''
+        Cria uma terceira gramática que corresponde à união das duas.
+        \:param outra_gramatica é a segunda gramática utilizada na união.
+        \:return uma gramática resultante da união das duas gramáticas.
+    '''
+    def uniao(self, outra_gramatica):
+        gramatica_uniao = Gramatica(self.get_nome() + " U " + outra_gramatica.get_nome())
+        gramatica_uniao.set_vt(self.__vt.union(outra_gramatica.get_vt()))
+        epsilon = False
+
+        vn_outra = set(outra_gramatica.get_producoes().keys())
+        vn = set(self.__producoes.keys())
+        uniao_vn = vn.union(vn_outra)
+
+        # Mapeia símbolos iguais na segunda gramática para novos símbolos
+        simbolos_iguais = vn.intersection(vn_outra)
+        if simbolos_iguais != set():
+            traducao_simbolos = {}
+            for simbolo in simbolos_iguais:
+                novo = self.novo_simbolo(uniao_vn)
+                traducao_simbolos[simbolo] = novo
+                uniao_vn.add(novo)
+
+        # Copia produções das gramáticas
+        for simbolo in vn:
+            producoes = list(self.__producoes[simbolo])
+            if ("&", "&") in producoes:
+                producoes.remove(("&", "&"))
+            gramatica_uniao.adiciona_producao(simbolo, producoes)
+
+        for simbolo in vn_outra:
+            chave = simbolo
+            if simbolo in simbolos_iguais:
+                chave = traducao_simbolos[simbolo]
+            novas_producoes = []
+            for producao in outra_gramatica.get_producoes()[simbolo]:
+                terminal = producao[0]
+                nao_terminal = producao[1]
+                if terminal != "&":
+                    if nao_terminal in simbolos_iguais:
+                        nao_terminal = traducao_simbolos[nao_terminal]
+                    novas_producoes.append((terminal, nao_terminal))
+                else:
+                    epsilon = True
+            gramatica_uniao.adiciona_producao(chave, novas_producoes)
+
+        # Cria o novo símbolo inicial
+        novo_inicial = self.novo_simbolo(uniao_vn)
+        producoes_iniciais = list(self.__producoes[self.__simbolo_inicial])
+        simbolo_inicial_outra = outra_gramatica.get_simbolo_inicial()
+        if simbolo_inicial_outra in simbolos_iguais:
+            producao_inicial_outra = list(gramatica_uniao.get_producoes()[traducao_simbolos[simbolo_inicial_outra]])
+        else:
+            producao_inicial_outra = list(gramatica_uniao.get_producoes()[simbolo_inicial_outra])
+        if epsilon:
+            producao_inicial_outra.append(("&", "&"))
+        producoes_iniciais.append(producao_inicial_outra)
+        gramatica_uniao.set_simbolo_inicial(novo_inicial)
+        gramatica_uniao.adiciona_producao(novo_inicial, producoes_iniciais)
+
+        return gramatica_uniao
+
+    '''
         Verifica se a string representa um número inteiro.
         \:param str é a string a ser verificada
         \:return True se a string representar um número inteiro e False caso contrário.
@@ -241,10 +310,10 @@ class Gramatica(Elemento):
         Gera um novo símbolo não terminal que não pertence à gramática.
         \:return um símbolo não terminal que não pertence à gramática.
     '''
-    def novo_simbolo(self):
+    def novo_simbolo(self, conjunto = set()):
         simbolo_novo = None
         for letra in ascii_uppercase:
-            if letra not in self.__producoes:
+            if letra not in self.__producoes and letra not in conjunto:
                 simbolo_novo = letra
                 break
         # Se todas as letras do alfabeto já fazem parte do conjunto de símbolos terminais,
@@ -254,7 +323,7 @@ class Gramatica(Elemento):
             for l1 in ascii_uppercase:
                 for l2 in ascii_uppercase:
                     letras = l1 + l2
-                    if letras not in self.__producoes:
+                    if letras not in self.__producoes and letra not in conjunto:
                         simbolo_novo = letras
                         found = True
                         break
