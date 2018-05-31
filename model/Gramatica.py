@@ -304,6 +304,9 @@ class Gramatica(Elemento):
         gramatica_concat = Gramatica(self.get_nome() + " . " + outra_gramatica.get_nome())
         gramatica_concat.set_vt(self.__vt.union(outra_gramatica.get_vt()))
         gramatica_concat.set_simbolo_inicial(self.__simbolo_inicial)
+        outra_aceita_epsilon = False
+        if ("&", "&") in outra_gramatica.get_producoes()[outra_gramatica.get_simbolo_inicial()]:
+            outra_aceita_epsilon = True
 
         vn_outra = set(outra_gramatica.get_producoes().keys())
         vn = set(self.__producoes.keys())
@@ -319,19 +322,6 @@ class Gramatica(Elemento):
                 uniao_vn.add(novo)
 
         # Gera as produções de concatenação
-        simbolo_inicial_outra = outra_gramatica.get_simbolo_inicial()
-        if simbolo_inicial_outra in simbolos_iguais:
-            simbolo_inicial_outra = traducao_simbolos[simbolo_inicial_outra]
-        for simbolo in vn:
-            novas_producoes = []
-            for producao in self.__producoes[simbolo]:
-                terminal = producao[0]
-                nao_terminal = producao[1]
-                if nao_terminal == "&":
-                    nao_terminal = simbolo_inicial_outra
-                novas_producoes.append((terminal, nao_terminal))
-            gramatica_concat.adiciona_producao(simbolo, novas_producoes)
-
         for simbolo in vn_outra:
             chave = simbolo
             if simbolo in simbolos_iguais:
@@ -345,6 +335,27 @@ class Gramatica(Elemento):
                         nao_terminal = traducao_simbolos[nao_terminal]
                     novas_producoes.append((terminal, nao_terminal))
             gramatica_concat.adiciona_producao(chave, novas_producoes)
+
+        simbolo_inicial_outra = outra_gramatica.get_simbolo_inicial()
+        if simbolo_inicial_outra in simbolos_iguais:
+            simbolo_inicial_outra = traducao_simbolos[simbolo_inicial_outra]
+        for simbolo in vn:
+            novas_producoes = []
+            for producao in self.__producoes[simbolo]:
+                terminal = producao[0]
+                nao_terminal = producao[1]
+                if nao_terminal == "&":
+                    if terminal != "&" and outra_aceita_epsilon:
+                        novas_producoes.append((terminal, nao_terminal))
+                    nao_terminal = simbolo_inicial_outra
+                if terminal != "&":
+                    novas_producoes.append((terminal, nao_terminal))
+                elif simbolo == self.__simbolo_inicial:
+                    # Se o terminal é igual a "&" e é o símbolo inicial, copia as produções iniciais da segunda gramática
+                    producoes_iniciais_outra = gramatica_concat.get_producoes()[simbolo_inicial_outra]
+                    for p in producoes_iniciais_outra:
+                        novas_producoes.append((p[0], p[1]))
+            gramatica_concat.adiciona_producao(simbolo, novas_producoes)
 
         return gramatica_concat
 
