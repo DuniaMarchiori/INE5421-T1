@@ -360,14 +360,15 @@ class AutomatoFinito(Elemento):
         ce_indefinido =  self.__get_ce_respectivo(ce, estado_indefinicao)
         for estado in self.__producoes:
             nome_estado = self.__get_ce_respectivo(ce, estado)
-            transicoes = self.__producoes[estado]
-            for simbolo in self.__vt:
-                if simbolo in transicoes:
-                    estado_t = transicoes[simbolo]
-                    nome_estado_t = self.__get_ce_respectivo(ce, estado_t[0])
-                    af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(nome_estado_t))
-                else:
-                    af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(ce_indefinido))
+            if Estado(nome_estado) not in af_minimo.get_producoes().keys():
+                transicoes = self.__producoes[estado]
+                for simbolo in self.__vt:
+                    if simbolo in transicoes:
+                        estado_t = transicoes[simbolo]
+                        nome_estado_t = self.__get_ce_respectivo(ce, estado_t[0])
+                        af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(nome_estado_t))
+                    else:
+                        af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(ce_indefinido))
 
         if not self.is_complete():
             del self.__producoes[estado_indefinicao] # Deleta a entrada auxiliar
