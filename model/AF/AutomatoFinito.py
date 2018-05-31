@@ -460,6 +460,7 @@ class AutomatoFinito(Elemento):
         \:return O autômato que representa o complemento deste autômato
     '''
     def complemento(self):
+        # TODO Completar o AF antes
         af_complemento = AutomatoFinito(self.get_nome() + " (complemento)", determinizado=self.__determinizado)
         estados_finais = []
         for estado in self.__producoes:
@@ -497,27 +498,33 @@ class AutomatoFinito(Elemento):
         \:return O autômato que representa o reverso da linguagem formata por este autômato.
     '''
     def reverso(self):
+        estado_equivalente = {}
+
         af_reverso = AutomatoFinito(self.get_nome() + " (reverso)")
         for estado in self.__producoes:
-            copia_estado = deepcopy(estado)
-            af_reverso.adiciona_estado(copia_estado)
-            for simbolo in self.__producoes[estado]:
-                for estado_destido in self.__producoes[estado][simbolo]:
-                    copia_estado_destino = deepcopy(estado_destido)
-                    af_reverso.adiciona_estado(copia_estado_destino)
-                    af_reverso.adiciona_transicao(copia_estado_destino, simbolo, copia_estado)
+            if estado not in estado_equivalente:
+                estado_equivalente[estado] = Estado(estado.to_string_lista())
+            novo_estado = estado_equivalente[estado]
 
-        novo_inicial = Estado("qx")
-        while novo_inicial in self.__producoes:
-            novo_inicial = Estado(novo_inicial.to_string() + "'")
+            af_reverso.adiciona_estado(novo_estado)
+            for simbolo in self.__producoes[estado]:
+                for estado_destino in self.__producoes[estado][simbolo]:
+                    if estado_destino not in estado_equivalente:
+                        estado_equivalente[estado_destino] = Estado(estado_destino.to_string_lista())
+                    novo_destino = estado_equivalente[estado_destino]
+                    af_reverso.adiciona_estado(novo_destino)
+                    af_reverso.adiciona_transicao(novo_destino, simbolo, novo_estado)
+
+        novo_inicial = af_reverso.novo_estado()
         af_reverso.adiciona_estado(novo_inicial)
         af_reverso.set_estado_inicial(novo_inicial)
-        for estado_final in self.__estados_finais:
-            for simbolo in af_reverso.get_producoes()[estado_final]:
-                for estado_destido in af_reverso.get_producoes()[estado_final][simbolo]:
-                    af_reverso.adiciona_transicao(novo_inicial, simbolo, estado_destido)
 
-        novo_final = deepcopy(self.__estado_inicial)
+        for estado_final in self.__estados_finais:
+            for simbolo in af_reverso.get_producoes()[estado_equivalente[estado_final]]:
+                for estado_destino in af_reverso.get_producoes()[estado_equivalente[estado_final]][simbolo]:
+                    af_reverso.adiciona_transicao(novo_inicial, simbolo, estado_destino)
+
+        novo_final = estado_equivalente[self.__estado_inicial]
         novos_finais = [novo_final]
         if self.__estado_inicial in self.__estados_finais:
             novos_finais.append(novo_inicial)
@@ -525,6 +532,7 @@ class AutomatoFinito(Elemento):
 
         print(self.to_string())
         print(af_reverso.to_string())
+        keys = list(af_reverso.get_producoes().keys())
         return af_reverso
 
     '''
