@@ -288,11 +288,65 @@ class Gramatica(Elemento):
             producao_inicial_outra = list(gramatica_uniao.get_producoes()[simbolo_inicial_outra])
         if epsilon:
             producao_inicial_outra.append(("&", "&"))
-        producoes_iniciais.append(producao_inicial_outra)
+        for p in producao_inicial_outra:
+            producoes_iniciais.append(p)
         gramatica_uniao.set_simbolo_inicial(novo_inicial)
         gramatica_uniao.adiciona_producao(novo_inicial, producoes_iniciais)
 
         return gramatica_uniao
+
+    '''
+        Cria uma terceira gramática que corresponde à concatenação desta gramática com a segunda, nesta ordem.
+        \:param outra_gramatica é a segunda gramática utilizada na concatenação.
+        \:return uma gramática resultante da concatenação das duas gramáticas.
+    '''
+    def concatenacao(self, outra_gramatica):
+        gramatica_concat = Gramatica(self.get_nome() + " . " + outra_gramatica.get_nome())
+        gramatica_concat.set_vt(self.__vt.union(outra_gramatica.get_vt()))
+        gramatica_concat.set_simbolo_inicial(self.__simbolo_inicial)
+
+        vn_outra = set(outra_gramatica.get_producoes().keys())
+        vn = set(self.__producoes.keys())
+        uniao_vn = vn.union(vn_outra)
+
+        # Mapeia símbolos iguais na segunda gramática para novos símbolos
+        simbolos_iguais = vn.intersection(vn_outra)
+        if simbolos_iguais != set():
+            traducao_simbolos = {}
+            for simbolo in simbolos_iguais:
+                novo = self.novo_simbolo(uniao_vn)
+                traducao_simbolos[simbolo] = novo
+                uniao_vn.add(novo)
+
+        # Gera as produções de concatenação
+        simbolo_inicial_outra = outra_gramatica.get_simbolo_inicial()
+        if simbolo_inicial_outra in simbolos_iguais:
+            simbolo_inicial_outra = traducao_simbolos[simbolo_inicial_outra]
+        for simbolo in vn:
+            novas_producoes = []
+            for producao in self.__producoes[simbolo]:
+                terminal = producao[0]
+                nao_terminal = producao[1]
+                if nao_terminal == "&":
+                    nao_terminal = simbolo_inicial_outra
+                novas_producoes.append((terminal, nao_terminal))
+            gramatica_concat.adiciona_producao(simbolo, novas_producoes)
+
+        for simbolo in vn_outra:
+            chave = simbolo
+            if simbolo in simbolos_iguais:
+                chave = traducao_simbolos[simbolo]
+            novas_producoes = []
+            for producao in outra_gramatica.get_producoes()[simbolo]:
+                terminal = producao[0]
+                nao_terminal = producao[1]
+                if terminal != "&":
+                    if nao_terminal in simbolos_iguais:
+                        nao_terminal = traducao_simbolos[nao_terminal]
+                    novas_producoes.append((terminal, nao_terminal))
+            gramatica_concat.adiciona_producao(chave, novas_producoes)
+
+        return gramatica_concat
 
     '''
         Verifica se a string representa um número inteiro.
