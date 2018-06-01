@@ -86,9 +86,9 @@ class Gramatica(Elemento):
         \:return True caso a estrutura seja gerada com sucesso e False caso contrário.
     '''
     def parse(self, texto):
-        if not texto:
-            raise FormatError("A gramática não pode ser vazia")
         self.__texto = texto.replace(" ", "") # Retira todos os espaços em branco
+        if not self.__texto:
+            raise FormatError("A gramática não pode ser vazia.")
         linhas = self.__texto.splitlines()
         self.__gera_estrutura_producoes(linhas)
         return True
@@ -163,7 +163,7 @@ class Gramatica(Elemento):
         from model.AF.AutomatoFinito import AutomatoFinito
 
         af = AutomatoFinito(self.get_nome() + "(convertido para AF)")
-        af.set_vt(self.__vt)
+        af.set_vt(set(self.__vt))
         af.set_estado_inicial(Estado(self.__simbolo_inicial))
 
         # Gera um símbolo novo
@@ -211,9 +211,9 @@ class Gramatica(Elemento):
         \:return uma gramática que gera o fechamento desta.
     '''
     def fechamento(self):
-        gramatica_fecho = Gramatica(self.get_nome() + "(Fecho)")
+        gramatica_fecho = Gramatica(self.get_nome() + " (fecho)")
         gramatica_fecho.set_simbolo_inicial(self.__simbolo_inicial)
-        gramatica_fecho.set_vt(self.__vt)
+        gramatica_fecho.set_vt(set(self.__vt))
 
         for x in self.__producoes:
             producoes_x = list(self.__producoes[x])
@@ -240,7 +240,7 @@ class Gramatica(Elemento):
         \:return uma gramática resultante da união das duas gramáticas.
     '''
     def uniao(self, outra_gramatica):
-        gramatica_uniao = Gramatica(self.get_nome() + " U " + outra_gramatica.get_nome())
+        gramatica_uniao = Gramatica(self.get_nome() + " união " + outra_gramatica.get_nome())
         gramatica_uniao.set_vt(self.__vt.union(outra_gramatica.get_vt()))
         epsilon = False
 
@@ -304,12 +304,10 @@ class Gramatica(Elemento):
         \:return uma gramática resultante da concatenação das duas gramáticas.
     '''
     def concatenacao(self, outra_gramatica):
-        gramatica_concat = Gramatica(self.get_nome() + " . " + outra_gramatica.get_nome())
+        gramatica_concat = Gramatica(self.get_nome() + " concat. " + outra_gramatica.get_nome())
         gramatica_concat.set_vt(self.__vt.union(outra_gramatica.get_vt()))
         gramatica_concat.set_simbolo_inicial(self.__simbolo_inicial)
-        outra_aceita_epsilon = False
-        if ("&", "&") in outra_gramatica.get_producoes()[outra_gramatica.get_simbolo_inicial()]:
-            outra_aceita_epsilon = True
+        outra_aceita_epsilon = ("&", "&") in outra_gramatica.get_producoes()[outra_gramatica.get_simbolo_inicial()]
 
         vn_outra = set(outra_gramatica.get_producoes().keys())
         vn = set(self.__producoes.keys())
