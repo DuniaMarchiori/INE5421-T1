@@ -111,7 +111,7 @@ class Controller:
         \:param operacao é o índice da operacao selecionada.
     '''
     def cb_aplica_operacao(self, indice_um, indice_dois, operacao):
-        if operacao >= 2 or indice_dois is not None:
+        if operacao >= 3 or indice_dois is not None:
             elementos_novos = self.__model.operacao_elementos(indice_um, indice_dois, operacao)
             self.__adicionar_multiplos_elementos(elementos_novos)
         else:

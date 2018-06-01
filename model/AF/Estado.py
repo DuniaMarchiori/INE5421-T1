@@ -15,14 +15,14 @@ class Estado:
             self.__string = ''.join(self.__lista)
             self.__nome = frozenset(nomes)
             self.__string_com_virgula = ','.join(self.__lista)
-            self.__string_lista = "[" + ', '.join(self.__lista) + "]"
+            self.__string_display = "[" + ', '.join(self.__lista) + "]"
         else:
             self.__lista = []
             self.__lista.append(nomes)
             self.__string = nomes
             self.__nome = frozenset([nomes])
             self.__string_com_virgula = ','.join(self.__lista)
-            self.__string_lista = "[" + ', '.join(self.__lista) + "]"
+            self.__string_display = nomes
 
     '''
         Retorna o estado em formato de lista.
@@ -49,8 +49,8 @@ class Estado:
         Retorna o estado em formato de texto, com os estados que compoem este estado dispostos em forma de uma string de lista.
         \:return uma string com a composição do estado.
     '''
-    def to_string_lista(self):
-        return self.__string_lista
+    def to_string_display(self):
+        return self.__string_display
 
     '''
         Retorna o estado em formato de conjunto.

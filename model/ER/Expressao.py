@@ -237,7 +237,7 @@ class Expressao(Elemento):
         prefixo_do_estado = "q"
         i = 0
 
-        estado_inicial = Estado([prefixo_do_estado + str(i)])
+        estado_inicial = Estado(prefixo_do_estado + str(i))
 
         automato = AutomatoFinito(self.get_nome() + " (convertido para AF)")
         automato.adiciona_estado(estado_inicial)
@@ -256,7 +256,7 @@ class Expressao(Elemento):
             composicao_atual = obter_composicao[estado_atual]
             for simbolo in composicao_atual:
                 if simbolo != "$":
-                    novo_estado = Estado([prefixo_do_estado + str(i)])
+                    novo_estado = Estado(prefixo_do_estado + str(i))
                     i += 1
                     nova_composicao = {}
                     for numero_folha in composicao_atual[simbolo]:

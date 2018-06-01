@@ -105,7 +105,7 @@ class Model:
                 elementos_gerados.append(elemento_op_um)
 
         elemento_op_dois = None
-        if operacao < 2:
+        if operacao < 3:
             elemento_dois = self.obter_elemento_por_indice(indice_dois)
             elemento_op_dois = elemento_dois
             if elemento_dois.get_tipo() is not TipoElemento.AF:
@@ -115,14 +115,21 @@ class Model:
                     elemento_op_dois = elemento_op_dois.determiniza()
                     elementos_gerados.append(elemento_op_dois)
 
-        if operacao == 0:  # Intersecção
+        if operacao == 0:  # União
+            elementos_gerados.append(elemento_op_um.uniao(elemento_op_dois))
+        elif operacao == 1:  # Intersecção
             elementos_gerados.append(elemento_op_um.interseccao(elemento_op_dois))
-        elif operacao == 1:  # Diferenca
+        elif operacao == 2:  # Diferenca
             elementos_gerados.append(elemento_op_um.diferenca(elemento_op_dois))
-        elif operacao == 2:  # Reverso
+        elif operacao == 3:  # Reverso
             elementos_gerados.append(elemento_op_um.reverso())
         else:  # Complemento
-            elementos_gerados.append(elemento_op_um.complemento())
+            if elemento_op_um.is_complete():
+                elementos_gerados.append(elemento_op_um.complemento())
+            else:
+                af_completa = elemento_op_um.completar()
+                elementos_gerados.append(af_completa)
+                elementos_gerados.append(af_completa.complemento())
 
         return elementos_gerados
 

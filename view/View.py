@@ -183,7 +183,7 @@ class View:
 
         label_nome = Label(frame_dados, text="Nome:")
         self.__configura_elemento(label_nome, row=0, column=0, rowweight=0, columnweight=0, sticky=W)
-        self.__label_nome_display = Label(frame_dados, text="NOME")
+        self.__label_nome_display = Label(frame_dados, text="NOME", wraplength=500, justify=LEFT)
         self.__configura_elemento(self.__label_nome_display, row=0, column=1, rowweight=0, columnweight=1, sticky=W)
         label_tipo = Label(frame_dados, text="Tipo:")
         self.__configura_elemento(label_tipo, row=1, column=0, rowweight=0, columnweight=0, sticky=W)
@@ -238,10 +238,11 @@ class View:
         self.__configura_elemento(frame_seleciona_operacao, row=1, column=0, rowweight=0, columnweight=0, sticky=NW)
 
         operacoes = [
-            ("Intersecção deste elemento com outro", 0),
-            ("Diferença deste elemento com outro", 1),
-            ("Reverso deste elemento", 2),
-            ("Complemento deste elemento", 3)
+            ("União deste elemento com outro", 0),
+            ("Intersecção deste elemento com outro", 1),
+            ("Diferença deste elemento com outro", 2),
+            ("Reverso deste elemento", 3),
+            ("Complemento deste elemento", 4)
         ]
         self.__int_operacao_selecionada.set(0)
         for texto, valor in operacoes:
@@ -546,7 +547,7 @@ class View:
     def cb_operacao_sobre_linguagem(self):
         indice_primeiro = self.__get_indice_selecionado()
         operacao = self.__int_operacao_selecionada.get()
-        if operacao < 2:
+        if operacao < 3:
             indice_segundo = self.abrir_janela_seleciona_elemento()
         else:
             indice_segundo = None
