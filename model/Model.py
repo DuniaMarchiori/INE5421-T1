@@ -124,14 +124,13 @@ class Model:
         if operacao != 2:
             gramatica_dois = self.obter_elemento_por_indice(indice_dois)
         gramatica_resultante = None
-        ''' TODO descomentar quando os metodos interseccao, diferenca e reverso estiverem implementadas
         if operacao == 0:  # União
             gramatica_resultante = gramatica_um.uniao(gramatica_dois)
         elif operacao == 1:  # Concatenação
             gramatica_resultante = gramatica_um.concatenacao(gramatica_dois)
         else:  # Fecho
-            gramatica_resultante = gramatica_um.fecho()
-        '''
+            gramatica_resultante = gramatica_um.fechamento()
+
         return gramatica_resultante
 
     '''

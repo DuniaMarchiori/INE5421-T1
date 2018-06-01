@@ -209,7 +209,6 @@ class Gramatica(Elemento):
         \:return uma gramática que gera o fechamento desta.
     '''
     def fechamento(self):
-        gera_epsilon = False
         gramatica_fecho = Gramatica(self.get_nome() + "(Fecho)")
         gramatica_fecho.set_simbolo_inicial(self.__simbolo_inicial)
         gramatica_fecho.set_vt(self.__vt)
@@ -217,19 +216,20 @@ class Gramatica(Elemento):
         for x in self.__producoes:
             producoes_x = list(self.__producoes[x])
             for p in producoes_x:
-                if p[0] != "&" and p[1] == "&":
-                    producoes_x.append((p[0], self.__simbolo_inicial))
-                if x == self.__simbolo_inicial and p[0] == "&" and not gera_epsilon:
-                    gera_epsilon = True
+                if p[0] != "&":
+                    if p[1] == "&":
+                        producoes_x.append((p[0], self.__simbolo_inicial))
+                else: # Se gera &
+                    producoes_x.remove(("&", "&"))
             gramatica_fecho.adiciona_producao(x, producoes_x)
 
-        # Gera &
-        if not gera_epsilon:
-            producoes_inicial = list(gramatica_fecho.get_producoes()[self.__simbolo_inicial])
-            producoes_inicial.append(("&", "&"))
-            novo_inicial = self.novo_simbolo()
-            gramatica_fecho.adiciona_producao(novo_inicial, producoes_inicial)
-            gramatica_fecho.set_simbolo_inicial(novo_inicial)
+        # Cria novo símbolo inicial que gera &
+        producoes_inicial = list(gramatica_fecho.get_producoes()[self.__simbolo_inicial])
+        producoes_inicial.append(("&", "&"))
+        novo_inicial = self.novo_simbolo()
+        gramatica_fecho.adiciona_producao(novo_inicial, producoes_inicial)
+        gramatica_fecho.set_simbolo_inicial(novo_inicial)
+
         return gramatica_fecho
 
     '''
@@ -260,6 +260,7 @@ class Gramatica(Elemento):
             producoes = list(self.__producoes[simbolo])
             if ("&", "&") in producoes:
                 producoes.remove(("&", "&"))
+                epsilon = True
             gramatica_uniao.adiciona_producao(simbolo, producoes)
 
         for simbolo in vn_outra:
@@ -280,7 +281,7 @@ class Gramatica(Elemento):
 
         # Cria o novo símbolo inicial
         novo_inicial = self.novo_simbolo(uniao_vn)
-        producoes_iniciais = list(self.__producoes[self.__simbolo_inicial])
+        producoes_iniciais = list(gramatica_uniao.get_producoes()[self.__simbolo_inicial])
         simbolo_inicial_outra = outra_gramatica.get_simbolo_inicial()
         if simbolo_inicial_outra in simbolos_iguais:
             producao_inicial_outra = list(gramatica_uniao.get_producoes()[traducao_simbolos[simbolo_inicial_outra]])
@@ -345,8 +346,8 @@ class Gramatica(Elemento):
                 terminal = producao[0]
                 nao_terminal = producao[1]
                 if nao_terminal == "&":
-                    if terminal != "&" and outra_aceita_epsilon:
-                        novas_producoes.append((terminal, nao_terminal))
+                    if outra_aceita_epsilon: # Se a segunda gramática aceita &, a sentença pode continuar acabando aqui
+                            novas_producoes.append((terminal, nao_terminal))
                     nao_terminal = simbolo_inicial_outra
                 if terminal != "&":
                     novas_producoes.append((terminal, nao_terminal))
