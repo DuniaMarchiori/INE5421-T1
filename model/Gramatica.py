@@ -86,6 +86,8 @@ class Gramatica(Elemento):
         \:return True caso a estrutura seja gerada com sucesso e False caso contrário.
     '''
     def parse(self, texto):
+        if not texto:
+            raise FormatError("A gramática não pode ser vazia")
         self.__texto = texto.replace(" ", "") # Retira todos os espaços em branco
         linhas = self.__texto.splitlines()
         self.__gera_estrutura_producoes(linhas)
