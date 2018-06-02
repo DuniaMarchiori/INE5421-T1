@@ -1,6 +1,5 @@
 # Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
 
-from copy import deepcopy
 from itertools import product
 from model.AF.Estado import Estado
 from string import ascii_uppercase

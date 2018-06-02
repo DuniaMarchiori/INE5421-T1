@@ -1,3 +1,5 @@
+# Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
+
 class ListaElementos:
 
     __lista_de_elementos = None

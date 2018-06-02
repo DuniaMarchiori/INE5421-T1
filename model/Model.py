@@ -1,4 +1,5 @@
 # Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
+
 from model.Elemento import *
 from model.ListaElementos import ListaElementos
 from model.ER.Expressao import Expressao
@@ -135,9 +136,10 @@ class Model:
 
     def operacao_gr(self, indice_um, indice_dois, operacao):
         gramatica_um = self.obter_elemento_por_indice(indice_um)
+        gramatica_dois = None
         if operacao != 2:
             gramatica_dois = self.obter_elemento_por_indice(indice_dois)
-        gramatica_resultante = None
+
         if operacao == 0:  # União
             gramatica_resultante = gramatica_um.uniao(gramatica_dois)
         elif operacao == 1:  # Concatenação

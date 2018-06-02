@@ -1,3 +1,6 @@
+# Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
+
+
 from model.ER.Arvore.Nodos.NodoFolha import NodoFolha
 
 

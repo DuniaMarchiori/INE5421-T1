@@ -1,4 +1,5 @@
 # Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
+
 from model.Model import Model
 from view.View import View
 
