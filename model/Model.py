@@ -215,5 +215,8 @@ class Model:
     def carregar_elemento(self, caminho):
         return self.__file_manager.abrir(caminho)
 
+    def nome_arquivo(self, caminho):
+        return self.__file_manager.nome_do_arquivo(caminho)
+
     def reposiciona_elemento_editado(self, indice):
         self.__lista_de_elementos.reposiciona_elemento_editado(indice)

@@ -464,7 +464,9 @@ class View:
         label.pack(expand=True)
         frame_btn = Frame(popup, pady=10)
         frame_btn.pack()
-        Button(frame_btn, text="OK", width=10, command=lambda:popup.destroy()).pack()
+        btn = Button(frame_btn, text="OK", width=10, command=lambda:popup.destroy())
+        btn.pack()
+        btn.focus()
         self.centralizar(popup)
         popup.grab_set()
         current_top.wait_window(popup)
@@ -495,7 +497,9 @@ class View:
 
         frame_btn = Frame(popup, pady=10)
         frame_btn.pack()
-        Button(frame_btn, text="OK", width=10, command=lambda:popup.destroy()).pack()
+        btn = Button(frame_btn, text="OK", width=10, command=lambda:popup.destroy())
+        btn.pack()
+        btn.focus()
 
         self.centralizar(popup)
         popup.grab_set()

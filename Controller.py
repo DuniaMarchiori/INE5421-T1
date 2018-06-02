@@ -222,7 +222,8 @@ class Controller:
     def cb_carregar_gr(self, caminho):
         try:
             conteudo = self.__model.carregar_elemento(caminho)
-            resultado = self.cb_nova_gramatica("Gramática Carregada", conteudo)
+            nome_elemento = self.__model.nome_arquivo(caminho)
+            resultado = self.cb_nova_gramatica(nome_elemento, conteudo)
             if resultado:
                 self.__view.mostrar_aviso("Gramática carregada com sucesso.", titulo="Sucesso")
         except Exception:
@@ -231,7 +232,8 @@ class Controller:
     def cb_carregar_er(self, caminho):
         try:
             conteudo = self.__model.carregar_elemento(caminho)
-            resultado = self.cb_nova_expressao("Expressão Carregada", conteudo)
+            nome_elemento = self.__model.nome_arquivo(caminho)
+            resultado = self.cb_nova_expressao(nome_elemento, conteudo)
             if resultado:
                 self.__view.mostrar_aviso("Expressão carregada com sucesso.", titulo="Sucesso")
         except Exception:
