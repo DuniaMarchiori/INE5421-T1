@@ -46,6 +46,13 @@ class Gramatica(Elemento):
         return self.__producoes
 
     '''
+        Retorna o símbolo inicial da gramática.
+        \:return o símbolo inicial da gramática.
+    '''
+    def get_simbolo_inicial(self):
+        return self.__simbolo_inicial
+
+    '''
         Modifica o conjunto de símbolos terminais da gramática.
         \:param vt é o novo conjunto de símbolos terminais.
     '''
@@ -80,6 +87,8 @@ class Gramatica(Elemento):
     '''
     def parse(self, texto):
         self.__texto = texto.replace(" ", "") # Retira todos os espaços em branco
+        if not self.__texto:
+            raise FormatError("A gramática não pode ser vazia.")
         linhas = self.__texto.splitlines()
         self.__gera_estrutura_producoes(linhas)
         return True
@@ -154,7 +163,7 @@ class Gramatica(Elemento):
         from model.AF.AutomatoFinito import AutomatoFinito
 
         af = AutomatoFinito(self.get_nome() + "(convertido para AF)")
-        af.set_vt(self.__vt)
+        af.set_vt(set(self.__vt))
         af.set_estado_inicial(Estado(self.__simbolo_inicial))
 
         # Gera um símbolo novo
@@ -198,6 +207,160 @@ class Gramatica(Elemento):
             pass #não tem mais letras no alfabeto possiveis pra ser o novo simbolo
 
     '''
+        Cria uma segunda gramática que corresponde ao fechamento desta.
+        \:return uma gramática que gera o fechamento desta.
+    '''
+    def fechamento(self):
+        gramatica_fecho = Gramatica(self.get_nome() + " (fecho)")
+        gramatica_fecho.set_simbolo_inicial(self.__simbolo_inicial)
+        gramatica_fecho.set_vt(set(self.__vt))
+
+        for x in self.__producoes:
+            producoes_x = list(self.__producoes[x])
+            for p in producoes_x:
+                if p[0] != "&":
+                    if p[1] == "&":
+                        producoes_x.append((p[0], self.__simbolo_inicial))
+                else: # Se gera &
+                    producoes_x.remove(("&", "&"))
+            gramatica_fecho.adiciona_producao(x, producoes_x)
+
+        # Cria novo símbolo inicial que gera &
+        producoes_inicial = list(gramatica_fecho.get_producoes()[self.__simbolo_inicial])
+        producoes_inicial.append(("&", "&"))
+        novo_inicial = self.novo_simbolo()
+        gramatica_fecho.adiciona_producao(novo_inicial, producoes_inicial)
+        gramatica_fecho.set_simbolo_inicial(novo_inicial)
+
+        return gramatica_fecho
+
+    '''
+        Cria uma terceira gramática que corresponde à união das duas.
+        \:param outra_gramatica é a segunda gramática utilizada na união.
+        \:return uma gramática resultante da união das duas gramáticas.
+    '''
+    def uniao(self, outra_gramatica):
+        gramatica_uniao = Gramatica(self.get_nome() + " união " + outra_gramatica.get_nome())
+        gramatica_uniao.set_vt(self.__vt.union(outra_gramatica.get_vt()))
+        epsilon = False
+
+        vn_outra = set(outra_gramatica.get_producoes().keys())
+        vn = set(self.__producoes.keys())
+        uniao_vn = vn.union(vn_outra)
+
+        # Mapeia símbolos iguais na segunda gramática para novos símbolos
+        simbolos_iguais = vn.intersection(vn_outra)
+        if simbolos_iguais != set():
+            traducao_simbolos = {}
+            for simbolo in simbolos_iguais:
+                novo = self.novo_simbolo(uniao_vn)
+                traducao_simbolos[simbolo] = novo
+                uniao_vn.add(novo)
+
+        # Copia produções das gramáticas
+        for simbolo in vn:
+            producoes = list(self.__producoes[simbolo])
+            if ("&", "&") in producoes:
+                producoes.remove(("&", "&"))
+                epsilon = True
+            gramatica_uniao.adiciona_producao(simbolo, producoes)
+
+        for simbolo in vn_outra:
+            chave = simbolo
+            if simbolo in simbolos_iguais:
+                chave = traducao_simbolos[simbolo]
+            novas_producoes = []
+            for producao in outra_gramatica.get_producoes()[simbolo]:
+                terminal = producao[0]
+                nao_terminal = producao[1]
+                if terminal != "&":
+                    if nao_terminal in simbolos_iguais:
+                        nao_terminal = traducao_simbolos[nao_terminal]
+                    novas_producoes.append((terminal, nao_terminal))
+                else:
+                    epsilon = True
+            gramatica_uniao.adiciona_producao(chave, novas_producoes)
+
+        # Cria o novo símbolo inicial
+        novo_inicial = self.novo_simbolo(uniao_vn)
+        producoes_iniciais = list(gramatica_uniao.get_producoes()[self.__simbolo_inicial])
+        simbolo_inicial_outra = outra_gramatica.get_simbolo_inicial()
+        if simbolo_inicial_outra in simbolos_iguais:
+            producao_inicial_outra = list(gramatica_uniao.get_producoes()[traducao_simbolos[simbolo_inicial_outra]])
+        else:
+            producao_inicial_outra = list(gramatica_uniao.get_producoes()[simbolo_inicial_outra])
+        if epsilon:
+            producao_inicial_outra.append(("&", "&"))
+        for p in producao_inicial_outra:
+            producoes_iniciais.append(p)
+        gramatica_uniao.set_simbolo_inicial(novo_inicial)
+        gramatica_uniao.adiciona_producao(novo_inicial, producoes_iniciais)
+
+        return gramatica_uniao
+
+    '''
+        Cria uma terceira gramática que corresponde à concatenação desta gramática com a segunda, nesta ordem.
+        \:param outra_gramatica é a segunda gramática utilizada na concatenação.
+        \:return uma gramática resultante da concatenação das duas gramáticas.
+    '''
+    def concatenacao(self, outra_gramatica):
+        gramatica_concat = Gramatica(self.get_nome() + " concat. " + outra_gramatica.get_nome())
+        gramatica_concat.set_vt(self.__vt.union(outra_gramatica.get_vt()))
+        gramatica_concat.set_simbolo_inicial(self.__simbolo_inicial)
+        outra_aceita_epsilon = ("&", "&") in outra_gramatica.get_producoes()[outra_gramatica.get_simbolo_inicial()]
+
+        vn_outra = set(outra_gramatica.get_producoes().keys())
+        vn = set(self.__producoes.keys())
+        uniao_vn = vn.union(vn_outra)
+
+        # Mapeia símbolos iguais na segunda gramática para novos símbolos
+        simbolos_iguais = vn.intersection(vn_outra)
+        if simbolos_iguais != set():
+            traducao_simbolos = {}
+            for simbolo in simbolos_iguais:
+                novo = self.novo_simbolo(uniao_vn)
+                traducao_simbolos[simbolo] = novo
+                uniao_vn.add(novo)
+
+        # Gera as produções de concatenação
+        for simbolo in vn_outra:
+            chave = simbolo
+            if simbolo in simbolos_iguais:
+                chave = traducao_simbolos[simbolo]
+            novas_producoes = []
+            for producao in outra_gramatica.get_producoes()[simbolo]:
+                terminal = producao[0]
+                nao_terminal = producao[1]
+                if terminal != "&":
+                    if nao_terminal in simbolos_iguais:
+                        nao_terminal = traducao_simbolos[nao_terminal]
+                    novas_producoes.append((terminal, nao_terminal))
+            gramatica_concat.adiciona_producao(chave, novas_producoes)
+
+        simbolo_inicial_outra = outra_gramatica.get_simbolo_inicial()
+        if simbolo_inicial_outra in simbolos_iguais:
+            simbolo_inicial_outra = traducao_simbolos[simbolo_inicial_outra]
+        for simbolo in vn:
+            novas_producoes = []
+            for producao in self.__producoes[simbolo]:
+                terminal = producao[0]
+                nao_terminal = producao[1]
+                if nao_terminal == "&":
+                    if outra_aceita_epsilon: # Se a segunda gramática aceita &, a sentença pode continuar acabando aqui
+                            novas_producoes.append((terminal, nao_terminal))
+                    nao_terminal = simbolo_inicial_outra
+                if terminal != "&":
+                    novas_producoes.append((terminal, nao_terminal))
+                elif simbolo == self.__simbolo_inicial:
+                    # Se o terminal é igual a "&" e é o símbolo inicial, copia as produções iniciais da segunda gramática
+                    producoes_iniciais_outra = gramatica_concat.get_producoes()[simbolo_inicial_outra]
+                    for p in producoes_iniciais_outra:
+                        novas_producoes.append((p[0], p[1]))
+            gramatica_concat.adiciona_producao(simbolo, novas_producoes)
+
+        return gramatica_concat
+
+    '''
         Verifica se a string representa um número inteiro.
         \:param str é a string a ser verificada
         \:return True se a string representar um número inteiro e False caso contrário.
@@ -213,10 +376,10 @@ class Gramatica(Elemento):
         Gera um novo símbolo não terminal que não pertence à gramática.
         \:return um símbolo não terminal que não pertence à gramática.
     '''
-    def novo_simbolo(self):
+    def novo_simbolo(self, conjunto = set()):
         simbolo_novo = None
         for letra in ascii_uppercase:
-            if letra not in self.__producoes:
+            if letra not in self.__producoes and letra not in conjunto:
                 simbolo_novo = letra
                 break
         # Se todas as letras do alfabeto já fazem parte do conjunto de símbolos terminais,
@@ -226,7 +389,7 @@ class Gramatica(Elemento):
             for l1 in ascii_uppercase:
                 for l2 in ascii_uppercase:
                     letras = l1 + l2
-                    if letras not in self.__producoes:
+                    if letras not in self.__producoes and letra not in conjunto:
                         simbolo_novo = letras
                         found = True
                         break
