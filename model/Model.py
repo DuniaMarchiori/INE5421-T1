@@ -118,9 +118,9 @@ class Model:
         if operacao == 0:  # União
             elementos_gerados.append(elemento_op_um.uniao(elemento_op_dois))
         elif operacao == 1:  # Intersecção
-            elementos_gerados.append(elemento_op_um.interseccao(elemento_op_dois))
+            elementos_gerados.extend(elemento_op_um.interseccao(elemento_op_dois))
         elif operacao == 2:  # Diferenca
-            elementos_gerados.append(elemento_op_um.diferenca(elemento_op_dois))
+            elementos_gerados.extend(elemento_op_um.diferenca(elemento_op_dois))
         elif operacao == 3:  # Reverso
             elementos_gerados.append(elemento_op_um.reverso())
         else:  # Complemento

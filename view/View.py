@@ -480,7 +480,7 @@ class View:
         popup.title("Lista de Sentenças Geradas")
         popup.resizable(width=False, height=True)
         popup.minsize(width=400, height=231)
-        label = Label(popup, text="Sentenças de tamanho " + str(tamanho) + ":")
+        label = Label(popup, text="Sentenças de tamanho: " + str(tamanho) + ":")
         label.pack()
         f = Frame(popup)
         f.pack(expand=True, fill=Y)

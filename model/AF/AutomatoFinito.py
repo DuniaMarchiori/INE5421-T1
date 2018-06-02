@@ -74,7 +74,7 @@ class AutomatoFinito(Elemento):
         \:param lista é a lista de novos estados finais.
     '''
     def set_estados_finais(self, lista):
-        self.__estados_finais = lista
+        self.__estados_finais = set(lista)
 
     '''
         Retorna os estados finais do autômato.
@@ -237,14 +237,15 @@ class AutomatoFinito(Elemento):
         if self.isAFND():
             af = AutomatoFinito(self.get_nome() + " (determinizado)", True) # Indica que o autômato é determinizado
             af.set_vt(self.__vt)
-            af.set_estado_inicial(self.__estado_inicial)
+            novo_inicial = Estado([self.__estado_inicial.to_string()])
+            af.set_estado_inicial(novo_inicial)
 
             estados_finais = set() # Conjuntos de estados finais do novo autômato
             estados_visitados = set()
             estados_criados = set()
-            estados_criados.add(self.__estado_inicial)
+            estados_criados.add(novo_inicial)
             estados_a_visitar = set()
-            estados_a_visitar.add(self.__estado_inicial)
+            estados_a_visitar.add(novo_inicial)
 
             while len(estados_a_visitar) != 0: # Se ainda há estados a visitar
                 estado = estados_a_visitar.pop()
@@ -478,30 +479,18 @@ class AutomatoFinito(Elemento):
         if self.is_complete():
             raise Exception("Autômato ja é completo")
         else:
-            estado_equivalente = {}
-            af_completo = AutomatoFinito(self.get_nome() + " (completo)", determinizado=self.__determinizado)
-            estado_de_erro = self.novo_estado()
-            for estado in self.__producoes:
-                for simbolo in self.__vt:
-                    if estado not in estado_equivalente:
-                        estado_equivalente[estado] = Estado(estado.to_string_display())
-                    self.adiciona_estado(estado_equivalente[estado])
-                    if simbolo in self.__producoes[estado]:
-                        for estado_destino in self.__producoes[estado][simbolo]:
-                            if estado_destino not in estado_equivalente:
-                                estado_equivalente[estado_destino] = Estado(estado_destino.to_string_display())
-                            af_completo.adiciona_transicao(estado_equivalente[estado], simbolo, estado_equivalente[estado_destino])
-                    else:
-                        af_completo.adiciona_transicao(estado_equivalente[estado], simbolo, estado_de_erro)
+            af_completo = AutomatoFinito(self.get_nome() + " (completo)")
+            af_completo.popula_automato(self, transicoes=True, inicial=True, terminais=True)
 
+            estado_de_erro = self.novo_estado()
+            af_completo.adiciona_estado(estado_de_erro)
             for simbolo in self.__vt:
                 af_completo.adiciona_transicao(estado_de_erro, simbolo, estado_de_erro)
 
-            af_completo.set_estado_inicial(estado_equivalente[self.__estado_inicial])
-            estados_finais = []
-            for estado_final in self.__estados_finais:
-                estados_finais.append(estado_equivalente[estado_final])
-            af_completo.set_estados_finais(estados_finais)
+            for simbolo in self.__vt:
+                for estado in af_completo.get_producoes():
+                    if simbolo not in af_completo.get_producoes()[estado]:
+                        af_completo.get_producoes()[estado][simbolo] = [estado_de_erro]
 
             return af_completo
 
@@ -512,23 +501,17 @@ class AutomatoFinito(Elemento):
     def complemento(self):
         if not self.is_complete():
             raise Exception("Autômato não é completo")
-
-        # TODO trocar a abordagem de deepcopy pra abordagem de estados_equivalentes
-        af_complemento = AutomatoFinito(self.get_nome() + " (complemento)", determinizado=self.__determinizado)
-        estados_finais = []
-        for estado in self.__producoes:
-            copia_estado = deepcopy(estado)
-            af_complemento.adiciona_estado(copia_estado)
-            for simbolo in self.__producoes[estado]:
-                for estado_destino in self.__producoes[estado][simbolo]:
-                    copia_estado_destino = deepcopy(estado_destino)
-                    af_complemento.adiciona_estado(copia_estado_destino)
-                    af_complemento.adiciona_transicao(copia_estado, simbolo, copia_estado_destino)
-            if estado not in self.__estados_finais:
-                estados_finais.append(estado)
-        af_complemento.set_estado_inicial(deepcopy(self.__estado_inicial))
-        af_complemento.set_estados_finais(estados_finais)
-        return af_complemento
+        if self.isAFND():
+            raise Exception("Autômato não é determinístico")
+        else:
+            af_complemento = AutomatoFinito(self.get_nome() + " (complemento)")
+            estados_equivalentes = af_complemento.popula_automato(self, transicoes=True, inicial=True)
+            finais_complemento = []
+            for estado in self.__producoes:
+                if estado not in self.__estados_finais:
+                    finais_complemento.append(estados_equivalentes[estado])
+            af_complemento.set_estados_finais(finais_complemento)
+            return af_complemento
 
     '''
         Obtem a união deste autômato com outro.
@@ -563,10 +546,40 @@ class AutomatoFinito(Elemento):
     '''
         Obtem a intersecção deste autômato com outro.
         \:param o segundo autômato da intersecçãp.
-        \:return O autômato resultante da intersecção desse autômato com o autômato passado por parâmetro.
+        \:return Uma lista de todos os autômatos gerados para se obter a intersecção
     '''
     def interseccao(self, segundo_automato):
-        pass
+        automatos_gerados = []
+
+        if self.is_complete():
+            la_barra = self.complemento()
+        else:
+            la_completo = self.completar()
+            automatos_gerados.append(la_completo)
+            la_barra = la_completo.complemento()
+        automatos_gerados.append(la_barra)
+
+        if segundo_automato.is_complete():
+            lb_barra = segundo_automato.complemento()
+        else:
+            lb_completo = segundo_automato.completar()
+            automatos_gerados.append(lb_completo)
+            lb_barra = lb_completo.complemento()
+        automatos_gerados.append(lb_barra)
+
+        l_uniao = la_barra.uniao(lb_barra)
+        automatos_gerados.append(l_uniao)
+
+        l_deterministico = l_uniao
+        if l_uniao.isAFND():
+            l_deterministico = l_uniao.determiniza()
+            automatos_gerados.append(l_deterministico)
+
+        l_uniao_barra = l_deterministico.complemento()
+        l_uniao_barra.set_nome("{" + self.get_nome() + "} intersec. {" + segundo_automato.get_nome() + "}")
+        automatos_gerados.append(l_uniao_barra)
+
+        return automatos_gerados
 
     '''
         Obtem a diferença deste autômato com outro.
@@ -574,7 +587,21 @@ class AutomatoFinito(Elemento):
         \:return O autômato resultante da diferença desse autômato com o autômato passado por parâmetro.
     '''
     def diferenca(self, segundo_automato):
-        pass
+        automatos_gerados = []
+
+        if segundo_automato.is_complete():
+            lb_barra = segundo_automato.complemento()
+        else:
+            lb_completo = segundo_automato.completar()
+            automatos_gerados.append(lb_completo)
+            lb_barra = lb_completo.complemento()
+        automatos_gerados.append(lb_barra)
+
+        automatos_intersec = self.interseccao(lb_barra)
+        automatos_intersec[-1].set_nome("{" + self.get_nome() + "} dif. {" + segundo_automato.get_nome() + "}")
+        automatos_gerados.extend(automatos_intersec)
+
+        return automatos_gerados
 
     '''
         Obtem o reverso da linguagem do autômato que chama a função.
@@ -626,7 +653,6 @@ class AutomatoFinito(Elemento):
     '''
     def popula_automato(self, segundo_automato, transicoes=False, inicial=False, terminais=False):
         estados_equivalentes = {}
-
         for estado in segundo_automato.get_producoes():
             if estado not in estados_equivalentes:
                 estado_equivalente = Estado(estado.to_string_display())
