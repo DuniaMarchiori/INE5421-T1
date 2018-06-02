@@ -285,23 +285,29 @@ class AutomatoFinito(Elemento):
         estado_indefinicao = self.novo_estado()
         transicoes_indef = {}
         lista = [estado_indefinicao]
-        if not self.is_complete():
+        estados_is_complete = self.is_set_complete(estados)
+        if not estados_is_complete:
             for simbolo in self.__vt:
                 transicoes_indef[simbolo] = lista
             self.__producoes[estado_indefinicao] = transicoes_indef # Item adicionado apenas para auxiliar na minimização
+            estados.add(estado_indefinicao)
 
         k_f = estados - set(self.__estados_finais)
-        if not self.is_complete():
+        if not estados_is_complete:
             k_f.add(estado_indefinicao)
         f = estados - k_f
 
         ce_k_f_anterior = []
         ce_f_anterior = []
-        novo_ce_k_f = [k_f]
-        novo_ce_f = [f]
+        novo_ce_k_f = []
+        novo_ce_f = []
+        if k_f != set():
+            novo_ce_k_f = [k_f]
+        if f != set():
+            novo_ce_f = [f]
 
         # Forma os conjuntos equivalentes
-        while ce_k_f_anterior != novo_ce_k_f or ce_f_anterior != novo_ce_f:
+        while (ce_k_f_anterior != novo_ce_k_f or ce_f_anterior != novo_ce_f) and len(novo_ce_f) != 0 and len(novo_ce_k_f) != 0:
             ce_k_f_anterior = list(novo_ce_k_f)
             ce_f_anterior = list(novo_ce_f)
             ce = ce_k_f_anterior + ce_f_anterior
@@ -372,13 +378,13 @@ class AutomatoFinito(Elemento):
         af_minimo.set_estados_finais(estados_finais)
 
         # Produções
-        ce_indefinido =  self.__get_ce_respectivo(ce, estado_indefinicao)
-        for estado in self.__producoes:
+        ce_indefinido = self.__get_ce_respectivo(ce, estado_indefinicao)
+        for estado in estados:
             nome_estado = self.__get_ce_respectivo(ce, estado)
             if Estado(nome_estado) not in af_minimo.get_producoes().keys():
                 transicoes = self.__producoes[estado]
                 for simbolo in self.__vt:
-                    if simbolo in transicoes:
+                    if simbolo in transicoes and transicoes[simbolo][0] in estados:
                         estado_t = transicoes[simbolo]
                         nome_estado_t = self.__get_ce_respectivo(ce, estado_t[0])
                         af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(nome_estado_t))
@@ -401,6 +407,20 @@ class AutomatoFinito(Elemento):
             if estado in e:
                 index = ce.index(e)
                 return "q" + str(index)
+        return ""
+
+    '''
+        Verifica se o conjunto representa um conjunto completo de estados.
+        \:param estados é o conjunto a ser verificado
+        \:return True se o conjunto é completo e False caso contrário.
+    '''
+    def is_set_complete(self, estados):
+        for estado in estados:
+            transicoes = self.__producoes[estado]
+            for simbolo in self.__vt:
+                if (simbolo not in transicoes) or (transicoes[simbolo][0] not in estados):
+                    return False
+        return True
 
     '''
         Determina se dois estados são equivalentes de acordo com os conjuntos de equivalência no processo de minimização.
