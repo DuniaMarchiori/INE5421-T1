@@ -1,3 +1,5 @@
+# Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
+
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
@@ -73,8 +75,8 @@ class View:
         menu_main = Menu(self.__root)
 
         menu_abrir = Menu(menu_main, tearoff=0)
-        menu_abrir.add_command(label="Gramática Regular", command=self.cb_carregar_gr)
         menu_abrir.add_command(label="Expressão Regular", command=self.cb_carregar_er)
+        menu_abrir.add_command(label="Gramática Regular", command=self.cb_carregar_gr)
 
         menu_arquivo = Menu(menu_main, tearoff=0)
         menu_arquivo.add_cascade(label="Abrir", menu=menu_abrir)
@@ -183,7 +185,7 @@ class View:
 
         label_nome = Label(frame_dados, text="Nome:")
         self.__configura_elemento(label_nome, row=0, column=0, rowweight=0, columnweight=0, sticky=W)
-        self.__label_nome_display = Label(frame_dados, text="NOME")
+        self.__label_nome_display = Label(frame_dados, text="NOME", wraplength=500, justify=LEFT)
         self.__configura_elemento(self.__label_nome_display, row=0, column=1, rowweight=0, columnweight=1, sticky=W)
         label_tipo = Label(frame_dados, text="Tipo:")
         self.__configura_elemento(label_tipo, row=1, column=0, rowweight=0, columnweight=0, sticky=W)
@@ -238,9 +240,11 @@ class View:
         self.__configura_elemento(frame_seleciona_operacao, row=1, column=0, rowweight=0, columnweight=0, sticky=NW)
 
         operacoes = [
-            ("Intersecção deste elemento com outro", 0),
-            ("Diferença deste elemento com outro", 1),
-            ("Reverso deste elemento", 2)
+            ("União deste elemento com outro", 0),
+            ("Intersecção deste elemento com outro", 1),
+            ("Diferença deste elemento com outro", 2),
+            ("Reverso deste elemento", 3),
+            ("Complemento deste elemento", 4)
         ]
         self.__int_operacao_selecionada.set(0)
         for texto, valor in operacoes:
@@ -462,7 +466,9 @@ class View:
         label.pack(expand=True)
         frame_btn = Frame(popup, pady=10)
         frame_btn.pack()
-        Button(frame_btn, text="OK", width=10, command=lambda:popup.destroy()).pack()
+        btn = Button(frame_btn, text="OK", width=10, command=lambda:popup.destroy())
+        btn.pack()
+        btn.focus()
         self.centralizar(popup)
         popup.grab_set()
         current_top.wait_window(popup)
@@ -478,7 +484,7 @@ class View:
         popup.title("Lista de Sentenças Geradas")
         popup.resizable(width=False, height=True)
         popup.minsize(width=400, height=231)
-        label = Label(popup, text="Sentenças de tamanho " + str(tamanho) + ":")
+        label = Label(popup, text="Sentenças de tamanho: " + str(tamanho) + ":")
         label.pack()
         f = Frame(popup)
         f.pack(expand=True, fill=Y)
@@ -493,7 +499,9 @@ class View:
 
         frame_btn = Frame(popup, pady=10)
         frame_btn.pack()
-        Button(frame_btn, text="OK", width=10, command=lambda:popup.destroy()).pack()
+        btn = Button(frame_btn, text="OK", width=10, command=lambda:popup.destroy())
+        btn.pack()
+        btn.focus()
 
         self.centralizar(popup)
         popup.grab_set()
@@ -545,7 +553,7 @@ class View:
     def cb_operacao_sobre_linguagem(self):
         indice_primeiro = self.__get_indice_selecionado()
         operacao = self.__int_operacao_selecionada.get()
-        if operacao != 2:
+        if operacao < 3:
             indice_segundo = self.abrir_janela_seleciona_elemento()
         else:
             indice_segundo = None

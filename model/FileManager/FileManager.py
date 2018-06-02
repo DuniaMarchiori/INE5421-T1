@@ -1,3 +1,5 @@
+# Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
+
 import os.path
 
 '''
@@ -17,12 +19,20 @@ class FileManager:
 
     '''
         Carrega o texto de um arquivo.
-        \:param nome_arquivo é o caminho do arquivo a ser lido.
+        \:param caminho_arquivo é o caminho do arquivo a ser lido.
         \:return o conteúdo do arquivo
     '''
-    def abrir(self, nome_arquivo):
-        file = open(nome_arquivo, "r")
+    def abrir(self, caminho_arquivo):
+        file = open(caminho_arquivo, "r")
         texto = file.read()
         file.close()
         return texto
 
+    '''
+        Obtem o nome do arquivo no caminho especificado.
+        \:param caminho_arquivo é o caminho do arquivo.
+        \:return o nome do arquivo
+    '''
+    def nome_do_arquivo(self, caminho_arquivo):
+        nome, extensao = os.path.splitext(os.path.basename(caminho_arquivo))
+        return nome

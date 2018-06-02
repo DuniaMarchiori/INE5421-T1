@@ -1,4 +1,5 @@
 # Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
+
 from model.Model import Model
 from view.View import View
 
@@ -111,7 +112,7 @@ class Controller:
         \:param operacao é o índice da operacao selecionada.
     '''
     def cb_aplica_operacao(self, indice_um, indice_dois, operacao):
-        if operacao == 2 or indice_dois is not None:
+        if operacao >= 3 or indice_dois is not None:
             elementos_novos = self.__model.operacao_elementos(indice_um, indice_dois, operacao)
             self.__adicionar_multiplos_elementos(elementos_novos)
         else:
@@ -222,7 +223,8 @@ class Controller:
     def cb_carregar_gr(self, caminho):
         try:
             conteudo = self.__model.carregar_elemento(caminho)
-            resultado = self.cb_nova_gramatica("Gramática Carregada", conteudo)
+            nome_elemento = self.__model.nome_arquivo(caminho)
+            resultado = self.cb_nova_gramatica(nome_elemento, conteudo)
             if resultado:
                 self.__view.mostrar_aviso("Gramática carregada com sucesso.", titulo="Sucesso")
         except Exception:
@@ -231,7 +233,8 @@ class Controller:
     def cb_carregar_er(self, caminho):
         try:
             conteudo = self.__model.carregar_elemento(caminho)
-            resultado = self.cb_nova_expressao("Expressão Carregada", conteudo)
+            nome_elemento = self.__model.nome_arquivo(caminho)
+            resultado = self.cb_nova_expressao(nome_elemento, conteudo)
             if resultado:
                 self.__view.mostrar_aviso("Expressão carregada com sucesso.", titulo="Sucesso")
         except Exception:

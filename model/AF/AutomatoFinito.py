@@ -51,7 +51,7 @@ class AutomatoFinito(Elemento):
         \:return um dicionário onde a chave é um estado e os dados são 
             um dicionário onde a chave é um símbolo não terminal e os dados são um conjunto de símbolos não-terminais (pode ser vazio).
     '''
-    def get_transicoes(self):
+    def get_producoes(self):
         return self.__producoes
 
     '''
@@ -62,11 +62,25 @@ class AutomatoFinito(Elemento):
         self.__estado_inicial = estado
 
     '''
+        Retorna o estado inicial do autômato.
+        \:return o estado inicial.
+    '''
+    def get_estado_inicial(self):
+        return self.__estado_inicial
+
+    '''
         Modifica o conjunto de estados finais do autômato.
         \:param lista é a lista de novos estados finais.
     '''
     def set_estados_finais(self, lista):
-        self.__estados_finais = lista
+        self.__estados_finais = set(lista)
+
+    '''
+        Retorna os estados finais do autômato.
+        \:return os estados finais.
+    '''
+    def get_estados_finais(self):
+        return self.__estados_finais
 
     '''
         Modifica o conjunto de símbolos terminais do autômato.
@@ -222,14 +236,15 @@ class AutomatoFinito(Elemento):
         if self.isAFND():
             af = AutomatoFinito(self.get_nome() + " (determinizado)", True) # Indica que o autômato é determinizado
             af.set_vt(self.__vt)
-            af.set_estado_inicial(self.__estado_inicial)
+            novo_inicial = Estado([self.__estado_inicial.to_string()])
+            af.set_estado_inicial(novo_inicial)
 
             estados_finais = set() # Conjuntos de estados finais do novo autômato
             estados_visitados = set()
             estados_criados = set()
-            estados_criados.add(self.__estado_inicial)
+            estados_criados.add(novo_inicial)
             estados_a_visitar = set()
-            estados_a_visitar.add(self.__estado_inicial)
+            estados_a_visitar.add(novo_inicial)
 
             while len(estados_a_visitar) != 0: # Se ainda há estados a visitar
                 estado = estados_a_visitar.pop()
@@ -269,23 +284,29 @@ class AutomatoFinito(Elemento):
         estado_indefinicao = self.novo_estado()
         transicoes_indef = {}
         lista = [estado_indefinicao]
-        if not self.is_complete():
+        estados_is_complete = self.is_set_complete(estados)
+        if not estados_is_complete:
             for simbolo in self.__vt:
                 transicoes_indef[simbolo] = lista
             self.__producoes[estado_indefinicao] = transicoes_indef # Item adicionado apenas para auxiliar na minimização
+            estados.add(estado_indefinicao)
 
         k_f = estados - set(self.__estados_finais)
-        if not self.is_complete():
+        if not estados_is_complete:
             k_f.add(estado_indefinicao)
         f = estados - k_f
 
         ce_k_f_anterior = []
         ce_f_anterior = []
-        novo_ce_k_f = [k_f]
-        novo_ce_f = [f]
+        novo_ce_k_f = []
+        novo_ce_f = []
+        if k_f != set():
+            novo_ce_k_f = [k_f]
+        if f != set():
+            novo_ce_f = [f]
 
         # Forma os conjuntos equivalentes
-        while ce_k_f_anterior != novo_ce_k_f or ce_f_anterior != novo_ce_f:
+        while (ce_k_f_anterior != novo_ce_k_f or ce_f_anterior != novo_ce_f) and len(novo_ce_f) != 0 and len(novo_ce_k_f) != 0:
             ce_k_f_anterior = list(novo_ce_k_f)
             ce_f_anterior = list(novo_ce_f)
             ce = ce_k_f_anterior + ce_f_anterior
@@ -356,17 +377,18 @@ class AutomatoFinito(Elemento):
         af_minimo.set_estados_finais(estados_finais)
 
         # Produções
-        ce_indefinido =  self.__get_ce_respectivo(ce, estado_indefinicao)
-        for estado in self.__producoes:
+        ce_indefinido = self.__get_ce_respectivo(ce, estado_indefinicao)
+        for estado in estados:
             nome_estado = self.__get_ce_respectivo(ce, estado)
-            transicoes = self.__producoes[estado]
-            for simbolo in self.__vt:
-                if simbolo in transicoes:
-                    estado_t = transicoes[simbolo]
-                    nome_estado_t = self.__get_ce_respectivo(ce, estado_t[0])
-                    af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(nome_estado_t))
-                else:
-                    af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(ce_indefinido))
+            if Estado(nome_estado) not in af_minimo.get_producoes().keys():
+                transicoes = self.__producoes[estado]
+                for simbolo in self.__vt:
+                    if simbolo in transicoes and transicoes[simbolo][0] in estados:
+                        estado_t = transicoes[simbolo]
+                        nome_estado_t = self.__get_ce_respectivo(ce, estado_t[0])
+                        af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(nome_estado_t))
+                    else:
+                        af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(ce_indefinido))
 
         if not self.is_complete():
             del self.__producoes[estado_indefinicao] # Deleta a entrada auxiliar
@@ -384,6 +406,20 @@ class AutomatoFinito(Elemento):
             if estado in e:
                 index = ce.index(e)
                 return "q" + str(index)
+        return ""
+
+    '''
+        Verifica se o conjunto representa um conjunto completo de estados.
+        \:param estados é o conjunto a ser verificado
+        \:return True se o conjunto é completo e False caso contrário.
+    '''
+    def is_set_complete(self, estados):
+        for estado in estados:
+            transicoes = self.__producoes[estado]
+            for simbolo in self.__vt:
+                if (simbolo not in transicoes) or (transicoes[simbolo][0] not in estados):
+                    return False
+        return True
 
     '''
         Determina se dois estados são equivalentes de acordo com os conjuntos de equivalência no processo de minimização.
@@ -437,7 +473,6 @@ class AutomatoFinito(Elemento):
         Identifica os estados mortos do autômato, ou seja, estados que não têm caminho que levem a um estado final a partir deles.
         \:return o conjunto de estados mortos.
     '''
-
     def estados_mortos(self):
         vivos_atuais = set(self.__estados_finais)
         vivos_anteriores = set()
@@ -454,6 +489,215 @@ class AutomatoFinito(Elemento):
             vivos_atuais = vivos_anteriores.union(estados_com_transicao)
 
         return set(self.__producoes.keys() - vivos_atuais)
+
+    '''
+        Completa o autômato.
+        \:return Um novo autômato que representa a mesma linguagem que é completo
+    '''
+    def completar(self):
+        if self.is_complete():
+            raise Exception("Autômato ja é completo")
+        else:
+            af_completo = AutomatoFinito(self.get_nome() + " (completo)")
+            af_completo.popula_automato(self, transicoes=True, inicial=True, terminais=True)
+
+            estado_de_erro = self.novo_estado()
+            af_completo.adiciona_estado(estado_de_erro)
+            for simbolo in self.__vt:
+                af_completo.adiciona_transicao(estado_de_erro, simbolo, estado_de_erro)
+
+            for simbolo in self.__vt:
+                for estado in af_completo.get_producoes():
+                    if simbolo not in af_completo.get_producoes()[estado]:
+                        af_completo.get_producoes()[estado][simbolo] = [estado_de_erro]
+
+            return af_completo
+
+    '''
+        Obtem o complemento do autômato que chama a função.
+        \:return O autômato que representa o complemento deste autômato
+    '''
+    def complemento(self):
+        if not self.is_complete():
+            raise Exception("Autômato não é completo")
+        if self.isAFND():
+            raise Exception("Autômato não é determinístico")
+        else:
+            af_complemento = AutomatoFinito(self.get_nome() + " (complemento)")
+            estados_equivalentes = af_complemento.popula_automato(self, transicoes=True, inicial=True)
+            finais_complemento = []
+            for estado in self.__producoes:
+                if estado not in self.__estados_finais:
+                    finais_complemento.append(estados_equivalentes[estado])
+            af_complemento.set_estados_finais(finais_complemento)
+            return af_complemento
+
+    '''
+        Obtem a união deste autômato com outro.
+        \:param o segundo autômato da união.
+        \:return O autômato resultante da união desse autômato com o autômato passado por parâmetro.
+    '''
+    def uniao(self, segundo_automato):
+        af_uniao = AutomatoFinito("{" + self.get_nome() + "} uniao {" + segundo_automato.get_nome() + "}")
+
+        estados_equivalentes_um = af_uniao.popula_automato(self, transicoes=True, terminais=True)
+        estados_equivalentes_dois = af_uniao.popula_automato(segundo_automato, transicoes=True, terminais=True)
+
+        novo_inicial = af_uniao.novo_estado()
+        af_uniao.adiciona_estado(novo_inicial)
+        af_uniao.set_estado_inicial(novo_inicial)
+
+        for simbolo in self.get_producoes()[self.get_estado_inicial()]:
+            for estado_destino in self.get_producoes()[self.get_estado_inicial()][simbolo]:
+                af_uniao.adiciona_transicao(novo_inicial, simbolo, estados_equivalentes_um[estado_destino])
+
+        for simbolo in segundo_automato.get_producoes()[segundo_automato.get_estado_inicial()]:
+            for estado_destino in segundo_automato.get_producoes()[segundo_automato.get_estado_inicial()][simbolo]:
+                af_uniao.adiciona_transicao(novo_inicial, simbolo, estados_equivalentes_dois[estado_destino])
+
+        if (self.__estado_inicial in self.__estados_finais) or (segundo_automato.get_estado_inicial() in segundo_automato.get_estados_finais()):
+            finais_atuais = af_uniao.get_estados_finais()
+            finais_atuais.add(novo_inicial)
+            #af_uniao.set_estados_finais(list(finais_atuais))
+
+        return af_uniao
+
+    '''
+        Obtem a intersecção deste autômato com outro.
+        \:param o segundo autômato da intersecçãp.
+        \:return Uma lista de todos os autômatos gerados para se obter a intersecção
+    '''
+    def interseccao(self, segundo_automato):
+        automatos_gerados = []
+
+        if self.is_complete():
+            la_barra = self.complemento()
+        else:
+            la_completo = self.completar()
+            automatos_gerados.append(la_completo)
+            la_barra = la_completo.complemento()
+        automatos_gerados.append(la_barra)
+
+        if segundo_automato.is_complete():
+            lb_barra = segundo_automato.complemento()
+        else:
+            lb_completo = segundo_automato.completar()
+            automatos_gerados.append(lb_completo)
+            lb_barra = lb_completo.complemento()
+        automatos_gerados.append(lb_barra)
+
+        l_uniao = la_barra.uniao(lb_barra)
+        automatos_gerados.append(l_uniao)
+
+        l_deterministico = l_uniao
+        if l_uniao.isAFND():
+            l_deterministico = l_uniao.determiniza()
+            automatos_gerados.append(l_deterministico)
+
+        l_uniao_barra = l_deterministico.complemento()
+        l_uniao_barra.set_nome("{" + self.get_nome() + "} intersec. {" + segundo_automato.get_nome() + "}")
+        automatos_gerados.append(l_uniao_barra)
+
+        return automatos_gerados
+
+    '''
+        Obtem a diferença deste autômato com outro.
+        \:param o segundo autômato da diferença.
+        \:return O autômato resultante da diferença desse autômato com o autômato passado por parâmetro.
+    '''
+    def diferenca(self, segundo_automato):
+        automatos_gerados = []
+
+        if segundo_automato.is_complete():
+            lb_barra = segundo_automato.complemento()
+        else:
+            lb_completo = segundo_automato.completar()
+            automatos_gerados.append(lb_completo)
+            lb_barra = lb_completo.complemento()
+        automatos_gerados.append(lb_barra)
+
+        automatos_intersec = self.interseccao(lb_barra)
+        automatos_intersec[-1].set_nome("{" + self.get_nome() + "} dif. {" + segundo_automato.get_nome() + "}")
+        automatos_gerados.extend(automatos_intersec)
+
+        return automatos_gerados
+
+    '''
+        Obtem o reverso da linguagem do autômato que chama a função.
+        \:return O autômato que representa o reverso da linguagem formata por este autômato.
+    '''
+    def reverso(self):
+        estado_equivalente = {}
+
+        af_reverso = AutomatoFinito(self.get_nome() + " (reverso)")
+        for estado in self.__producoes:
+            if estado not in estado_equivalente:
+                estado_equivalente[estado] = Estado(estado.to_string_display())
+            novo_estado = estado_equivalente[estado]
+
+            af_reverso.adiciona_estado(novo_estado)
+            for simbolo in self.__producoes[estado]:
+                for estado_destino in self.__producoes[estado][simbolo]:
+                    if estado_destino not in estado_equivalente:
+                        estado_equivalente[estado_destino] = Estado(estado_destino.to_string_display())
+                    novo_destino = estado_equivalente[estado_destino]
+                    af_reverso.adiciona_estado(novo_destino)
+                    af_reverso.adiciona_transicao(novo_destino, simbolo, novo_estado)
+
+        novo_inicial = af_reverso.novo_estado()
+        af_reverso.adiciona_estado(novo_inicial)
+        af_reverso.set_estado_inicial(novo_inicial)
+
+        for estado_final in self.__estados_finais:
+            for simbolo in af_reverso.get_producoes()[estado_equivalente[estado_final]]:
+                for estado_destino in af_reverso.get_producoes()[estado_equivalente[estado_final]][simbolo]:
+                    af_reverso.adiciona_transicao(novo_inicial, simbolo, estado_destino)
+
+        novo_final = estado_equivalente[self.__estado_inicial]
+        novos_finais = [novo_final]
+        if self.__estado_inicial in self.__estados_finais:
+            novos_finais.append(novo_inicial)
+        af_reverso.set_estados_finais(novos_finais)
+        return af_reverso
+
+    '''
+        Adiciona à esse autômato os estados do autômato passado como parâmetro.
+            Outras propriedades do segundo autômato também podem ser adicionadas.
+            Além disso ele verificad se ja não existe um estado com um nome igual, criando novos estados com nomes diferentes nesses casos.
+        \:param segundo_automato é o autômato cujos estados serão inseridos neste autômato.
+        \:param transicoes um booleano que indica se as transições também devem ser adicionadas.
+        \:param inicial um booleado que indica se o estado inicial desse autômato deve passar a ser o inicial do segundo_automato.
+        \:param terminais um booleado que indica se os terminais de segundo_automato devem ser adicionados aos terminais do autômato atual.
+        \:return Um dicionário que mapeia os estados do segunto_automato para os novos estados no autômato atual.
+    '''
+    def popula_automato(self, segundo_automato, transicoes=False, inicial=False, terminais=False):
+        estados_equivalentes = {}
+        for estado in segundo_automato.get_producoes():
+            if estado not in estados_equivalentes:
+                estado_equivalente = Estado(estado.to_string_display())
+                while estado_equivalente in self.__producoes:
+                    estado_equivalente = Estado(estado_equivalente.to_string_display() + "'")
+                estados_equivalentes[estado] = estado_equivalente
+            self.adiciona_estado(estados_equivalentes[estado])
+            if transicoes:
+                for simbolo in segundo_automato.get_producoes()[estado]:
+                    for estado_destino in segundo_automato.get_producoes()[estado][simbolo]:
+                        if estado_destino not in estados_equivalentes:
+                            estado_equivalente = Estado(estado_destino.to_string_display())
+                            while estado_equivalente in self.__producoes:
+                                estado_equivalente = Estado(estado_equivalente.to_string_display() + "'")
+                            estados_equivalentes[estado_destino] = estado_equivalente
+                        self.adiciona_transicao(estados_equivalentes[estado], simbolo, estados_equivalentes[estado_destino])
+
+        if inicial:
+            self.set_estado_inicial(estados_equivalentes[segundo_automato.get_estado_inicial()])
+
+        if terminais:
+            novos_terminais = []
+            for terminal in segundo_automato.get_estados_finais():
+                self.__estados_finais.add(estados_equivalentes[terminal])
+
+        return estados_equivalentes
 
     '''
         Verifica se o autômato é um autômato finito não determinístico (AFND).
@@ -495,8 +739,8 @@ class AutomatoFinito(Elemento):
         return self.__completo
 
     '''
-        Gera um novo símbolo não terminal que não pertence à gramática.
-        \:return um símbolo não terminal que não pertence à gramática.
+        Gera um novo estado que não pertence ao automato.
+        \:return um estado que não pertence ao automato.
     '''
     def novo_estado(self, lista=[]):
         simbolo_novo = None

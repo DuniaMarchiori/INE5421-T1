@@ -1,3 +1,5 @@
+# Autores: Dúnia Marchiori e Vinicius Steffani Schweitzer [2018]
+
 '''
     Classe que representa um erro na formatação da expressão regular escrita pelo usuário.
 '''
