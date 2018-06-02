@@ -46,8 +46,8 @@ class Estado:
         return self.__string_com_virgula
 
     '''
-        Retorna o estado em formato de texto, com os estados que compoem este estado dispostos em forma de uma string de lista.
-        \:return uma string com a composição do estado.
+        Retorna o estado em formato de texto, com os estados que compoem este estado dispostos em forma de uma string pronta para exibição.
+        \:return uma string com a composição do estado para exibição.
     '''
     def to_string_display(self):
         return self.__string_display

@@ -662,9 +662,9 @@ class AutomatoFinito(Elemento):
 
     '''
         Adiciona à esse autômato os estados do autômato passado como parâmetro.
-            Outras propriedades do segundo autômato também podem ser adicionados.
-            Além disso ele verificad se ja não existe um estado com um nome igual, criando novos estados com nomes diferentes nestes casos.
-        \:param segundo_automato é o autômatu cujos estados serão inseridos neste autômato.
+            Outras propriedades do segundo autômato também podem ser adicionadas.
+            Além disso ele verificad se ja não existe um estado com um nome igual, criando novos estados com nomes diferentes nesses casos.
+        \:param segundo_automato é o autômato cujos estados serão inseridos neste autômato.
         \:param transicoes um booleano que indica se as transições também devem ser adicionadas.
         \:param inicial um booleado que indica se o estado inicial desse autômato deve passar a ser o inicial do segundo_automato.
         \:param terminais um booleado que indica se os terminais de segundo_automato devem ser adicionados aos terminais do autômato atual.
