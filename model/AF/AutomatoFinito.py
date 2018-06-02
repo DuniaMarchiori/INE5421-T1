@@ -521,7 +521,7 @@ class AutomatoFinito(Elemento):
         if not self.is_complete():
             raise Exception("Autômato não é completo")
         if self.isAFND():
-            raise Exception("Autômato não é determinístico")
+            raise AFNDError(" complemento")
         else:
             af_complemento = AutomatoFinito(self.get_nome() + " (complemento)")
             estados_equivalentes = af_complemento.popula_automato(self, transicoes=True, inicial=True)
