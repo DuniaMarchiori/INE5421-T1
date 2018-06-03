@@ -64,3 +64,6 @@ class Estado:
 
     def __eq__(self, other):
         return self.__nome.__hash__() == other.get_nome().__hash__()
+
+    def __str__(self):
+        return "Estado(\"" + self.to_string_display() + "\")"

@@ -247,7 +247,7 @@ class Expressao(Elemento):
 
         composicao_da_raiz = self.__arvore.composicao_da_raiz()
         obter_composicao[estado_inicial] = composicao_da_raiz
-        obter_estado[tuple(composicao_da_raiz)] = estado_inicial
+        obter_estado[self.__obter_composicao_como_chave(composicao_da_raiz)] = estado_inicial
 
         estados_incompletos = [estado_inicial]
         estados_de_aceitacao = []
@@ -265,12 +265,13 @@ class Expressao(Elemento):
                         folhas[numero_folha].subir(nova_composicao)
                     obter_composicao[novo_estado] = nova_composicao
 
-                    if tuple(nova_composicao) not in obter_estado:
-                        obter_estado[tuple(nova_composicao)] = novo_estado
+                    nova_composicao_como_chave = self.__obter_composicao_como_chave(nova_composicao)
+                    if nova_composicao_como_chave not in obter_estado:
+                        obter_estado[nova_composicao_como_chave] = novo_estado
                         automato.adiciona_estado(novo_estado)
                         estados_incompletos.append(novo_estado)
                     else:
-                        novo_estado = obter_estado[tuple(nova_composicao)]
+                        novo_estado = obter_estado[nova_composicao_como_chave]
 
                     automato.adiciona_transicao(estado_atual, simbolo, novo_estado)
                 else:
@@ -278,3 +279,15 @@ class Expressao(Elemento):
         automato.set_estados_finais(estados_de_aceitacao)
         return automato
 
+    '''
+        Recebe a composição de um estado e a transforma em um valor único imutável para a composição com estes valores.
+            Utilizado quando se precisa utilizar a composição de um estado como chave de um dicionário.
+        \:param composicao a composição de um estado.
+        \:return uma tupla imutável que representa a mesma composição passada por parâmetro.
+    '''
+    def __obter_composicao_como_chave(self, composicao):
+        id_nova_composicao = []
+        for simb in composicao:
+            par = (simb, tuple(sorted(list(composicao[simb]))))
+            id_nova_composicao.append(par)
+        return tuple(id_nova_composicao)
