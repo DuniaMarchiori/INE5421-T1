@@ -281,176 +281,102 @@ class AutomatoFinito(Elemento):
         \:return o autômato mínimo deste autômato.
     '''
     def minimiza(self):
-        estados = set(self.__producoes.keys())
-        estados_inuteis = self.estados_inacessiveis().union(self.estados_mortos())
-        estados = estados - estados_inuteis
+        af_a_minimizar = AutomatoFinito("")
+        af_a_minimizar.popula_automato(self, transicoes=True, inicial=True, terminais=True)
+        estados_inuteis = af_a_minimizar.estados_inacessiveis().union(af_a_minimizar.estados_mortos())
+        af_a_minimizar.remover_estados(list(estados_inuteis))
 
-        estado_indefinicao = self.novo_estado()
-        transicoes_indef = {}
-        lista = [estado_indefinicao]
-        estados_is_complete = self.is_set_complete(estados)
-        if not estados_is_complete:
-            for simbolo in self.__vt:
-                transicoes_indef[simbolo] = lista
-            self.__producoes[estado_indefinicao] = transicoes_indef # Item adicionado apenas para auxiliar na minimização
-            estados.add(estado_indefinicao)
+        if not af_a_minimizar.is_complete():
+            af_a_minimizar = af_a_minimizar.completar()
+        if not af_a_minimizar.get_producoes():
+            estado_unico = Estado("q0")
+            af_a_minimizar.adiciona_estado(estado_unico)
+            af_a_minimizar.set_estado_inicial(estado_unico)
+            for simbolo in af_a_minimizar.get_vt():
+                af_a_minimizar.adiciona_transicao(estado_unico, simbolo, estado_unico)
 
-        k_f = estados - set(self.__estados_finais)
-        if not estados_is_complete:
-            k_f.add(estado_indefinicao)
-        f = estados - k_f
+        conjuntos_por_iteracao = []
+        conjuntos_por_iteracao.append([set(af_a_minimizar.get_producoes().keys()) - af_a_minimizar.get_estados_finais(), af_a_minimizar.get_estados_finais()])
 
-        ce_k_f_anterior = []
-        ce_f_anterior = []
-        novo_ce_k_f = []
-        novo_ce_f = []
-        if k_f != set():
-            novo_ce_k_f = [k_f]
-        if f != set():
-            novo_ce_f = [f]
+        i = 0
+        while i == 0 or len(conjuntos_por_iteracao[i]) != len(conjuntos_por_iteracao[i-1]):
+            i += 1
+            conjuntos_por_iteracao.append([])
 
-        # Forma os conjuntos equivalentes
-        while (ce_k_f_anterior != novo_ce_k_f or ce_f_anterior != novo_ce_f) and len(novo_ce_f) != 0 and len(novo_ce_k_f) != 0:
-            ce_k_f_anterior = list(novo_ce_k_f)
-            ce_f_anterior = list(novo_ce_f)
-            ce = ce_k_f_anterior + ce_f_anterior
+            for conjunto_estados in conjuntos_por_iteracao[i-1]:
+                lista_estados = list(conjunto_estados)
+                ja_agrupados = []
+                for j in range(0, len(lista_estados)):
+                    estado_um = lista_estados[j]
+                    if estado_um not in ja_agrupados:
+                        ja_agrupados.append(estado_um)
+                        equivalentes = [estado_um]
+                        for k in range(j + 1, len(lista_estados)):
+                            estado_dois = lista_estados[k]
+                            if estado_dois not in ja_agrupados and self.__estados_equivalentes(af_a_minimizar, estado_um, estado_dois, conjuntos_por_iteracao[i-1]):
+                                equivalentes.append(estado_dois)
+                                ja_agrupados.append(estado_dois)
+                        conjuntos_por_iteracao[i].append(equivalentes)
 
-            # K-F
-            for conjunto in ce_k_f_anterior:
-                estado = next(iter(conjunto))
-                set_e = set()
-                set_e.add(estado)
-                for outro_estado in conjunto - set_e:
-                    if not self.__estados_equivalentes(estado, outro_estado, ce, estado_indefinicao):
-                        adicionado = False
-                        for outro_set in novo_ce_k_f:
-                            if outro_set != conjunto:
-                                e = next(iter(outro_set))
-                                if self.__estados_equivalentes(outro_estado, e, ce, estado_indefinicao):
-                                    outro_set.add(outro_estado)
-                                    adicionado = True
-                                    break
-                            else:
-                                outro_set.remove(outro_estado)
-                        if not adicionado:
-                            set_outro_estado = set()
-                            set_outro_estado.add(outro_estado)
-                            novo_ce_k_f.append(set_outro_estado)
-
-            # F
-            for conjunto in ce_f_anterior:
-                estado = next(iter(conjunto))
-                set_e = set()
-                set_e.add(estado)
-                for outro_estado in conjunto - set_e:
-                    if not self.__estados_equivalentes(estado, outro_estado, ce, estado_indefinicao):
-                        adicionado = False
-                        for outro_set in novo_ce_f:
-                            if outro_set != conjunto:
-                                e = next(iter(outro_set))
-                                if self.__estados_equivalentes(outro_estado, e, ce, estado_indefinicao):
-                                    outro_set.add(outro_estado)
-                                    adicionado = True
-                                    break
-                            else:
-                                outro_set.remove(outro_estado)
-                        if not adicionado:
-                            set_outro_estado = set()
-                            set_outro_estado.add(outro_estado)
-                            novo_ce_f.append(set_outro_estado)
-
-        # Constrói o autômato
-        ce = novo_ce_k_f + novo_ce_f
         af_minimo = AutomatoFinito(self.get_nome() + " (minimizado)")
-        af_minimo.set_vt(self.__vt)
 
-        # Estado inicial
-        for e in ce:
-            if self.__estado_inicial in e:
-                index = ce.index(e)
-                nome_estado = "q" + str(index)
-                af_minimo.set_estado_inicial(Estado(nome_estado))
-                break
+        i = 0
+        lista_conjnutos_finais = list(conjuntos_por_iteracao[-1])
+        estados_aceitacao = []
+        for conjunto in lista_conjnutos_finais:
+            lista_estados = list(conjunto)
+            novo_estado = Estado("q" + str(i))
+            af_minimo.adiciona_estado(novo_estado)
+            if lista_estados[0] in af_a_minimizar.get_estados_finais():
+                estados_aceitacao.append(novo_estado)
+            for simbolo in af_a_minimizar.get_vt():
+                estado_destino_original = af_a_minimizar.get_producoes()[lista_estados[0]][simbolo][0]
+                id_conjunto_destino = self.__encontrar_conjunto_do_estado(af_a_minimizar, estado_destino_original, lista_conjnutos_finais)
+                estado_destino = Estado("q" + str(id_conjunto_destino))
+                af_minimo.adiciona_transicao(novo_estado, simbolo, estado_destino)
+            i += 1
 
-        # Estados finais
-        estados_finais = set()
-        for e in novo_ce_f:
-            index = ce.index(e)
-            nome_estado = "q" + str(index)
-            estados_finais.add(Estado(nome_estado))
-        af_minimo.set_estados_finais(estados_finais)
-
-        # Produções
-        ce_indefinido = self.__get_ce_respectivo(ce, estado_indefinicao)
-        for estado in estados:
-            nome_estado = self.__get_ce_respectivo(ce, estado)
-            if Estado(nome_estado) not in af_minimo.get_producoes().keys():
-                transicoes = self.__producoes[estado]
-                for simbolo in self.__vt:
-                    if simbolo in transicoes and transicoes[simbolo][0] in estados:
-                        estado_t = transicoes[simbolo]
-                        nome_estado_t = self.__get_ce_respectivo(ce, estado_t[0])
-                        af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(nome_estado_t))
-                    else:
-                        af_minimo.adiciona_transicao(Estado(nome_estado), simbolo, Estado(ce_indefinido))
-
-        if not self.is_complete():
-            del self.__producoes[estado_indefinicao] # Deleta a entrada auxiliar
+        af_minimo.set_estados_finais(estados_aceitacao)
+        id_estado_inicial = self.__encontrar_conjunto_do_estado(af_a_minimizar, af_a_minimizar.get_estado_inicial(), lista_conjnutos_finais)
+        estado_inicial = Estado("q" + str(id_estado_inicial))
+        af_minimo.set_estado_inicial(estado_inicial)
 
         return af_minimo
 
     '''
-        Determina a qual conjunto de equivalência o estado pertence durante o processo de minimização.
-        \:param ce é o conjunto total de conjuntos de equivalência.
-        \:param estado é o estado que se deseja determinar o conjunto a qual ele pertence.
-        \:return o nome do estado que representa o conjunto de equivalência.
+        Verifica se dois estados são equivalentes em uma iteração do algoritmo de minimização.
+        \:param automato é o autômato que os estados pertencem.
+        \:param estado_um é o primeiro dos dois estados que se quer saber sobre a equivalencia.
+        \:param estado_dois é o segundo dos dois estados que se quer saber sobre a equivalencia.
+        \:param lista_conjuntos_anterior é a lista com todos os conjuntos de equivalencia da iteração anterior.
+        \:return True se os estados são equivalentes de acordo com a lista de conjuntos passada como parametro, False caso contrário.
     '''
-    def __get_ce_respectivo(self, ce, estado):
-        for e in ce:
-            if estado in e:
-                index = ce.index(e)
-                return "q" + str(index)
-        return ""
-
-    '''
-        Verifica se o conjunto representa um conjunto completo de estados.
-        \:param estados é o conjunto a ser verificado
-        \:return True se o conjunto é completo e False caso contrário.
-    '''
-    def is_set_complete(self, estados):
-        for estado in estados:
-            transicoes = self.__producoes[estado]
-            for simbolo in self.__vt:
-                if (simbolo not in transicoes) or (transicoes[simbolo][0] not in estados):
+    def __estados_equivalentes(self, automato, estado_um, estado_dois, lista_conjuntos_anterior):
+        for simbolo in automato.get_vt():
+            estado_destino_um = automato.get_producoes()[estado_um][simbolo][0]  # Como o AF é determinístico, podemos obter apenas o estado que esta no indice [0] dos estados destino (pois é o único).
+            estado_destino_dois = automato.get_producoes()[estado_dois][simbolo][0]
+            for conjunto in lista_conjuntos_anterior:
+                if estado_destino_um in conjunto and estado_destino_dois not in conjunto:
+                    return False
+                elif estado_destino_um not in conjunto and estado_destino_dois in conjunto:
                     return False
         return True
 
     '''
-        Determina se dois estados são equivalentes de acordo com os conjuntos de equivalência no processo de minimização.
-        \:param estado é um dos dois estados usados na comparação.
-        \:param outro_estado é o segundo estado usado na comparação.
-        \:param ce é o conjunto total de conjuntos de equivalência.
-        \:param estado_indefinicao é o estado criado para representar a indefinicao no autômato.
-        \:return True se os dois estados são equivalentes e False caso não sejam.
+        Encontra o conjunto que um determinado estado pertence.
+        \:param automato é o autômato que o estado pertence.
+        \:param estado é o estado que se quer saber a qual conjunto pertence.
+        \:param lista_conjuntos é a lista com todos os conjuntos de equivalencia.
+        \:return Retorna o índice do conjunto na lista de conjuntos passada como parâmetro.
     '''
-    def __estados_equivalentes(self, estado, outro_estado, ce, estado_indefinicao):
-        for simbolo in self.__vt:
-            if simbolo in self.__producoes[estado]:
-                transicao_estado = self.__producoes[estado][simbolo]
-            else:
-                transicao_estado = [estado_indefinicao]
-
-            if simbolo in self.__producoes[outro_estado]:
-                transicao_outro_estado = self.__producoes[outro_estado][simbolo]
-            else:
-                transicao_outro_estado = [estado_indefinicao]
-
-            ce_estado = self.__get_ce_respectivo(ce, transicao_estado[0])
-            ce_outro_estado = self.__get_ce_respectivo(ce, transicao_outro_estado[0])
-            if ce_estado != ce_outro_estado:
-                return False
-
-        return True
+    def __encontrar_conjunto_do_estado(self, automato, estado, lista_conjuntos):
+        indice = 0
+        for conjunto in lista_conjuntos:
+            for estado_conj in conjunto:
+                if estado == estado_conj:
+                    return indice
+            indice += 1
+        return -1
 
     '''
         Identifica os estados inacessíveis do autômato, ou seja, estados em que não é possível chegar a partir do estado inicial.
@@ -493,6 +419,31 @@ class AutomatoFinito(Elemento):
             vivos_atuais = vivos_anteriores.union(estados_com_transicao)
 
         return set(self.__producoes.keys() - vivos_atuais)
+
+    '''
+        Remove estados de um autômato.
+        \:param lista_de_estados lista de estados à remover
+    '''
+    def remover_estados(self, lista_de_estados):
+        try:
+            self.__completo = None
+            for estado in lista_de_estados:
+                self.__producoes.pop(estado, None)
+                if estado in self.__estados_finais:
+                    self.__estados_finais.remove(estado)
+            for estado_restante in self.__producoes:
+                simbolos_a_remover = []
+                for simbolo in self.__producoes[estado_restante]:
+                    for estado_destino in self.__producoes[estado_restante][simbolo]:
+                        if estado_destino in lista_de_estados:
+                            self.__producoes[estado_restante][simbolo].remove(estado_destino)
+                            if not self.__producoes[estado_restante][simbolo]:
+                                simbolos_a_remover.append(simbolo)
+                for simbolo_vazio in simbolos_a_remover:
+                    self.__producoes[estado_restante].pop(simbolo_vazio, None)
+        except:
+            import traceback
+            traceback.print_exc()
 
     '''
         Completa o autômato.
@@ -729,7 +680,6 @@ class AutomatoFinito(Elemento):
         \:return True se o autômato for completo ou False caso contrário.
     '''
     def is_complete(self):
-
         if self.__completo != None:
             return self.__completo
 
