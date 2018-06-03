@@ -165,7 +165,7 @@ class Gramatica(Elemento):
     def transformar_em_AF(self):
         from model.AF.AutomatoFinito import AutomatoFinito
 
-        af = AutomatoFinito(self.get_nome() + "(convertido para AF)")
+        af = AutomatoFinito(self.get_nome() + " (convertido para AF)")
         af.set_vt(set(self.__vt))
         af.set_estado_inicial(Estado(self.__simbolo_inicial))
 
