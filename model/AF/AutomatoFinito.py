@@ -105,7 +105,6 @@ class AutomatoFinito(Elemento):
 
         gramatica = Gramatica(self.get_nome() + " (convertido para GR)")
         gramatica.set_vt(self.__vt)
-        gramatica.set_simbolo_inicial(self.__estado_inicial.to_string())
 
         traducao_nomes = {}
         novos_nomes = []
@@ -140,6 +139,12 @@ class AutomatoFinito(Elemento):
                     b = traducao_nomes[b]
             gramatica.adiciona_producao(b, producoes_g)
 
+        si = self.__estado_inicial.to_string()
+        if si[0] == "q":
+            gramatica.set_simbolo_inicial(traducao_nomes[si])
+        else:
+            gramatica.set_simbolo_inicial(si)
+
         # Item C do algoritmo visto em aula
         # Se & pertence à linguagem
         if self.__estado_inicial in self.__estados_finais:
@@ -148,7 +153,6 @@ class AutomatoFinito(Elemento):
             # Copia produções do estado inicial atual
             producoes_novo_si = [] # lista de tuplas
 
-            si = self.__estado_inicial.to_string()
             if si[0] == "q":
                 si = traducao_nomes[si]
             producoes_si = gramatica.get_producoes()[si]
