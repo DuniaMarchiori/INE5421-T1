@@ -56,7 +56,7 @@ class Expressao(Elemento):
             self.__verifica_validade(self.to_string())
         except:
             raise ExpressionParsingError(ExpressionParsingError.EXPRESSION_PARSING_ERROR +
-                                         "Expressão possui operadores redundantes que resultam em recursão infinita.")
+                                         "Expressão possui operadores redundantes que resultam em recursão sem fim.")
 
     '''
         Algorítmo recursivo que gera a arvore/sub-arvore a partir da expressão/sub-expressão regular dada.
@@ -132,7 +132,7 @@ class Expressao(Elemento):
     def __verifica_validade(self, expressao):
         if not expressao:
             raise ExpressionParsingError("A expressão não pode ser vazia")
-        chars_validos = string.ascii_letters + string.digits + "|.*?()"
+        chars_validos = string.ascii_lowercase + string.digits + "|.*?()"
         nivel_parentesis = 0
         char_anterior = " "
         i_real = 0
@@ -176,7 +176,7 @@ class Expressao(Elemento):
     def __preparar_expressao(self, expressao):
         # Remove espaços em branco
         expressao = "".join(expressao.split())
-        # Adiciona concatenações impricitas
+        # Adiciona concatenações implicitas
         expressao = self.__expor_concatenacoes_implicitas(expressao)
         return expressao
 

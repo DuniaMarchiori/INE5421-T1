@@ -308,7 +308,7 @@ class View:
         button_reconhecer = Button(self.__frame_operacoes_af, text="Reconhecer", command=self.cb_reconhece_sentenca)
         self.__configura_elemento(button_reconhecer, row=2, column=2, rowweight=0, columnweight=0, sticky=W+E)
 
-        label_gerar = Label(self.__frame_operacoes_af, text="Gerar sentenças de tamanho ", pady=padding)
+        label_gerar = Label(self.__frame_operacoes_af, text="Gerar sentenças de tamanho: ", pady=padding)
         self.__configura_elemento(label_gerar, row=3, column=0, rowweight=1, columnweight=0, sticky=W)
 
         f = Frame(self.__frame_operacoes_af, padx=padding)
