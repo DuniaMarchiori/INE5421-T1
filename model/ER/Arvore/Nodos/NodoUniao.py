@@ -15,6 +15,5 @@ class NodoUniao(Nodo):
         return composicao
 
     def subir(self, composicao):
-        # TODO é isso mesmo? (faz sentido se o getCostura de quem não tem costura é a costura do filho direito acho)
         composicao = self.get_filho_direito().get_costura().subir(composicao)
         return composicao
