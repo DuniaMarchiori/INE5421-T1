@@ -1,5 +1,3 @@
-I->aA|bB|&
-S->aA|bB
-A->aS|bC|a
-B->aC|bS|b
-C->aB|bA
+I->aA|bA|&
+S->aA|bA
+A->aS|bS|a|b
