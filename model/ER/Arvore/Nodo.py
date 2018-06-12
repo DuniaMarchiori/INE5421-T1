@@ -90,3 +90,6 @@ class Nodo:
 
     def subir(self, composicao):
         pass
+
+    def __str__(self):
+        return "Nodo(\"" + self.get_valor() + "\")"

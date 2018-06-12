@@ -113,8 +113,11 @@ class Controller:
     '''
     def cb_aplica_operacao(self, indice_um, indice_dois, operacao):
         if operacao >= 3 or indice_dois is not None:
-            elementos_novos = self.__model.operacao_elementos(indice_um, indice_dois, operacao)
-            self.__adicionar_multiplos_elementos(elementos_novos)
+            try:
+                elementos_novos = self.__model.operacao_elementos(indice_um, indice_dois, operacao)
+                self.__adicionar_multiplos_elementos(elementos_novos)
+            except AFNDError as e:
+                self.__view.mostrar_aviso(e.get_message())
         else:
             self.__view.mostrar_aviso("Você precisa selecionar um segundo\nelemento para aplicar a operação.")
 

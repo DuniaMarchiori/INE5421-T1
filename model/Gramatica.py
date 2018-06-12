@@ -117,8 +117,11 @@ class Gramatica(Elemento):
                                     producoes.append((p, "&"))
                                     if p != "&":
                                         self.__vt.add(p)
-                                    if p == "&" and linhas.index(linha) == 0:
-                                        gera_epsilon = True
+                                    if p == "&":
+                                        if linhas.index(linha) == 0:
+                                            gera_epsilon = True
+                                        else:
+                                            raise FormatError(FormatError.FORMAT_ERROR + str(linhas.index(linha)+1) + ": as produções não seguem as regras de geração de &.")
                                 else:
                                     raise FormatError(FormatError.FORMAT_ERROR + str(linhas.index(linha)+1) + ": as produções regulares devem seguir o formato aB, onde a é um símbolo terminal e B um símbolo não terminal.")
                             elif len(p) != 0:
@@ -127,7 +130,7 @@ class Gramatica(Elemento):
                                 nao_terminal = chars[1:len(chars)] # caracteres não-terminais
 
                                 if nao_terminal == list(self.__simbolo_inicial) and gera_epsilon:
-                                    raise FormatError(": as produções não seguem as regras de geração de &.")
+                                    raise FormatError(FormatError.FORMAT_ERROR + str(linhas.index(linha)+1) + ": as produções não seguem as regras de geração de &.")
 
                                 all_upper = True if True in [s.isupper() for s in nao_terminal] else False # Todos os caracteres do símbolo não-terminal são maiúsculos
                                 all_letters = True # Não há números no símbolo
@@ -162,7 +165,7 @@ class Gramatica(Elemento):
     def transformar_em_AF(self):
         from model.AF.AutomatoFinito import AutomatoFinito
 
-        af = AutomatoFinito(self.get_nome() + "(convertido para AF)")
+        af = AutomatoFinito(self.get_nome() + " (convertido para AF)")
         af.set_vt(set(self.__vt))
         af.set_estado_inicial(Estado(self.__simbolo_inicial))
 
