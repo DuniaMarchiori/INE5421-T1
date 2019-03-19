@@ -1,5 +1,5 @@
 # INE5421-T1
-Trabalho 1 de Linguagens Formais e Compiladores (INE5421): um sistema para manipular autômatos finitos, gramáticas e expressões regulares com as seguintes funcionalidades:
+Primeiro trabalho de Linguagens Formais e Compiladores (INE5421 - UFSC): um sistema para manipular autômatos finitos, gramáticas e expressões regulares com as seguintes funcionalidades:
 
 1 – Edição, leitura e gravação de GR e ER.
 
@@ -15,6 +15,7 @@ Trabalho 1 de Linguagens Formais e Compiladores (INE5421): um sistema para manip
 
 7 - Reconhecimento de sentenças aceitas por um AF e enumeração das sentenças de tamanho “n” aceitas por ele.
 
-Execute com
 
-$ python3 Main.py
+*Execute com*
+
+`python3 Main.py`
